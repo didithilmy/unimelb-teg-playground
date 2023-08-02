@@ -28,3 +28,5 @@
 This script uses [dotbimpy](https://github.com/paireks/dotbimpy) to parse the `.bim` file and create a mesh. Then, it uses [Trimesh](https://github.com/mikedh/trimesh) to export the mesh into obj file.
 
 The method of conversion is largely taken from this source: https://github.com/paireks/dotbimpy/blob/master/dotbimpy/other/DotbimToTrimeshScene.ipynb
+
+Given that this is an executable Python script, it should be possible to be embedded in the simulator Unity application as a single software package.
