@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pyquaternion
 from dotbimpy import File
@@ -61,6 +62,8 @@ def convert_file_to_trimesh_scene(file):
     return scene
 
 if __name__ == '__main__':
-    file = File.read("House.bim")
+    input_filename = sys.argv[1]
+    output_filename = sys.argv[2]
+    file = File.read(input_filename)
     scene = convert_file_to_trimesh_scene(file)
-    scene.export('output.obj', 'obj', include_color=True)
+    scene.export(output_filename, 'obj', include_color=True)
