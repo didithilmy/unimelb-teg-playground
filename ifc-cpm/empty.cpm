@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <version>2023.1.0</version>
+  <panicMode>false</panicMode>
+  <validatedSuccessfully>false</validatedSuccessfully>
+  <levelHeight>2.5</levelHeight>
+  <levels>
+    <Level>
+      <id>0</id>
+      <width>49</width>
+      <height>49</height>
+      <wall_pkg>
+        <walls />
+      </wall_pkg>
+      <gate_pkg>
+        <gates />
+      </gate_pkg>
+      <counter_pkg>
+        <gates />
+      </counter_pkg>
+      <agent_pkg>
+        <distributions />
+      </agent_pkg>
+      <waitPoint_pkg>
+        <waitPoints />
+      </waitPoint_pkg>
+      <obstacle_pkg>
+        <Obstacles />
+      </obstacle_pkg>
+      <barricade_pkg>
+        <barricade_walls />
+      </barricade_pkg>
+      <train_pkg>
+        <trains />
+      </train_pkg>
+    </Level>
+  </levels>
+  <stairs />
+  <threats />
+  <cameraPos>
+    <x>0</x>
+    <y>12.325</y>
+    <z>0</z>
+  </cameraPos>
+  <cameraRot>
+    <x>18.306</x>
+    <y>45</y>
+    <z>-4.49642044E-07</z>
+  </cameraRot>
+</Model>
