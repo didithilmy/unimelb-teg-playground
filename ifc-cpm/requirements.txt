@@ -1,2 +1,5 @@
 ifcopenshell
 xmltodict
+svg.path
+svgelements
+svgpathtools
