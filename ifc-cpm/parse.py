@@ -137,8 +137,6 @@ def split_line_at_point(point, line):
 
     if get_wall_length(line2) > 0:
         lines.append(line2)
-    
-    print(lines)
 
     return lines
 
@@ -175,16 +173,15 @@ def split_intersecting_walls(walls):
     walls_queue = copy.copy(walls)
     output_walls = []
     while len(walls_queue) > 0:
-        print(walls_queue)
         wall = walls_queue.pop(0)
-        intersection = find_first_intersection(wall, list(set(walls) - set([wall])))
+        intersection = find_first_intersection(wall, walls_queue)
         if intersection is None:
             output_walls.append(wall)
         else:
             split_walls = split_line_at_point(intersection, wall)
-            # walls_queue += split_walls TODO debug recursion
+            walls_queue += split_walls
 
-    print(output_walls)
+    return output_walls
 
 
 cpm = CrowdSimulationEnvironment()
@@ -193,14 +190,13 @@ for storey in model.by_type("IfcBuildingStorey"):
     elements = ifcopenshell.util.element.get_decomposition(storey)
     walls = [x for x in elements if x.is_a("IfcWall")]
     walls_vertices = [get_wall_vertices(x) for x in walls]
-    split_intersecting_walls(walls_vertices)
+    walls_vertices = split_intersecting_walls(walls_vertices)
 
-    # level = Level()
+    level = Level()
+    for wall in walls_vertices:
+        wall_length = get_wall_length(wall)
+        level.add_wall(wall, wall_length)
+    cpm.add_level(level)
 
-    # for wall in walls:
-    #     vert1, vert2, wall_length = get_wall_vertices(wall)
-    #     level.add_wall((vert1, vert2), wall_length)
-    # cpm.add_level(level)
-
-# xml = cpm.write()
-# print(xml)
+xml = cpm.write()
+print(xml)
