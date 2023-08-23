@@ -129,8 +129,34 @@ def split_line_at_point(point, line):
     """
     x, y = point
     (x1, y1), (x2, y2) = line
+    line1, line2 = ((x1, y1), (x, y)), ((x, y), (x2, y2))
 
-    return ((x1, y1), (x, y)), ((x, y), (x2, y2))
+    lines = []
+    if get_wall_length(line1) > 0:
+        lines.append(line1)
+
+    if get_wall_length(line2) > 0:
+        lines.append(line2)
+    
+    print(lines)
+
+    return lines
+
+
+def find_first_intersection(target_line, other_lines):
+    for other_line in other_lines:
+        intersection = find_intersection(target_line, other_line)
+        if intersection is not None:
+            wall_vertices = [
+                target_line[0],
+                target_line[1],
+                other_line[0],
+                other_line[1],
+            ]
+            # Only add intersections that are T or +
+            if wall_vertices.count(intersection) <= 1:
+                return intersection
+    return None
 
 
 def split_intersecting_walls(walls):
@@ -146,17 +172,19 @@ def split_intersecting_walls(walls):
         ((x1, y1), (x2, y2))
     ]
     """
-    wall_pairs = combinations(walls, 2)
-    intersections = set()
-    for wall1, wall2 in wall_pairs:
-        intersection = find_intersection(wall1, wall2)
-        if intersection is not None:
-            wall_vertices = [wall1[0], wall1[1], wall2[0], wall2[1]]
-            # Only add intersections that are T or +
-            if wall_vertices.count(intersection) <= 1:
-                intersections.add(intersection)
+    walls_queue = copy.copy(walls)
+    output_walls = []
+    while len(walls_queue) > 0:
+        print(walls_queue)
+        wall = walls_queue.pop(0)
+        intersection = find_first_intersection(wall, list(set(walls) - set([wall])))
+        if intersection is None:
+            output_walls.append(wall)
+        else:
+            split_walls = split_line_at_point(intersection, wall)
+            # walls_queue += split_walls TODO debug recursion
 
-    print(intersections)
+    print(output_walls)
 
 
 cpm = CrowdSimulationEnvironment()
