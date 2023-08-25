@@ -1,0 +1,17 @@
+[MASTER]
+disable=
+    C0114, # missing-module-docstring
+    C0115, 
+    C0116, # missing-function-docstring
+    R0903, # too-few-public-methods
+    R0913, 
+    R0914,
+    R0201, # no-self-use
+    E1101, # no-member
+    unused-argument
+
+[FORMAT]
+max-line-length=256
+
+[DESIGN]
+max-attributes=12
