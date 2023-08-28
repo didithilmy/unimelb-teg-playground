@@ -7,10 +7,14 @@ class Level:
         self.walls = []
         self.gates = []
         self.doors = []
+        self.barricades = []
         self.dimension = (width, height)
 
     def add_wall(self, vertices, length):
         self.walls.append((length, vertices))
+
+    def add_barricade(self, vertices, length):
+        self.barricades.append((length, vertices))
 
     def add_gate(self, vertices, length):
         self.gates.append((length, vertices))
@@ -89,11 +93,33 @@ class CrowdSimulationEnvironment:
                 }
             )
 
+        barricades = []
+        for length, vertices in level.barricades:
+            barricade_id = self._get_id()
+            (x1, y1), (x2, y2) = vertices
+
+            barricades.append(
+                {
+                    "id": barricade_id,
+                    "length": length,
+                    "isLow": False,
+                    "isTransparent": False,
+                    "isWlWG": False,
+                    "vertices": {
+                        "Vertex": [
+                            {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
+                            {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                        ]
+                    },
+                }
+            )
+
         return {
             "id": level_id,
             "width": level.dimension[0],
             "height": level.dimension[1],
             "wall_pkg": {"walls": {"Wall": walls}},
+            "barricade_pkg": {"barricade_walls": {"Wall": barricades}},
             "gate_pkg": {"gates": {"Gate": gates}},
         }
 
