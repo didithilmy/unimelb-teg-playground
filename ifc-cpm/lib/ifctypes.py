@@ -32,6 +32,13 @@ class Wall(BuildingElement):
         super().__init__(*args, **kwargs, type="Wall")
 
 
+class Barricade(BuildingElement):
+    __type__ = "Barricade"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, type="Barricade")
+
+
 class Gate(BuildingElement):
     __type__ = "Gate"
 
