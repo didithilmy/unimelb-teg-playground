@@ -5,11 +5,15 @@ import xmltodict
 class Level:
     def __init__(self, width=100, height=100):
         self.walls = []
+        self.gates = []
         self.doors = []
         self.dimension = (width, height)
 
     def add_wall(self, vertices, length):
         self.walls.append((length, vertices))
+
+    def add_gate(self, vertices, length):
+        self.gates.append((length, vertices))
 
 
 class CrowdSimulationEnvironment:
@@ -63,11 +67,34 @@ class CrowdSimulationEnvironment:
                 }
             )
 
+        gates = []
+        for length, vertices in level.gates:
+            gate_id = self._get_id()
+            (x1, y1), (x2, y2) = vertices
+            gates.append(
+                {
+                    "id": gate_id,
+                    "length": length,
+                    "angle": 0,  # TODO?
+                    "destination": False,
+                    "counter": False,
+                    "transparent": False,
+                    "designatedOnly": False,
+                    "vertices": {
+                        "Vertex": [
+                            {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
+                            {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                        ]
+                    },
+                }
+            )
+
         return {
             "id": level_id,
             "width": level.dimension[0],
             "height": level.dimension[1],
             "wall_pkg": {"walls": {"Wall": walls}},
+            "gate_pkg": {"gates": {"Gate": gates}},
         }
 
     def _get_vertex_id(self, vertex):
