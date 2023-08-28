@@ -17,8 +17,18 @@ settings.set(settings.USE_WORLD_COORDS, True)
 
 
 class IfcToCpmConverter:
-    def __init__(self, ifc_filepath, dimension=None):
+    def __init__(
+        self,
+        ifc_filepath: str,
+        dimension: Tuple[int, int] = None,
+        origin: Tuple[int, int] = None,
+    ):
         self.dimension = dimension
+        if origin is None:
+            origin = (0, 0)
+        self.x_offset = origin[0]
+        self.y_offset = origin[1]
+
         self.crowd_environment = CrowdSimulationEnvironment()
         self.model = ifcopenshell.open(ifc_filepath)
         self.unit_scale = ifcopenshell.util.unit.calculate_unit_scale(self.model)
@@ -26,13 +36,25 @@ class IfcToCpmConverter:
     def write(self, cpm_out_filepath):
         for storey in self.model.by_type("IfcBuildingStorey"):
             elements = self._get_storey_elements(storey)
-            level = Level()
+
+            if self.dimension is None:
+                width, height = self._get_storey_size(elements)
+            else:
+                width, height = self.dimension
+
+            level = Level(width=width, height=height)
             for element in elements:
+                x1, y1 = element.start_vertex
+                x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+
+                x2, y2 = element.end_vertex
+                x2, y2 = x2 + self.x_offset, y2 + self.y_offset
+
+                vertices = ((x1, y1), (x2, y2))
+
                 if element.__type__ == "Wall":
-                    vertices = element.start_vertex, element.end_vertex
                     level.add_wall(vertices, element.length)
                 elif element.__type__ == "Gate":
-                    vertices = element.start_vertex, element.end_vertex
                     level.add_gate(vertices, element.length)
 
             self.crowd_environment.add_level(level)
@@ -233,6 +255,10 @@ class IfcToCpmConverter:
 
         x_max = math.ceil(x_max)
         y_max = math.ceil(y_max)
+
+        # Account for x and y offset
+        x_max += 2 * self.x_offset
+        y_max += 2 * self.y_offset
 
         return x_max, y_max
 
