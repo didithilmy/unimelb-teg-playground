@@ -1,4 +1,5 @@
 import copy
+from collections import defaultdict
 import math
 from typing import Tuple, List
 import numpy as np
@@ -7,9 +8,9 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from cpm_writer import CrowdSimulationEnvironment, Level
+from .cpm_writer import CrowdSimulationEnvironment, Level
 
-from .ifctypes import BuildingElement, Wall, Gate
+from .ifctypes import BuildingElement, Wall, Gate, Barricade
 from .utils import find_lines_intersection
 
 settings = ifcopenshell.geom.settings()
@@ -54,6 +55,8 @@ class IfcToCpmConverter:
 
                 if element.__type__ == "Wall":
                     level.add_wall(vertices, element.length)
+                elif element.__type__ == "Barricade":
+                    level.add_barricade(vertices, element.length)
                 elif element.__type__ == "Gate":
                     level.add_gate(vertices, element.length)
 
@@ -93,6 +96,9 @@ class IfcToCpmConverter:
                         )
                     )
         building_elements = self._split_intersecting_elements(building_elements)
+        building_elements = self._convert_disconnected_walls_into_barricades(
+            building_elements
+        )
         return building_elements
 
     def _decompose_wall_openings(self, ifc_wall) -> List[BuildingElement]:
@@ -234,6 +240,30 @@ class IfcToCpmConverter:
             out.append(element2)
 
         return out
+
+    def _convert_disconnected_walls_into_barricades(
+        self, elements: List[BuildingElement]
+    ):
+        vertices_count = defaultdict(lambda: 0)
+        for el in elements:
+            vertices_count[el.start_vertex] += 1
+            vertices_count[el.end_vertex] += 1
+
+        output_elements = copy.copy(elements)
+        walls = [x for x in output_elements if x.__type__ == "Wall"]
+        for wall in walls:
+            if (
+                vertices_count[wall.start_vertex] < 2
+                or vertices_count[wall.end_vertex] < 2
+            ):
+                barricade = Barricade(
+                    name=wall.name,
+                    start_vertex=wall.start_vertex,
+                    end_vertex=wall.end_vertex,
+                )
+                output_elements.remove(wall)
+                output_elements.append(barricade)
+        return output_elements
 
     def _get_relative_ifcwall_vertices(self, ifc_wall):
         representations = ifc_wall.Representation.Representations
