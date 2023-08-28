@@ -1,7 +1,6 @@
 import copy
 from typing import List
 import numpy as np
-from itertools import combinations
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.placement
@@ -36,15 +35,15 @@ unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 #             opening_location_relative_to_wall = (
 #                 opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
 #             )
-            # print((opening_location_relative_to_wall))
-            # print(dir(opening_element))
-            # matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
-            # print(matrix)
-            # print(opening_element.Name, (opening_element.Representation.Representations[1].Items))
-            # Opening length can be retrieved from IfcBoundingBox here
+# print((opening_location_relative_to_wall))
+# print(dir(opening_element))
+# matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
+# print(matrix)
+# print(opening_element.Name, (opening_element.Representation.Representations[1].Items))
+# Opening length can be retrieved from IfcBoundingBox here
 
-        # get_opening_vertices(opening)
-        # print("Opening", opening.Name, opening)
+# get_opening_vertices(opening)
+# print("Opening", opening.Name, opening)
 
 
 def get_relative_wall_vertices(ifc_wall):
@@ -59,11 +58,11 @@ def get_relative_wall_vertices(ifc_wall):
     return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
 
 
-def decompose_wall_openings(ifc_wall):
+def decompose_wall_openings(ifc_wall) -> List[BuildingElement]:
     """
     Input: IfcWall
     Output: Array of [
-        Wall, Gate, Wall
+        Wall, Gate, Wall (decomposed elements)
     ]
     """
     gates_vertices = []
@@ -78,19 +77,19 @@ def decompose_wall_openings(ifc_wall):
         box_representation = representations[0]
         opening_length = box_representation.Items[0].XDim
 
-        # TODO investigate: Wand-Int-ERDG-2 has x+length more than the wall length.
-        # This measure may not be entirely accurate?
         opening_location_relative_to_wall = (
             opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
         )
 
         x, y, z = opening_location_relative_to_wall
+
+        # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
+        # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
+        x = x - opening_length / 2
         if z == 0:
             gates_vertices.append(
                 ((x, y), (x + opening_length, y), opening_element.Name)
             )
-
-    # print("Gates vertices", gates_vertices)
 
     start_vertex, end_vertex = get_relative_wall_vertices(ifc_wall)
     building_elements = [(start_vertex, end_vertex, "Wall", ifc_wall.Name)]

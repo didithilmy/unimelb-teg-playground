@@ -9,7 +9,8 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from cpm_writer import CrowdSimulationEnvironment, Level
 
-from .ifctypes import BuildingElement, Wall
+from .ifctypes import BuildingElement, Wall, Gate
+from .utils import find_lines_intersection
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -24,23 +25,204 @@ class IfcToCpmConverter:
 
     def write(self, cpm_out_filepath):
         for storey in self.model.by_type("IfcBuildingStorey"):
-            elements = ifcopenshell.util.element.get_decomposition(storey)
-            ifc_walls = [x for x in elements if x.is_a("IfcWall")]
-            walls = [self._ifc_wall_to_converter_wall(x) for x in ifc_walls]
-            walls = self._split_intersecting_walls(walls)
+            elements = self._get_storey_elements(storey)
+            level = Level()
+            for element in elements:
+                if element.__type__ == "Wall":
+                    vertices = element.start_vertex, element.end_vertex
+                    level.add_wall(vertices, element.length)
+                elif element.__type__ == "Gate":
+                    vertices = element.start_vertex, element.end_vertex
+                    level.add_gate(vertices, element.length)
 
-            if self.dimension is None:
-                width, height = self._get_storey_size(walls)
-            else:
-                width, height = self.dimension
-
-            level = Level(width=width, height=height)
-            for wall in walls:
-                level.add_wall((wall.start_vertex, wall.end_vertex), wall.length)
             self.crowd_environment.add_level(level)
 
         with open(cpm_out_filepath, "w") as f:
             f.write(self.crowd_environment.write())
+
+    def _get_storey_elements(self, storey):
+        elements = ifcopenshell.util.element.get_decomposition(storey)
+        walls = [x for x in elements if x.is_a("IfcWall")]
+        building_elements = []
+        for wall in walls:
+            decomposed = self._decompose_wall_openings(wall)
+            transformation_matrix = ifcopenshell.util.placement.get_local_placement(
+                wall.ObjectPlacement
+            )
+            i = 0
+            for v1, v2, type, name in decomposed:
+                i += 1
+                v1_transform = self._transform_vertex(v1, transformation_matrix)
+                v2_transform = self._transform_vertex(v2, transformation_matrix)
+                if type == "Wall":
+                    building_elements.append(
+                        Wall(
+                            name=f"{wall.Name} - w{i}",
+                            start_vertex=v1_transform,
+                            end_vertex=v2_transform,
+                        )
+                    )
+                elif type == "Gate":
+                    building_elements.append(
+                        Gate(
+                            name=f"{wall.Name} - g{i}",
+                            start_vertex=v1_transform,
+                            end_vertex=v2_transform,
+                        )
+                    )
+        building_elements = self._split_intersecting_elements(building_elements)
+        return building_elements
+
+    def _decompose_wall_openings(self, ifc_wall) -> List[BuildingElement]:
+        """
+        Input: IfcWall
+        Output: Array of [
+            Wall, Gate, Wall (decomposed elements)
+        ]
+        """
+        gates_vertices = []
+        openings = ifc_wall.HasOpenings
+        for opening in openings:
+            opening_element = opening.RelatedOpeningElement
+            representations = [
+                x
+                for x in opening_element.Representation.Representations
+                if x.RepresentationIdentifier == "Box"
+            ]
+            box_representation = representations[0]
+            opening_length = box_representation.Items[0].XDim
+
+            opening_location_relative_to_wall = (
+                opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
+            )
+
+            x, y, z = opening_location_relative_to_wall
+
+            # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
+            # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
+            x = x - opening_length / 2
+            if z == 0:
+                gates_vertices.append(
+                    ((x, y), (x + opening_length, y), opening_element.Name)
+                )
+
+        start_vertex, end_vertex = self._get_relative_ifcwall_vertices(ifc_wall)
+        building_elements = [(start_vertex, end_vertex, "Wall", ifc_wall.Name)]
+        out_building_elements = []
+
+        def get_first_contained_gate(p1, p2):
+            p1_x, p1_y = min(p1[0], p2[0]), min(p1[1], p2[1])
+            p2_x, p2_y = max(p1[0], p2[0]), min(p1[1], p2[1])
+            for gate_vertices in gates_vertices:
+                (g1_x, g1_y), (g2_x, g2_y), name = gate_vertices
+
+                # Offset with wall starting vertex
+                g1_x += start_vertex[0]
+                g1_y += start_vertex[1]
+                g2_x += start_vertex[0]
+                g2_y += start_vertex[1]
+
+                if g1_x >= p1_x and g2_x <= p2_x and g1_y >= p1_y and g2_y <= p2_y:
+                    return gate_vertices
+
+        while len(building_elements) > 0:
+            vertex1, vertex2, type, name = building_elements.pop(0)
+            gate_vertices = get_first_contained_gate(vertex1, vertex2)
+            if gate_vertices is None:
+                out_building_elements.append((vertex1, vertex2, type, name))
+            else:
+                gate_vert1, gate_vert2, gate_name = gate_vertices
+                wall1 = (vertex1, gate_vert1, "Wall", ifc_wall.Name)
+                wall2 = (gate_vert2, vertex2, "Wall", ifc_wall.Name)
+                gate = (gate_vert1, gate_vert2, "Gate", gate_name)
+                building_elements += [wall1, gate, wall2]
+                gates_vertices.remove(gate_vertices)
+
+        return out_building_elements
+
+    def _split_intersecting_elements(
+        self, elements: List[BuildingElement]
+    ) -> List[BuildingElement]:
+        """
+        Split intersecting elements to get new vertices.
+        Input: Array of BuildingElement
+        Output: Array of BuildingElement
+        """
+        elements_queue = copy.copy(elements)
+        output_elements = []
+        while len(elements_queue) > 0:
+            element = elements_queue.pop(0)
+            intersection = self._find_first_intersection(element, elements_queue)
+            if intersection is None:
+                output_elements.append(element)
+            else:
+                split_elements = self._split_element_at_point(intersection, element)
+                elements_queue += split_elements
+
+        return output_elements
+
+    def _find_first_intersection(
+        self, target_element: BuildingElement, other_elements: List[BuildingElement]
+    ) -> Tuple[float, float]:
+        for other_element in other_elements:
+            target_line = target_element.start_vertex, target_element.end_vertex
+            other_line = other_element.start_vertex, other_element.end_vertex
+            intersection = find_lines_intersection(target_line, other_line)
+            if intersection is not None:
+                wall_vertices = [
+                    target_line[0],
+                    target_line[1],
+                    other_line[0],
+                    other_line[1],
+                ]
+                # Only add intersections that are T or +
+                if wall_vertices.count(intersection) <= 1:
+                    return intersection
+        return None
+
+    def _split_element_at_point(self, point, element: BuildingElement):
+        """
+        Input:
+            point (x, y)
+            element: BuildingElement
+            (x, y) must fall within the line.
+        """
+        x, y = point
+        (x1, y1), (x2, y2) = element.start_vertex, element.end_vertex
+
+        element1 = BuildingElement(
+            type=element.__type__,
+            name=f"{element.name}-1",
+            start_vertex=(x1, y1),
+            end_vertex=(x, y),
+        )
+
+        element2 = BuildingElement(
+            type=element.__type__,
+            name=f"{element.name}-2",
+            start_vertex=(x, y),
+            end_vertex=(x2, y2),
+        )
+
+        out = []
+        if element1.length > 0:
+            out.append(element1)
+
+        if element2.length > 0:
+            out.append(element2)
+
+        return out
+
+    def _get_relative_ifcwall_vertices(self, ifc_wall):
+        representations = ifc_wall.Representation.Representations
+        axis_representation = [
+            x for x in representations if x.RepresentationType == "Curve2D"
+        ]
+        origin_vertex, dest_vertex = axis_representation[0].Items[0].Points
+        origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
+        dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
+
+        return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
 
     def _get_storey_size(self, elements: List[BuildingElement]):
         x_max = 0
@@ -54,164 +236,19 @@ class IfcToCpmConverter:
 
         return x_max, y_max
 
-    def _split_intersecting_walls(self, walls: List[Wall]) -> List[Wall]:
-        """
-        Split intersecting walls to get new vertex.
-        """
-        walls_queue = copy.copy(walls)
-        output_walls = []
-        while len(walls_queue) > 0:
-            wall = walls_queue.pop(0)
-            intersection = self._find_first_intersection(wall, walls_queue)
-            if intersection is None:
-                output_walls.append(wall)
-            else:
-                split_walls = self._split_line_at_point(intersection, wall)
-                walls_queue += split_walls
-
-        return output_walls
-
-    def _ifc_wall_to_converter_wall(self, ifc_wall):
-        point1, point2 = self._get_wall_vertices(ifc_wall)
-        wall = Wall()
-        wall.name = ifc_wall.Name
-        wall.start_vertex = point1
-        wall.end_vertex = point2
-        return wall
-
-    def _get_wall_vertices(self, ifc_wall):
-        matrix = ifcopenshell.util.placement.get_local_placement(
-            ifc_wall.ObjectPlacement
-        )
+    def _transform_vertex(self, vertex, transformation_matrix):
+        x, y = vertex
 
         # Coordinate of IfcWall origin reference
-        position_matrix = matrix[:, 3][:3].reshape(-1, 1)
+        position_matrix = transformation_matrix[:, 3][:3].reshape(-1, 1)
 
         # Rotation matrices, from the wall origin reference.
-        xyz_rotation_matrix = matrix[:3, :3]
+        xyz_rotation_matrix = transformation_matrix[:3, :3]
 
-        # Find the rotated wall vertices relative to the wall frame of reference
-        representations = ifc_wall.Representation.Representations
-        axis_representation = [
-            x for x in representations if x.RepresentationType == "Curve2D"
-        ]
-        origin_vertex, dest_vertex = axis_representation[0].Items[0].Points
-
-        origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
-        origin_vertex_matrix = np.array([[origin_vertex_x], [origin_vertex_y], [0]])
-
-        dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
-        dest_vertex_matrix = np.array([[dest_vertex_x], [dest_vertex_y], [0]])
-
-        transformed_origin_vertex = np.dot(xyz_rotation_matrix, origin_vertex_matrix)
-        transformed_dest_vertex = np.dot(xyz_rotation_matrix, dest_vertex_matrix)
+        vertex_matrix = np.array([[x], [y], [0]])
+        transformed_vertex = np.dot(xyz_rotation_matrix, vertex_matrix)
 
         # Calculate world coordinate
-        absolute_origin_vertex = position_matrix + transformed_origin_vertex
-        origin_x, origin_y, _ = np.transpose(absolute_origin_vertex)[0]
-        absolute_dest_vertex = position_matrix + transformed_dest_vertex
-        dest_x, dest_y, _ = np.transpose(absolute_dest_vertex)[0]
-
-        # Convert to SI unit
-        origin_x = self.unit_scale * origin_x
-        origin_y = self.unit_scale * origin_y
-        dest_x = self.unit_scale * dest_x
-        dest_y = self.unit_scale * dest_y
-
-        return (origin_x, origin_y), (dest_x, dest_y)
-
-    def _find_first_intersection(
-        self, target_line: BuildingElement, other_lines: List[BuildingElement]
-    ):
-        for other_line in other_lines:
-            intersection = self._find_intersection(target_line, other_line)
-            if intersection is not None:
-                wall_vertices = [
-                    target_line.start_vertex,
-                    target_line.end_vertex,
-                    other_line.start_vertex,
-                    other_line.end_vertex,
-                ]
-                # Only add intersections that are T or +
-                if wall_vertices.count(intersection) <= 1:
-                    return intersection
-
-        return None
-
-    def _find_intersection(self, element1: BuildingElement, element2: BuildingElement):
-        line1_point1, line1_point2 = element1.start_vertex, element1.end_vertex
-        line2_point1, line2_point2 = element2.start_vertex, element2.end_vertex
-
-        x1, y1 = line1_point1
-        x2, y2 = line1_point2
-        x3, y3 = line2_point1
-        x4, y4 = line2_point2
-
-        # Calculate slopes and intercepts of the two lines, if the line is NOT vertical.
-        m1, b1 = None, None
-        if x1 != x2:
-            m1 = (y2 - y1) / (x2 - x1)
-            b1 = y1 - m1 * x1
-
-        m2, b2 = None, None
-        if x3 != x4:
-            m2 = (y4 - y3) / (x4 - x3)
-            b2 = y3 - m2 * x3
-
-        if m1 == m2 and m1 is not None and m2 is not None:
-            return None
-
-        if m1 is None and m2 is None:
-            if x1 == x3:
-                return None  # FIXME TODO handle lines occupying the same space.
-            return None
-
-        if m1 is None:
-            intersection_x = x1
-            intersection_y = m2 * intersection_x + b2
-        elif m2 is None:
-            intersection_x = x3
-            intersection_y = m1 * intersection_x + b1
-        else:
-            intersection_x = (b2 - b1) / (m1 - m2)
-            intersection_y = m1 * intersection_x + b1
-
-        # Check if the intersection point is within the bounds of both line segments
-        if (
-            min(x1, x2) <= intersection_x <= max(x1, x2)
-            and min(y1, y2) <= intersection_y <= max(y1, y2)
-            and min(x3, x4) <= intersection_x <= max(x3, x4)
-            and min(y3, y4) <= intersection_y <= max(y3, y4)
-        ):
-            return intersection_x, intersection_y
-        else:
-            return None  # No intersection within bounds
-
-    def _split_line_at_point(
-        self, point, element: BuildingElement
-    ) -> List[BuildingElement]:
-        """
-        Input:
-            point (x, y)
-            line: (x1, y1), (x2, y2)
-            (x, y) must fall within the line.
-        """
-        x, y = point
-        (x1, y1), (x2, y2) = element.start_vertex, element.end_vertex
-        line1, line2 = ((x1, y1), (x, y)), ((x, y), (x2, y2))
-
-        elements = []
-
-        element_new_1 = copy.copy(element)
-        element_new_1.start_vertex = line1[0]
-        element_new_1.end_vertex = line1[1]
-        if element_new_1.length > 0:
-            elements.append(element_new_1)
-
-        element_new_2 = copy.copy(element)
-        element_new_2.start_vertex = line2[0]
-        element_new_2.end_vertex = line2[1]
-        if element_new_2.length > 0:
-            elements.append(element_new_2)
-
-        return elements
+        absolute_vertex = position_matrix + transformed_vertex
+        transformed_x, transformed_y, _ = np.transpose(absolute_vertex)[0]
+        return (transformed_x, transformed_y)
