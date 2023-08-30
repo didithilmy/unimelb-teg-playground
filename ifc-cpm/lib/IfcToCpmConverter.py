@@ -67,7 +67,7 @@ class IfcToCpmConverter:
 
     def _get_storey_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
-        walls = [x for x in elements if x.is_a("IfcWall")]
+        walls = [x for x in elements if x.is_a("IfcWallStandardCase")]
         building_elements = []
         for wall in walls:
             decomposed = self._decompose_wall_openings(wall)
