@@ -169,8 +169,11 @@ class IfcToCpmConverter:
             # This is just an opening without attached door.
             # Get the width from the shape representations.
             representations = opening_element.Representation.Representations
-            opening_length, _ = XYBoundingBox.infer(representations)
-            return opening_length
+            try:
+                opening_length, _ = XYBoundingBox.infer(representations)
+                return opening_length
+            except:
+                return None
 
         door_filling = None
         for filling in fillings:
