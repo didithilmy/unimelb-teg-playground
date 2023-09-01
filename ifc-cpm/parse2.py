@@ -1,3 +1,4 @@
 from lib.IfcToCpmConverter import IfcToCpmConverter
 
-IfcToCpmConverter("house.ifc", origin=(10, 10)).write("house3.cpm")
+# IfcToCpmConverter("institute.ifc", origin=(10, 10)).write("institute.cpm")
+IfcToCpmConverter("house_b.ifc", origin=(10, 10)).write("house_b.cpm")
