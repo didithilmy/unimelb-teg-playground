@@ -9,6 +9,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
+from .representation_helpers import XYBoundingBox
 
 from .ifctypes import BuildingElement, Wall, Gate, Barricade
 from .utils import find_lines_intersection
@@ -112,13 +113,8 @@ class IfcToCpmConverter:
         openings = ifc_wall.HasOpenings
         for opening in openings:
             opening_element = opening.RelatedOpeningElement
-            representations = [
-                x
-                for x in opening_element.Representation.Representations
-                if x.RepresentationIdentifier == "Box"
-            ]
-            box_representation = representations[0]
-            opening_length = box_representation.Items[0].XDim
+            representations = opening_element.Representation.Representations
+            opening_length, _ = XYBoundingBox.infer(representations)
 
             opening_location_relative_to_wall = (
                 opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
