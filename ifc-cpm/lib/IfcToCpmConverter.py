@@ -41,6 +41,9 @@ class IfcToCpmConverter:
 
             if self.dimension is None:
                 width, height = self._get_storey_size(elements)
+                width, height = self._scale_to_metric((width, height))
+                width = math.ceil(width)
+                height = math.ceil(height)
             else:
                 width, height = self.dimension
 
@@ -52,14 +55,16 @@ class IfcToCpmConverter:
                 x2, y2 = element.end_vertex
                 x2, y2 = x2 + self.x_offset, y2 + self.y_offset
 
+                x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
                 vertices = ((x1, y1), (x2, y2))
+                length = self._scale_to_metric(element.length)
 
                 if element.__type__ == "Wall":
-                    level.add_wall(vertices, element.length)
+                    level.add_wall(vertices, length)
                 elif element.__type__ == "Barricade":
-                    level.add_barricade(vertices, element.length)
+                    level.add_barricade(vertices, length)
                 elif element.__type__ == "Gate":
-                    level.add_gate(vertices, element.length)
+                    level.add_gate(vertices, length)
 
             self.crowd_environment.add_level(level)
 
@@ -324,3 +329,13 @@ class IfcToCpmConverter:
         absolute_vertex = position_matrix + transformed_vertex
         transformed_x, transformed_y, _ = np.transpose(absolute_vertex)[0]
         return (transformed_x, transformed_y)
+
+    def _scale_to_metric(self, length):
+        if isinstance(length, tuple):
+            new_list = [self.unit_scale * x for x in length]
+            return tuple(new_list)
+        elif isinstance(length, list):
+            new_list = [self.unit_scale * x for x in length]
+            return new_list
+
+        return self.unit_scale * length
