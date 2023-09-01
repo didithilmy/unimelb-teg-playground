@@ -113,22 +113,21 @@ class IfcToCpmConverter:
         openings = ifc_wall.HasOpenings
         for opening in openings:
             opening_element = opening.RelatedOpeningElement
-            representations = opening_element.Representation.Representations
-            opening_length, _ = XYBoundingBox.infer(representations)
-
-            opening_location_relative_to_wall = (
-                opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
-            )
-
-            x, y, z = opening_location_relative_to_wall
-
-            # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
-            # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
-            x = x - opening_length / 2
-            if z == 0:
-                gates_vertices.append(
-                    ((x, y), (x + opening_length, y), opening_element.Name)
+            opening_length = self._get_opening_width(opening_element)
+            if opening_length is not None:
+                opening_location_relative_to_wall = (
+                    opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
                 )
+
+                x, y, z = opening_location_relative_to_wall
+
+                # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
+                # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
+                x = x - opening_length / 2
+                if z == 0:
+                    gates_vertices.append(
+                        ((x, y), (x + opening_length, y), opening_element.Name)
+                    )
 
         start_vertex, end_vertex = self._get_relative_ifcwall_vertices(ifc_wall)
         building_elements = [(start_vertex, end_vertex, "Wall", ifc_wall.Name)]
@@ -163,6 +162,24 @@ class IfcToCpmConverter:
                 gates_vertices.remove(gate_vertices)
 
         return out_building_elements
+
+    def _get_opening_width(self, opening_element):
+        fillings = opening_element.HasFillings
+        if len(fillings) == 0:
+            # This is just an opening without attached door.
+            # Get the width from the shape representations.
+            representations = opening_element.Representation.Representations
+            opening_length, _ = XYBoundingBox.infer(representations)
+            return opening_length
+
+        door_filling = None
+        for filling in fillings:
+            if filling.RelatedBuildingElement.is_a("IfcDoor"):
+                door_filling = filling.RelatedBuildingElement
+                break
+
+        if door_filling is not None:
+            return door_filling.OverallWidth
 
     def _split_intersecting_elements(
         self, elements: List[BuildingElement]
