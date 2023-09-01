@@ -9,7 +9,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
-from .representation_helpers import XYBoundingBox
+from .representation_helpers import get_representation, XYBoundingBox
 
 from .ifctypes import BuildingElement, Wall, Gate, Barricade
 from .utils import find_lines_intersection
@@ -101,6 +101,8 @@ class IfcToCpmConverter:
                             end_vertex=v2_transform,
                         )
                     )
+
+        building_elements += self._get_storey_void_barricade_elements(storey)
         building_elements = self._split_intersecting_elements(building_elements)
         building_elements = self._convert_disconnected_walls_into_barricades(
             building_elements
@@ -296,6 +298,63 @@ class IfcToCpmConverter:
         dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
 
         return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
+
+    def _get_storey_void_barricade_elements(self, storey):
+        elements = ifcopenshell.util.element.get_decomposition(storey)
+        slabs = [x for x in elements if x.is_a("IfcSlab")]
+        floor_slabs = [x for x in slabs if x.PredefinedType == "FLOOR"]
+
+        elements = []
+        if len(floor_slabs) > 0:
+            floor_slab = floor_slabs[0]
+            floor_openings = floor_slab.HasOpenings
+            for floor_opening in floor_openings:
+                opening_element = floor_opening.RelatedOpeningElement
+                representations = opening_element.Representation.Representations
+                box_repr = get_representation(representations, "Box")
+                xdim, ydim = box_repr.Items[0].XDim, box_repr.Items[0].YDim
+
+                corner = box_repr.Items[0].Corner
+                corner_x, corner_y, _ = corner.Coordinates
+
+                transformation_matrix = ifcopenshell.util.placement.get_local_placement(
+                    opening_element.ObjectPlacement
+                )
+
+                vertex_1 = (corner_x, corner_y)
+                vertex_2 = (corner_x, corner_y + ydim)
+                vertex_3 = (corner_x + xdim, corner_y + ydim)
+                vertex_4 = (corner_x + xdim, corner_y)
+
+                v1_transform = self._transform_vertex(vertex_1, transformation_matrix)
+                v2_transform = self._transform_vertex(vertex_2, transformation_matrix)
+                v3_transform = self._transform_vertex(vertex_3, transformation_matrix)
+                v4_transform = self._transform_vertex(vertex_4, transformation_matrix)
+
+                elements += [
+                    Barricade(
+                        name=f"{opening_element.Name}-1",
+                        start_vertex=v1_transform,
+                        end_vertex=v2_transform,
+                    ),
+                    Barricade(
+                        name=f"{opening_element.Name}-2",
+                        start_vertex=v2_transform,
+                        end_vertex=v3_transform,
+                    ),
+                    Barricade(
+                        name=f"{opening_element.Name}-3",
+                        start_vertex=v3_transform,
+                        end_vertex=v4_transform,
+                    ),
+                    Barricade(
+                        name=f"{opening_element.Name}-4",
+                        start_vertex=v1_transform,
+                        end_vertex=v4_transform,
+                    ),
+                ]
+
+        return elements
 
     def _get_storey_size(self, elements: List[BuildingElement]):
         x_max = 0

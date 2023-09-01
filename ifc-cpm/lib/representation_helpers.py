@@ -1,3 +1,9 @@
+def get_representation(representations, identifier):
+    for repr in representations:
+        if repr.RepresentationIdentifier == identifier:
+            return repr
+
+
 class XYBoundingBox:
     @staticmethod
     def infer(representations):
