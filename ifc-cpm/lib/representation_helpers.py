@@ -31,6 +31,8 @@ class Extrusion2DVertices:
         for repr in representations:
             if repr.RepresentationIdentifier == "Box":
                 return Extrusion2DVertices.from_bounding_box(repr)
+            elif repr.RepresentationIdentifier == "Body":
+                return Extrusion2DVertices.from_body(repr)
 
         raise Exception("Cannot infer bounding box")
 
@@ -53,4 +55,16 @@ class Extrusion2DVertices:
             (top_left, bottom_left),
         ]
 
+        return vertices
+
+    @staticmethod
+    def from_body(representation):
+        # FIXME only work for IfcCartesianPointList2D outer curve representation
+        points = representation.Items[0].SweptArea.OuterCurve.Points.CoordList
+        vertices = []
+        for i in range(len(points)):
+            v1 = points[i]
+            v2 = points[(i + 1) % len(points)]
+            if v1 != v2:
+                vertices.append((v1, v2))
         return vertices
