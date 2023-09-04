@@ -9,7 +9,10 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
-from .representation_helpers import get_representation, XYBoundingBox
+from .representation_helpers import (
+    XYBoundingBox,
+    Extrusion2DVertices,
+)
 
 from .ifctypes import BuildingElement, Wall, Gate, Barricade
 from .utils import find_lines_intersection
@@ -357,48 +360,24 @@ class IfcToCpmConverter:
             for floor_opening in floor_openings:
                 opening_element = floor_opening.RelatedOpeningElement
                 representations = opening_element.Representation.Representations
-                box_repr = get_representation(representations, "Box")
-                xdim, ydim = box_repr.Items[0].XDim, box_repr.Items[0].YDim
-
-                corner = box_repr.Items[0].Corner
-                corner_x, corner_y, _ = corner.Coordinates
 
                 transformation_matrix = ifcopenshell.util.placement.get_local_placement(
                     opening_element.ObjectPlacement
                 )
 
-                vertex_1 = (corner_x, corner_y)
-                vertex_2 = (corner_x, corner_y + ydim)
-                vertex_3 = (corner_x + xdim, corner_y + ydim)
-                vertex_4 = (corner_x + xdim, corner_y)
+                edges = Extrusion2DVertices.infer(representations)
 
-                v1_transform = self._transform_vertex(vertex_1, transformation_matrix)
-                v2_transform = self._transform_vertex(vertex_2, transformation_matrix)
-                v3_transform = self._transform_vertex(vertex_3, transformation_matrix)
-                v4_transform = self._transform_vertex(vertex_4, transformation_matrix)
-
-                elements += [
-                    Barricade(
-                        name=f"{opening_element.Name}-1",
-                        start_vertex=v1_transform,
-                        end_vertex=v2_transform,
-                    ),
-                    Barricade(
-                        name=f"{opening_element.Name}-2",
-                        start_vertex=v2_transform,
-                        end_vertex=v3_transform,
-                    ),
-                    Barricade(
-                        name=f"{opening_element.Name}-3",
-                        start_vertex=v3_transform,
-                        end_vertex=v4_transform,
-                    ),
-                    Barricade(
-                        name=f"{opening_element.Name}-4",
-                        start_vertex=v1_transform,
-                        end_vertex=v4_transform,
-                    ),
-                ]
+                for i in range(len(edges)):
+                    v1, v2 = edges[i]
+                    v1_transform = self._transform_vertex(v1, transformation_matrix)
+                    v2_transform = self._transform_vertex(v2, transformation_matrix)
+                    elements.append(
+                        Barricade(
+                            name=f"{opening_element.Name}-{i}",
+                            start_vertex=v1_transform,
+                            end_vertex=v2_transform,
+                        )
+                    )
 
         return elements
 
@@ -422,7 +401,7 @@ class IfcToCpmConverter:
         x, y = vertex
 
         vertex_matrix = np.array([[x], [y], [0], [1]])
-        
+
         # Building location correction
         total_transformation_matrix = np.dot(
             self.base_transformation_matrix, transformation_matrix
