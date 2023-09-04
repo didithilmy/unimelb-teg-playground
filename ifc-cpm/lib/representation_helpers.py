@@ -68,3 +68,32 @@ class Extrusion2DVertices:
             if v1 != v2:
                 vertices.append((v1, v2))
         return vertices
+
+
+class WallVertices:
+    @staticmethod
+    def infer(representations):
+        for repr in representations:
+            if repr.RepresentationIdentifier == "Axis":
+                if repr.RepresentationType == "Curve2D":
+                    return WallVertices.from_axis_curve2d(repr)
+                elif repr.RepresentationType == "Curve3D":
+                    return WallVertices.from_axis_curve3d(repr)
+
+        raise Exception("Cannot infer wall vertices")
+
+    @staticmethod
+    def from_axis_curve2d(representation):
+        origin_vertex, dest_vertex = representation.Items[0].Points
+        origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
+        dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
+
+        return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
+
+    @staticmethod
+    def from_axis_curve3d(representation):
+        origin_vertex, dest_vertex = representation.Items[0].Points.CoordList
+        origin_vertex_x, origin_vertex_y, _ = origin_vertex
+        dest_vertex_x, dest_vertex_y, _ = dest_vertex
+
+        return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)

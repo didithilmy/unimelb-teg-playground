@@ -9,10 +9,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
-from .representation_helpers import (
-    XYBoundingBox,
-    Extrusion2DVertices,
-)
+from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 
 from .ifctypes import BuildingElement, Wall, Gate, Barricade
 from .utils import find_lines_intersection
@@ -122,7 +119,7 @@ class IfcToCpmConverter:
 
     def _get_storey_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
-        walls = [x for x in elements if x.is_a("IfcWallStandardCase")]
+        walls = [x for x in elements if x.is_a("IfcWall")]
         building_elements = []
         for wall in walls:
             decomposed = self._decompose_wall_openings(wall)
@@ -339,14 +336,7 @@ class IfcToCpmConverter:
 
     def _get_relative_ifcwall_vertices(self, ifc_wall):
         representations = ifc_wall.Representation.Representations
-        axis_representation = [
-            x for x in representations if x.RepresentationType == "Curve2D"
-        ]
-        origin_vertex, dest_vertex = axis_representation[0].Items[0].Points
-        origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
-        dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
-
-        return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
+        return WallVertices.infer(representations)
 
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
