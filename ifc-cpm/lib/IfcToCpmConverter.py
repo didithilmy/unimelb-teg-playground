@@ -266,7 +266,10 @@ class IfcToCpmConverter:
                 output_elements.append(element)
             else:
                 split_elements = self._split_element_at_point(intersection, element)
-                elements_queue += split_elements
+                if len(split_elements) > 1:
+                    elements_queue += split_elements
+                else:
+                    output_elements.append(split_elements[0])
 
         return output_elements
 
