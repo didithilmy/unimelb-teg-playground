@@ -28,13 +28,20 @@ class XYBoundingBox:
 class Extrusion2DVertices:
     @staticmethod
     def infer(representations):
-        for repr in representations:
-            if repr.RepresentationIdentifier == "Box":
-                return Extrusion2DVertices.from_bounding_box(repr)
-            elif repr.RepresentationIdentifier == "Body":
-                return Extrusion2DVertices.from_body(repr)
+        vertices = None
+        i = 0
+        while vertices is None and i < len(representations):
+            repr = representations[i]
+            i += 1
 
-        raise Exception("Cannot infer bounding box")
+            if repr.RepresentationIdentifier == "Box":
+                vertices = Extrusion2DVertices.from_bounding_box(repr)
+            elif repr.RepresentationIdentifier == "Body":
+                vertices = Extrusion2DVertices.from_body(repr)
+
+        if vertices:
+            return vertices
+        raise Exception("Cannot infer 2D extrusion vertices.")
 
     @staticmethod
     def from_bounding_box(representation):
@@ -59,12 +66,30 @@ class Extrusion2DVertices:
 
     @staticmethod
     def from_body(representation):
-        # FIXME only work for IfcCartesianPointList2D outer curve representation
-        points = representation.Items[0].SweptArea.OuterCurve.Points.CoordList
+        outer_curve = representation.Items[0].SweptArea.OuterCurve
+        if outer_curve.is_a("IfcIndexedPolyCurve"):
+            return Extrusion2DVertices._from_indexed_poly_curve(outer_curve)
+        elif outer_curve.is_a("IfcPolyline"):
+            return Extrusion2DVertices._from_poly_line(outer_curve)
+
+    @staticmethod
+    def _from_indexed_poly_curve(outer_curve):
+        points = outer_curve.Points.CoordList
         vertices = []
         for i in range(len(points)):
             v1 = points[i]
             v2 = points[(i + 1) % len(points)]
+            if v1 != v2:
+                vertices.append((v1, v2))
+        return vertices
+
+    @staticmethod
+    def _from_poly_line(outer_curve):
+        points = outer_curve.Points
+        vertices = []
+        for i in range(len(points)):
+            v1 = points[i].Coordinates
+            v2 = points[(i + 1) % len(points)].Coordinates
             if v1 != v2:
                 vertices.append((v1, v2))
         return vertices
