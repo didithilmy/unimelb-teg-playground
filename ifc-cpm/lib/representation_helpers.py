@@ -66,11 +66,38 @@ class Extrusion2DVertices:
 
     @staticmethod
     def from_body(representation):
-        outer_curve = representation.Items[0].SweptArea.OuterCurve
-        if outer_curve.is_a("IfcIndexedPolyCurve"):
-            return Extrusion2DVertices._from_indexed_poly_curve(outer_curve)
-        elif outer_curve.is_a("IfcPolyline"):
-            return Extrusion2DVertices._from_poly_line(outer_curve)
+        swept_area = representation.Items[0].SweptArea
+        if swept_area.is_a("IfcRectangleProfileDef"):
+            return Extrusion2DVertices._from_body_rectangle_profile(swept_area)
+        elif swept_area.is_a("IfcArbitraryClosedProfileDef"):
+            outer_curve = swept_area.OuterCurve
+            if outer_curve.is_a("IfcIndexedPolyCurve"):
+                return Extrusion2DVertices._from_indexed_poly_curve(outer_curve)
+            elif outer_curve.is_a("IfcPolyline"):
+                return Extrusion2DVertices._from_poly_line(outer_curve)
+
+    @staticmethod
+    def _from_body_rectangle_profile(swept_area):
+        x = swept_area.XDim
+        y = swept_area.YDim
+        corner = swept_area.Position
+        corner_x, corner_y = corner.Location.Coordinates
+        corner_x -= x / 2
+        corner_y -= y / 2
+
+        bottom_left = (corner_x, corner_y)
+        bottom_right = (corner_x + x, corner_y)
+        top_right = (corner_x + x, corner_y + y)
+        top_left = (corner_x, corner_y + y)
+
+        vertices = [
+            (bottom_left, bottom_right),
+            (bottom_right, top_right),
+            (top_right, top_left),
+            (top_left, bottom_left),
+        ]
+
+        return vertices
 
     @staticmethod
     def _from_indexed_poly_curve(outer_curve):
@@ -109,11 +136,18 @@ class WallVertices:
 
     @staticmethod
     def from_axis_curve2d(representation):
-        origin_vertex, dest_vertex = representation.Items[0].Points
-        origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
-        dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
+        curve = representation.Items[0]
 
-        return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
+        if curve.is_a("IfcTrimmedCurve"):
+            print(curve.Trim1, curve.Trim2, curve.BasisCurve, curve.MasterRepresentation)
+            print((curve.BasisCurve.Pnt, curve.BasisCurve.Dir))
+            # TODO handle trimmed curve
+        elif curve.is_a("IfcPolyline"):
+            origin_vertex, dest_vertex = representation.Items[0].Points
+            origin_vertex_x, origin_vertex_y = origin_vertex.Coordinates
+            dest_vertex_x, dest_vertex_y = dest_vertex.Coordinates
+
+            return (origin_vertex_x, origin_vertex_y), (dest_vertex_x, dest_vertex_y)
 
     @staticmethod
     def from_axis_curve3d(representation):

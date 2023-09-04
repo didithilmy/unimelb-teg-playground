@@ -42,6 +42,7 @@ class IfcToCpmConverterBuilder:
         building_name: str = None,
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
+        round_function = None,
     ):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
@@ -49,6 +50,7 @@ class IfcToCpmConverterBuilder:
             unit_scale=self.unit_scale,
             dimension=dimension,
             origin=origin,
+            round_function=round_function,
         )
 
 
@@ -59,6 +61,7 @@ class IfcToCpmConverter:
         unit_scale,
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
+        round_function = None,
     ):
         self.dimension = dimension
         if origin is None:
@@ -77,7 +80,10 @@ class IfcToCpmConverter:
         )
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
 
-        self.round = lambda x: round(x * 2) / 2
+        if round_function is not None:
+            self.round = round_function
+        else:
+            self.round = lambda x: round(x * 2) / 2
 
     def write(self, cpm_out_filepath):
         building_elements = ifcopenshell.util.element.get_decomposition(
@@ -124,31 +130,35 @@ class IfcToCpmConverter:
         walls = [x for x in elements if x.is_a("IfcWall")]
         building_elements = []
         for wall in walls:
-            decomposed = self._decompose_wall_openings(wall)
-            transformation_matrix = ifcopenshell.util.placement.get_local_placement(
-                wall.ObjectPlacement
-            )
-            i = 0
-            for v1, v2, type, name in decomposed:
-                i += 1
-                v1_transform = self._transform_vertex(v1, transformation_matrix)
-                v2_transform = self._transform_vertex(v2, transformation_matrix)
-                if type == "Wall":
-                    building_elements.append(
-                        Wall(
-                            name=f"{wall.Name} - w{i}",
-                            start_vertex=v1_transform,
-                            end_vertex=v2_transform,
+            try:
+                decomposed = self._decompose_wall_openings(wall)
+                transformation_matrix = ifcopenshell.util.placement.get_local_placement(
+                    wall.ObjectPlacement
+                )
+                i = 0
+                for v1, v2, type, name in decomposed:
+                    i += 1
+                    v1_transform = self._transform_vertex(v1, transformation_matrix)
+                    v2_transform = self._transform_vertex(v2, transformation_matrix)
+                    if type == "Wall":
+                        building_elements.append(
+                            Wall(
+                                name=f"{wall.Name} - w{i}",
+                                start_vertex=v1_transform,
+                                end_vertex=v2_transform,
+                            )
                         )
-                    )
-                elif type == "Gate":
-                    building_elements.append(
-                        Gate(
-                            name=f"{wall.Name} - g{i}",
-                            start_vertex=v1_transform,
-                            end_vertex=v2_transform,
+                    elif type == "Gate":
+                        building_elements.append(
+                            Gate(
+                                name=f"{wall.Name} - g{i}",
+                                start_vertex=v1_transform,
+                                end_vertex=v2_transform,
+                            )
                         )
-                    )
+            except Exception as exc:
+                print("Error parsing wall", wall.Name, exc)
+                raise Exception
 
         building_elements += self._get_storey_void_barricade_elements(storey)
         building_elements = self._split_intersecting_elements(building_elements)
