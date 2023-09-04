@@ -18,10 +18,45 @@ settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
 
 
+class IfcToCpmConverterBuilder:
+    def __init__(self, ifc_filepath: str):
+        self.crowd_environment = CrowdSimulationEnvironment()
+        self.model = ifcopenshell.open(ifc_filepath)
+        self.unit_scale = ifcopenshell.util.unit.calculate_unit_scale(self.model)
+
+    def get_buildings(self):
+        buildings = []
+        for ifc_building in self.model.by_type("IfcBuilding"):
+            buildings.append(ifc_building.Name)
+        return buildings
+
+    def get_ifc_building(self, name=None):
+        for ifc_building in self.model.by_type("IfcBuilding"):
+            if name is None:
+                return ifc_building
+            if name == ifc_building.Name:
+                return ifc_building
+
+    def build(
+        self,
+        building_name: str = None,
+        dimension: Tuple[int, int] = None,
+        origin: Tuple[int, int] = None,
+    ):
+        ifc_building = self.get_ifc_building(building_name)
+        return IfcToCpmConverter(
+            ifc_building=ifc_building,
+            unit_scale=self.unit_scale,
+            dimension=dimension,
+            origin=origin,
+        )
+
+
 class IfcToCpmConverter:
     def __init__(
         self,
-        ifc_filepath: str,
+        ifc_building,
+        unit_scale,
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
     ):
@@ -32,11 +67,22 @@ class IfcToCpmConverter:
         self.y_offset = origin[1]
 
         self.crowd_environment = CrowdSimulationEnvironment()
-        self.model = ifcopenshell.open(ifc_filepath)
-        self.unit_scale = ifcopenshell.util.unit.calculate_unit_scale(self.model)
+        self.ifc_building = ifc_building
+        self.unit_scale = unit_scale
+
+        building_transformation_matrix = (
+            ifcopenshell.util.placement.get_local_placement(
+                ifc_building.ObjectPlacement
+            )
+        )
+        self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
 
     def write(self, cpm_out_filepath):
-        for storey in self.model.by_type("IfcBuildingStorey"):
+        building_elements = ifcopenshell.util.element.get_decomposition(
+            self.ifc_building
+        )
+        storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
+        for storey in storeys:
             elements = self._get_storey_elements(storey)
 
             if self.dimension is None:
@@ -375,18 +421,15 @@ class IfcToCpmConverter:
     def _transform_vertex(self, vertex, transformation_matrix):
         x, y = vertex
 
-        # Coordinate of IfcWall origin reference
-        position_matrix = transformation_matrix[:, 3][:3].reshape(-1, 1)
+        vertex_matrix = np.array([[x], [y], [0], [1]])
+        
+        # Building location correction
+        total_transformation_matrix = np.dot(
+            self.base_transformation_matrix, transformation_matrix
+        )
+        transformed_matrix = np.dot(total_transformation_matrix, vertex_matrix)
 
-        # Rotation matrices, from the wall origin reference.
-        xyz_rotation_matrix = transformation_matrix[:3, :3]
-
-        vertex_matrix = np.array([[x], [y], [0]])
-        transformed_vertex = np.dot(xyz_rotation_matrix, vertex_matrix)
-
-        # Calculate world coordinate
-        absolute_vertex = position_matrix + transformed_vertex
-        transformed_x, transformed_y, _ = np.transpose(absolute_vertex)[0]
+        transformed_x, transformed_y, _, _ = np.transpose(transformed_matrix)[0]
         return (transformed_x, transformed_y)
 
     def _scale_to_metric(self, length):
