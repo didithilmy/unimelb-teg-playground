@@ -77,6 +77,8 @@ class IfcToCpmConverter:
         )
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
 
+        self.round = lambda x: round(x * 2) / 2
+
     def write(self, cpm_out_filepath):
         building_elements = ifcopenshell.util.element.get_decomposition(
             self.ifc_building
@@ -399,6 +401,8 @@ class IfcToCpmConverter:
         transformed_matrix = np.dot(total_transformation_matrix, vertex_matrix)
 
         transformed_x, transformed_y, _, _ = np.transpose(transformed_matrix)[0]
+        transformed_x = self.round(transformed_x)
+        transformed_y = self.round(transformed_y)
         return (transformed_x, transformed_y)
 
     def _scale_to_metric(self, length):
