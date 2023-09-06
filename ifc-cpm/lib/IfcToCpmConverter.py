@@ -211,6 +211,7 @@ class IfcToCpmConverter:
                     else:
                         closest_wall.end_vertex = intersection
 
+                    # FIXME this causes problems in house.ifc (the walls are overlapping the gates)
                     # Do not modify the continuing wall vertices in T connections.
                     if connection_type != 'ATPATH':
                         wall_v1_distance = eucledian_distance(
@@ -246,6 +247,7 @@ class IfcToCpmConverter:
                 # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
                 # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
                 x = x - opening_length / 2
+                y = 0 # FIXME investigate other representations where the y is NOT zero.
                 if z == 0:
                     gates_vertices.append(
                         ((x, y), (x + opening_length, y), opening_element.Name)
