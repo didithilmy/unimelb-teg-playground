@@ -4,13 +4,20 @@ import numpy as np
 
 class BuildingElement:
     __type__ = "BuildingElement"
+    object_id: str = None
     name: str = None
     start_vertex: Tuple[float, float] = None
     end_vertex: Tuple[float, float] = None
 
     def __init__(
-        self, name=None, start_vertex=None, end_vertex=None, type="BuildingElement"
+        self,
+        object_id=None,
+        name=None,
+        start_vertex=None,
+        end_vertex=None,
+        type="BuildingElement",
     ):
+        self.object_id = object_id
         self.name = name
         self.start_vertex = start_vertex
         self.end_vertex = end_vertex
@@ -27,9 +34,11 @@ class BuildingElement:
 
 class Wall(BuildingElement):
     __type__ = "Wall"
+    connected_to = []
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, connected_to=[], **kwargs):
         super().__init__(*args, **kwargs, type="Wall")
+        self.connected_to = connected_to
 
 
 class Barricade(BuildingElement):

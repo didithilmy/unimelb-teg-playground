@@ -12,7 +12,13 @@ from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 
 from .ifctypes import BuildingElement, Wall, Gate, Barricade
-from .utils import find_lines_intersection
+from .utils import (
+    find_lines_intersection,
+    find,
+    filter,
+    eucledian_distance,
+    find_unbounded_lines_intersection,
+)
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -42,7 +48,7 @@ class IfcToCpmConverterBuilder:
         building_name: str = None,
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
-        round_function = None,
+        round_function=None,
     ):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
@@ -61,7 +67,7 @@ class IfcToCpmConverter:
         unit_scale,
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
-        round_function = None,
+        round_function=None,
     ):
         self.dimension = dimension
         if origin is None:
@@ -131,6 +137,7 @@ class IfcToCpmConverter:
         building_elements = []
         for wall in walls:
             try:
+                connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in wall.ConnectedTo]
                 decomposed = self._decompose_wall_openings(wall)
                 transformation_matrix = ifcopenshell.util.placement.get_local_placement(
                     wall.ObjectPlacement
@@ -143,14 +150,17 @@ class IfcToCpmConverter:
                     if type == "Wall":
                         building_elements.append(
                             Wall(
+                                object_id=wall.GlobalId,
                                 name=f"{wall.Name} - w{i}",
                                 start_vertex=v1_transform,
                                 end_vertex=v2_transform,
+                                connected_to=connected_to,
                             )
                         )
                     elif type == "Gate":
                         building_elements.append(
                             Gate(
+                                object_id=wall.GlobalId,
                                 name=f"{wall.Name} - g{i}",
                                 start_vertex=v1_transform,
                                 end_vertex=v2_transform,
@@ -160,12 +170,59 @@ class IfcToCpmConverter:
                 print("Error parsing wall", wall.Name, exc)
                 raise Exception
 
+        building_elements = self._join_connected_walls(building_elements)
         building_elements += self._get_storey_void_barricade_elements(storey)
         building_elements = self._split_intersecting_elements(building_elements)
         building_elements = self._convert_disconnected_walls_into_barricades(
             building_elements
         )
         return building_elements
+
+    def _join_connected_walls(self, elements) -> List[BuildingElement]:
+        walls: List[Wall] = [x for x in elements if x.__type__ == "Wall"]
+        for wall in walls:
+            for (connected_wall_id, connection_type) in wall.connected_to:
+                related_walls = filter(
+                    walls, lambda x: x.object_id == connected_wall_id
+                )
+                first_related_wall = related_walls[0]
+                intersection = find_unbounded_lines_intersection(
+                    (wall.start_vertex, wall.end_vertex),
+                    (first_related_wall.start_vertex, first_related_wall.end_vertex),
+                )
+                if intersection:
+                    # Find a wall containing the closest vertex to the intersection
+                    closest_wall = min(
+                        related_walls,
+                        key=lambda w: min(
+                            eucledian_distance(w.start_vertex, intersection),
+                            eucledian_distance(w.end_vertex, intersection),
+                        ),
+                    )
+
+                    v1_distance = eucledian_distance(
+                        closest_wall.start_vertex, intersection
+                    )
+                    v2_distance = eucledian_distance(
+                        closest_wall.end_vertex, intersection
+                    )
+                    if v1_distance < v2_distance:
+                        closest_wall.start_vertex = intersection
+                    else:
+                        closest_wall.end_vertex = intersection
+
+                    # Do not modify the continuing wall vertices in T connections.
+                    if connection_type != 'ATPATH':
+                        wall_v1_distance = eucledian_distance(
+                            wall.start_vertex, intersection
+                        )
+                        wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
+                        if wall_v1_distance < wall_v2_distance:
+                            wall.start_vertex = intersection
+                        else:
+                            wall.end_vertex = intersection
+
+        return elements
 
     def _decompose_wall_openings(self, ifc_wall) -> List[BuildingElement]:
         """
@@ -338,6 +395,7 @@ class IfcToCpmConverter:
                 or vertices_count[wall.end_vertex] < 2
             ):
                 barricade = Barricade(
+                    object_id=wall.object_id,
                     name=wall.name,
                     start_vertex=wall.start_vertex,
                     end_vertex=wall.end_vertex,
