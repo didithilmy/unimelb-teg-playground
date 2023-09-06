@@ -66,22 +66,26 @@ class Extrusion2DVertices:
 
     @staticmethod
     def from_body(representation):
-        swept_area = representation.Items[0].SweptArea
+        body_rep = representation.Items[0]
+        swept_area = body_rep.SweptArea
         if swept_area.is_a("IfcRectangleProfileDef"):
-            return Extrusion2DVertices._from_body_rectangle_profile(swept_area)
+            return Extrusion2DVertices._from_body_rectangle_profile(representation)
         elif swept_area.is_a("IfcArbitraryClosedProfileDef"):
             outer_curve = swept_area.OuterCurve
             if outer_curve.is_a("IfcIndexedPolyCurve"):
-                return Extrusion2DVertices._from_indexed_poly_curve(outer_curve)
+                return Extrusion2DVertices._from_indexed_poly_curve(representation)
             elif outer_curve.is_a("IfcPolyline"):
-                return Extrusion2DVertices._from_poly_line(outer_curve)
+                return Extrusion2DVertices._from_poly_line(representation)
 
     @staticmethod
-    def _from_body_rectangle_profile(swept_area):
+    def _from_body_rectangle_profile(representation):
+        body_rep = representation.Items[0]
+        swept_area = body_rep.SweptArea
         x = swept_area.XDim
         y = swept_area.YDim
-        corner = swept_area.Position
-        corner_x, corner_y = corner.Location.Coordinates
+
+        corner = body_rep.Position
+        corner_x, corner_y, _ = corner.Location.Coordinates
         corner_x -= x / 2
         corner_y -= y / 2
 
@@ -100,7 +104,11 @@ class Extrusion2DVertices:
         return vertices
 
     @staticmethod
-    def _from_indexed_poly_curve(outer_curve):
+    def _from_indexed_poly_curve(representation):
+        body_rep = representation.Items[0]
+        swept_area = body_rep.SweptArea
+        outer_curve = swept_area.OuterCurve
+
         points = outer_curve.Points.CoordList
         vertices = []
         for i in range(len(points)):
@@ -111,7 +119,11 @@ class Extrusion2DVertices:
         return vertices
 
     @staticmethod
-    def _from_poly_line(outer_curve):
+    def _from_poly_line(representation):
+        body_rep = representation.Items[0]
+        swept_area = body_rep.SweptArea
+        outer_curve = swept_area.OuterCurve
+
         points = outer_curve.Points
         vertices = []
         for i in range(len(points)):
@@ -139,7 +151,9 @@ class WallVertices:
         curve = representation.Items[0]
 
         if curve.is_a("IfcTrimmedCurve"):
-            print(curve.Trim1, curve.Trim2, curve.BasisCurve, curve.MasterRepresentation)
+            print(
+                curve.Trim1, curve.Trim2, curve.BasisCurve, curve.MasterRepresentation
+            )
             print((curve.BasisCurve.Pnt, curve.BasisCurve.Dir))
             # TODO handle trimmed curve
         elif curve.is_a("IfcPolyline"):
