@@ -32,6 +32,17 @@ class BuildingElement:
         return f"{self.__type__}({self.name}, {self.start_vertex}, {self.end_vertex})"
 
 
+class WallWithOpening(BuildingElement):
+    __type__ = "WallWithOpening"
+    opening_vertices = []
+    connected_to = []
+
+    def __init__(self, *args, opening_vertices=[], connected_to=[], **kwargs):
+        super().__init__(*args, **kwargs, type="WallWithOpening")
+        self.opening_vertices = opening_vertices
+        self.connected_to = connected_to
+
+
 class Wall(BuildingElement):
     __type__ = "Wall"
     connected_to = []
