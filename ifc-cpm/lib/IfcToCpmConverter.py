@@ -101,7 +101,6 @@ class IfcToCpmConverter:
 
             if self.dimension is None:
                 width, height = self._get_storey_size(elements)
-                width, height = self._scale_to_metric((width, height))
                 width = math.ceil(width)
                 height = math.ceil(height)
             else:
@@ -110,12 +109,11 @@ class IfcToCpmConverter:
             level = Level(width=width, height=height)
             for element in elements:
                 x1, y1 = element.start_vertex
-                x1, y1 = x1 + self.x_offset, y1 + self.y_offset
-
                 x2, y2 = element.end_vertex
+                x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
+                x1, y1 = x1 + self.x_offset, y1 + self.y_offset
                 x2, y2 = x2 + self.x_offset, y2 + self.y_offset
 
-                x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
                 vertices = ((x1, y1), (x2, y2))
                 length = self._scale_to_metric(element.length)
 
@@ -419,6 +417,9 @@ class IfcToCpmConverter:
 
         x_max = math.ceil(x_max)
         y_max = math.ceil(y_max)
+
+        # Scale to metric
+        x_max, y_max = self._scale_to_metric((x_max, y_max))
 
         # Account for x and y offset
         x_max += 2 * self.x_offset
