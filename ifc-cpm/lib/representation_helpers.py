@@ -109,12 +109,17 @@ class Extrusion2DVertices:
         swept_area = body_rep.SweptArea
         outer_curve = swept_area.OuterCurve
 
+        corner = body_rep.Position
+        corner_x, corner_y, _ = corner.Location.Coordinates
+
         points = outer_curve.Points.CoordList
         vertices = []
         for i in range(len(points)):
             v1 = points[i]
             v2 = points[(i + 1) % len(points)]
             if v1 != v2:
+                v1 = (v1[0] + corner_x, v1[1] + corner_y)
+                v2 = (v2[0] + corner_x, v2[1] + corner_y)
                 vertices.append((v1, v2))
         return vertices
 
@@ -124,12 +129,17 @@ class Extrusion2DVertices:
         swept_area = body_rep.SweptArea
         outer_curve = swept_area.OuterCurve
 
+        corner = body_rep.Position
+        corner_x, corner_y, _ = corner.Location.Coordinates
+
         points = outer_curve.Points
         vertices = []
         for i in range(len(points)):
             v1 = points[i].Coordinates
             v2 = points[(i + 1) % len(points)].Coordinates
             if v1 != v2:
+                v1 = (v1[0] + corner_x, v1[1] + corner_y)
+                v2 = (v2[0] + corner_x, v2[1] + corner_y)
                 vertices.append((v1, v2))
         return vertices
 
