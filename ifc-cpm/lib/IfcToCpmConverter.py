@@ -170,7 +170,6 @@ class IfcToCpmConverter:
                         ((x, y), (x + opening_length, y))
                     )
 
-        start_vertex, end_vertex = self._get_relative_ifcwall_vertices(ifc_wall)
         transformation_matrix = ifcopenshell.util.placement.get_local_placement(
             ifc_wall.ObjectPlacement
         )
@@ -181,8 +180,10 @@ class IfcToCpmConverter:
             v2 = self._transform_vertex(v2, transformation_matrix)
             opening_vertices.append((v1, v2))
 
+        start_vertex, end_vertex = self._get_relative_ifcwall_vertices(ifc_wall)
         start_vertex = self._transform_vertex(start_vertex, transformation_matrix)
         end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
+
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
 
@@ -253,7 +254,7 @@ class IfcToCpmConverter:
 
                 def get_first_contained_gate(p1, p2):
                     p1_x, p1_y = min(p1[0], p2[0]), min(p1[1], p2[1])
-                    p2_x, p2_y = max(p1[0], p2[0]), min(p1[1], p2[1])
+                    p2_x, p2_y = max(p1[0], p2[0]), max(p1[1], p2[1])
                     for gate_vertices in gates_vertices:
                         (g1_x, g1_y), (g2_x, g2_y) = gate_vertices
                         if g1_x >= p1_x and g2_x <= p2_x and g1_y >= p1_y and g2_y <= p2_y:
