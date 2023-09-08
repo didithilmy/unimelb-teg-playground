@@ -89,7 +89,7 @@ class IfcToCpmConverter:
         if round_function is not None:
             self.round = round_function
         else:
-            self.round = lambda x: round(x * 2) / 2
+            self.round = lambda x: x
 
     def write(self, cpm_out_filepath):
         building_elements = ifcopenshell.util.element.get_decomposition(
@@ -221,8 +221,8 @@ class IfcToCpmConverter:
                     (related_wall.start_vertex, related_wall.end_vertex),
                 )
 
-                # Update related wall vertices
                 if intersection:
+                    # Update related wall vertices
                     v1_distance = eucledian_distance(
                         related_wall.start_vertex, intersection
                     )
@@ -234,16 +234,16 @@ class IfcToCpmConverter:
                     else:
                         related_wall.end_vertex = intersection
 
-                # Update current wall vertices
-                if connection_type != 'ATPATH':
-                    wall_v1_distance = eucledian_distance(
-                        wall.start_vertex, intersection
-                    )
-                    wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
-                    if wall_v1_distance < wall_v2_distance:
-                        wall.start_vertex = intersection
-                    else:
-                        wall.end_vertex = intersection
+                    # Update current wall vertices
+                    if connection_type != 'ATPATH':
+                        wall_v1_distance = eucledian_distance(
+                            wall.start_vertex, intersection
+                        )
+                        wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
+                        if wall_v1_distance < wall_v2_distance:
+                            wall.start_vertex = intersection
+                        else:
+                            wall.end_vertex = intersection
 
         return building_elements
 
