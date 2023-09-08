@@ -1,5 +1,6 @@
 import copy
 from collections import defaultdict
+from itertools import combinations
 import math
 from typing import Tuple, List
 import numpy as np
@@ -49,6 +50,7 @@ class IfcToCpmConverterBuilder:
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
         round_function=None,
+        close_wall_gap_metre=None
     ):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
@@ -57,6 +59,7 @@ class IfcToCpmConverterBuilder:
             dimension=dimension,
             origin=origin,
             round_function=round_function,
+            close_wall_gap_metre=close_wall_gap_metre
         )
 
 
@@ -68,6 +71,7 @@ class IfcToCpmConverter:
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
         round_function=None,
+        close_wall_gap_metre=None
     ):
         self.dimension = dimension
         if origin is None:
@@ -90,6 +94,8 @@ class IfcToCpmConverter:
             self.round = round_function
         else:
             self.round = lambda x: x
+
+        self.close_wall_gap_metre = close_wall_gap_metre
 
     def write(self, cpm_out_filepath):
         building_elements = ifcopenshell.util.element.get_decomposition(
@@ -141,6 +147,8 @@ class IfcToCpmConverter:
                 print("Error parsing wall", wall.Name, exc)
                 raise Exception
 
+        if self.close_wall_gap_metre is not None:
+            building_elements = self._infer_wall_connections(building_elements)
         building_elements = self._join_connected_walls(building_elements)
         building_elements = self._decompose_wall_with_openings(building_elements)
         building_elements = self._split_intersecting_elements(building_elements)
@@ -207,6 +215,31 @@ class IfcToCpmConverter:
 
         if door_filling is not None:
             return door_filling.OverallWidth
+
+    def _infer_wall_connections(self, building_elements: List[BuildingElement]) -> List[BuildingElement]:
+        # TODO evaluate if this method is reliable
+        tolerance = self.close_wall_gap_metre / self.unit_scale
+        walls = [x for x in building_elements if x.__type__ in ('Wall', 'WallWithOpening')]
+        for wall1, wall2 in combinations(walls, 2):
+            wall1_vertices = (wall1.start_vertex, wall1.end_vertex)
+            wall2_vertices = (wall2.start_vertex, wall2.end_vertex)
+            intersection = find_unbounded_lines_intersection(wall1_vertices, wall2_vertices)
+            if intersection is not None:
+                # Wall has intersection
+                w1_v1_distance_to_intersection = eucledian_distance(wall1.start_vertex, intersection)
+                w1_v2_distance_to_intersection = eucledian_distance(wall1.end_vertex, intersection)
+                w2_v1_distance_to_intersection = eucledian_distance(wall2.start_vertex, intersection)
+                w2_v2_distance_to_intersection = eucledian_distance(wall2.end_vertex, intersection)
+
+                wall1_near_intersection = w1_v1_distance_to_intersection <= tolerance or w1_v2_distance_to_intersection <= tolerance
+                wall2_near_intersection = w2_v1_distance_to_intersection <= tolerance or w2_v2_distance_to_intersection <= tolerance
+                if wall1_near_intersection or wall2_near_intersection:
+                    # Wall 1 and 2 has connections
+                    if wall2.object_id not in wall1.connected_to:
+                        connection_type = "ATSTART" if wall1_near_intersection and wall1_near_intersection else "ATPATH"
+                        wall1.connected_to.append((wall2.object_id, connection_type))
+
+        return building_elements
 
     def _join_connected_walls(self, building_elements: List[BuildingElement]) -> List[BuildingElement]:
         walls = [x for x in building_elements if x.__type__ == 'WallWithOpening']
@@ -347,7 +380,7 @@ class IfcToCpmConverter:
             out.append(element2)
 
         return out
-    
+
     def _convert_disconnected_walls_into_barricades(self, elements: List[BuildingElement]):
         vertices_count = defaultdict(lambda: 0)
         for el in elements:
@@ -370,7 +403,7 @@ class IfcToCpmConverter:
                 output_elements.remove(wall)
                 output_elements.append(barricade)
         return output_elements
-    
+
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
         slabs = [x for x in elements if x.is_a("IfcSlab")]
@@ -403,7 +436,6 @@ class IfcToCpmConverter:
                     )
 
         return elements
-
 
     def _get_relative_ifcwall_vertices(self, ifc_wall):
         representations = ifc_wall.Representation.Representations
