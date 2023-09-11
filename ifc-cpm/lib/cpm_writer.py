@@ -1,23 +1,25 @@
 from typing import List
 import xmltodict
+from .ifctypes import BuildingElement, Wall, Gate, Barricade
+from .utils import filter
 
 
 class Level:
-    def __init__(self, width=100, height=100):
-        self.walls = []
-        self.gates = []
-        self.doors = []
-        self.barricades = []
+    def __init__(self, elements: List[BuildingElement], width=100, height=100):
         self.dimension = (width, height)
+        self.elements = elements
 
-    def add_wall(self, vertices, length):
-        self.walls.append((length, vertices))
+    @property
+    def walls(self) -> List[Wall]:
+        return filter(self.elements, lambda x: x.__type__ == 'Wall')
 
-    def add_barricade(self, vertices, length):
-        self.barricades.append((length, vertices))
+    @property
+    def barricades(self) -> List[Barricade]:
+        return filter(self.elements, lambda x: x.__type__ == 'Barricade')
 
-    def add_gate(self, vertices, length):
-        self.gates.append((length, vertices))
+    @property
+    def gates(self) -> List[Gate]:
+        return filter(self.elements, lambda x: x.__type__ == 'Gate')
 
 
 class CrowdSimulationEnvironment:
@@ -51,14 +53,14 @@ class CrowdSimulationEnvironment:
         level_id = self._get_id()
 
         walls = []
-        for length, vertices in level.walls:
+        for wall in level.walls:
             wall_id = self._get_id()
-            (x1, y1), (x2, y2) = vertices
+            (x1, y1), (x2, y2) = wall.start_vertex, wall.end_vertex
 
             walls.append(
                 {
                     "id": wall_id,
-                    "length": length,
+                    "length": wall.length,
                     "isLow": False,
                     "isTransparent": False,
                     "isWlWG": False,
@@ -72,13 +74,13 @@ class CrowdSimulationEnvironment:
             )
 
         gates = []
-        for length, vertices in level.gates:
+        for gate in level.gates:
             gate_id = self._get_id()
-            (x1, y1), (x2, y2) = vertices
+            (x1, y1), (x2, y2) = gate.start_vertex, gate.end_vertex
             gates.append(
                 {
                     "id": gate_id,
-                    "length": length,
+                    "length": gate.length,
                     "angle": 0,  # TODO?
                     "destination": False,
                     "counter": False,
@@ -94,14 +96,14 @@ class CrowdSimulationEnvironment:
             )
 
         barricades = []
-        for length, vertices in level.barricades:
+        for barricade in level.barricades:
             barricade_id = self._get_id()
-            (x1, y1), (x2, y2) = vertices
+            (x1, y1), (x2, y2) = barricade.start_vertex, barricade.end_vertex
 
             barricades.append(
                 {
                     "id": barricade_id,
-                    "length": length,
+                    "length": barricade.length,
                     "isLow": False,
                     "isTransparent": False,
                     "isWlWG": False,

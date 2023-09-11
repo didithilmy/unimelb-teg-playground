@@ -13,7 +13,7 @@
 				<walls>
 					<Wall>
 						<id>2</id>
-						<length>3.385000000000003</length>
+						<length>3.3850000000000016</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -51,7 +51,7 @@
 					</Wall>
 					<Wall>
 						<id>8</id>
-						<length>6.000000000000003</length>
+						<length>6.0000000000000036</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -108,7 +108,7 @@
 					</Wall>
 					<Wall>
 						<id>16</id>
-						<length>3.4</length>
+						<length>3.3999999999999986</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -127,7 +127,7 @@
 					</Wall>
 					<Wall>
 						<id>18</id>
-						<length>2.9</length>
+						<length>2.9000000000000004</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -146,7 +146,7 @@
 					</Wall>
 					<Wall>
 						<id>21</id>
-						<length>0.7575000000000001</length>
+						<length>0.7575000000000003</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -165,7 +165,7 @@
 					</Wall>
 					<Wall>
 						<id>23</id>
-						<length>1.1275</length>
+						<length>1.1274999999999995</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -184,7 +184,7 @@
 					</Wall>
 					<Wall>
 						<id>26</id>
-						<length>2.8000000000000003</length>
+						<length>2.8000000000000007</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -203,7 +203,7 @@
 					</Wall>
 					<Wall>
 						<id>28</id>
-						<length>0.8999999999999972</length>
+						<length>0.8999999999999968</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -241,7 +241,7 @@
 					</Wall>
 					<Wall>
 						<id>31</id>
-						<length>2.1849999999999974</length>
+						<length>2.184999999999997</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -260,7 +260,7 @@
 					</Wall>
 					<Wall>
 						<id>33</id>
-						<length>2.9</length>
+						<length>2.9000000000000004</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -279,7 +279,7 @@
 					</Wall>
 					<Wall>
 						<id>34</id>
-						<length>3.9</length>
+						<length>3.9000000000000004</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -298,7 +298,7 @@
 					</Wall>
 					<Wall>
 						<id>36</id>
-						<length>3.1</length>
+						<length>3.0999999999999996</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -321,7 +321,7 @@
 				<barricade_walls>
 					<Wall>
 						<id>42</id>
-						<length>3.4</length>
+						<length>3.3999999999999986</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -344,7 +344,7 @@
 				<gates>
 					<Gate>
 						<id>37</id>
-						<length>0.915</length>
+						<length>0.9149999999999991</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -386,7 +386,7 @@
 					</Gate>
 					<Gate>
 						<id>39</id>
-						<length>0.915</length>
+						<length>0.9150000000000009</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -407,7 +407,7 @@
 					</Gate>
 					<Gate>
 						<id>40</id>
-						<length>0.9000000000000028</length>
+						<length>0.9000000000000039</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -428,7 +428,7 @@
 					</Gate>
 					<Gate>
 						<id>41</id>
-						<length>0.014999999999997272</length>
+						<length>0.014999999999997016</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -477,7 +477,7 @@
 					</Wall>
 					<Wall>
 						<id>46</id>
-						<length>0.7575000000000001</length>
+						<length>0.7574999999999994</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -496,7 +496,7 @@
 					</Wall>
 					<Wall>
 						<id>49</id>
-						<length>0.4275</length>
+						<length>0.4275000000000002</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -515,7 +515,7 @@
 					</Wall>
 					<Wall>
 						<id>52</id>
-						<length>0.8575</length>
+						<length>0.8575000000000017</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -534,7 +534,7 @@
 					</Wall>
 					<Wall>
 						<id>55</id>
-						<length>1.9275</length>
+						<length>1.9275000000000002</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -572,7 +572,7 @@
 					</Wall>
 					<Wall>
 						<id>59</id>
-						<length>3.1</length>
+						<length>3.0999999999999996</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -629,7 +629,7 @@
 					</Wall>
 					<Wall>
 						<id>62</id>
-						<length>2.1</length>
+						<length>2.0999999999999996</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -648,7 +648,7 @@
 					</Wall>
 					<Wall>
 						<id>64</id>
-						<length>2.9</length>
+						<length>2.9000000000000004</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -667,7 +667,7 @@
 					</Wall>
 					<Wall>
 						<id>65</id>
-						<length>2.1</length>
+						<length>2.0999999999999996</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -686,7 +686,7 @@
 					</Wall>
 					<Wall>
 						<id>66</id>
-						<length>2.9</length>
+						<length>2.9000000000000004</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -705,7 +705,7 @@
 					</Wall>
 					<Wall>
 						<id>68</id>
-						<length>3.7</length>
+						<length>3.700000000000001</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -724,7 +724,7 @@
 					</Wall>
 					<Wall>
 						<id>69</id>
-						<length>2.2</length>
+						<length>2.1999999999999993</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -747,7 +747,7 @@
 				<barricade_walls>
 					<Wall>
 						<id>72</id>
-						<length>3.4</length>
+						<length>3.3999999999999986</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -766,7 +766,7 @@
 					</Wall>
 					<Wall>
 						<id>73</id>
-						<length>3.3000000000000362</length>
+						<length>3.300000000000038</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -785,7 +785,7 @@
 					</Wall>
 					<Wall>
 						<id>76</id>
-						<length>2.8999999999999937</length>
+						<length>2.8999999999999932</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -804,7 +804,7 @@
 					</Wall>
 					<Wall>
 						<id>78</id>
-						<length>3.3000000000000362</length>
+						<length>3.300000000000038</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -823,7 +823,7 @@
 					</Wall>
 					<Wall>
 						<id>80</id>
-						<length>2.8999999999999937</length>
+						<length>2.8999999999999932</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<isWlWG>false</isWlWG>
@@ -867,7 +867,7 @@
 					</Gate>
 					<Gate>
 						<id>71</id>
-						<length>0.915</length>
+						<length>0.9149999999999991</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>

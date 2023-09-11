@@ -108,24 +108,8 @@ class IfcToCpmConverter:
             else:
                 width, height = self.dimension
 
-            level = Level(width=width, height=height)
-            for element in elements:
-                x1, y1 = element.start_vertex
-                x2, y2 = element.end_vertex
-                x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
-                x1, y1 = x1 + self.x_offset, y1 + self.y_offset
-                x2, y2 = x2 + self.x_offset, y2 + self.y_offset
-
-                vertices = ((x1, y1), (x2, y2))
-                length = self._scale_to_metric(element.length)
-
-                if element.__type__ == "Wall":
-                    level.add_wall(vertices, length)
-                elif element.__type__ == "Barricade":
-                    level.add_barricade(vertices, length)
-                elif element.__type__ == "Gate":
-                    level.add_gate(vertices, length)
-
+            normalized_elements = self._normalize_vertices(elements)
+            level = Level(elements=normalized_elements, width=width, height=height)
             self.crowd_environment.add_level(level)
 
         with open(cpm_out_filepath, "w") as f:
@@ -275,6 +259,20 @@ class IfcToCpmConverter:
         y_max += 2 * self.y_offset
 
         return x_max, y_max
+
+    def _normalize_vertices(self, elements: List[BuildingElement]) -> List[BuildingElement]:
+        out_elements = copy.deepcopy(elements)
+        for element in out_elements:
+            x1, y1 = element.start_vertex
+            x2, y2 = element.end_vertex
+            x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
+            x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+            x2, y2 = x2 + self.x_offset, y2 + self.y_offset
+
+            element.start_vertex = (x1, y1)
+            element.end_vertex = (x2, y2)
+
+        return out_elements
 
     def _transform_vertex(self, vertex, transformation_matrix):
         # Building location correction
