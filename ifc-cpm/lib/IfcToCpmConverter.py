@@ -109,7 +109,7 @@ class IfcToCpmConverter:
                 width, height = self.dimension
 
             normalized_elements = self._normalize_vertices(elements)
-            level = Level(elements=normalized_elements, width=width, height=height)
+            level = Level(index=storey_id, elements=normalized_elements, width=width, height=height)
             self.crowd_environment.add_level(level)
 
         with open(cpm_out_filepath, "w") as f:

@@ -5,7 +5,8 @@ from .utils import filter
 
 
 class Level:
-    def __init__(self, elements: List[BuildingElement], width=100, height=100):
+    def __init__(self, index, elements: List[BuildingElement], width=100, height=100):
+        self.index = index
         self.dimension = (width, height)
         self.elements = elements
 
@@ -21,22 +22,23 @@ class Level:
     def gates(self) -> List[Gate]:
         return filter(self.elements, lambda x: x.__type__ == 'Gate')
 
-    @property
-    def stairs(self) -> List[Stair]:
-        return filter(self.elements, lambda x: x.__type__ == 'Stair')
-
 
 class CrowdSimulationEnvironment:
     def __init__(self):
         self.highest_id = 0
         self.levels: List[Level] = []
+        self.stairs: List[Stair] = []
         self.vertices = {}
 
     def add_level(self, level):
         self.levels.append(level)
 
+    def add_stair(self, stair: Stair):
+        self.stairs.append(stair)
+
     def write(self):
         levels = [self._get_level(x) for x in self.levels]
+        stairs = [self._create_stair_json(s) for s in self.stairs]
         data = {
             "Model": {
                 "@xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
@@ -46,6 +48,7 @@ class CrowdSimulationEnvironment:
                 "validatedSuccessfully": False,
                 "levelHeight": 2.5,
                 "levels": {"Level": levels},
+                "stairs": {"Stair": stairs},
                 "cameraPos": {"x": 0, "y": 12.325, "z": 0},
                 "cameraRot": {"x": 18.306, "y": 45, "z": 0},
             }
@@ -123,6 +126,112 @@ class CrowdSimulationEnvironment:
                 ]
             },
         }
+
+    def _create_stair_json(self, stair: Stair):
+        stair_id = self._get_id()
+
+        return {
+            "id": stair_id,
+            "X": stair.lower_gate_edge[0][0],  # X coordinate of first lower vertex
+            "Y": stair.lower_gate_edge[0][1],  # Y coordinate of first lower vertex
+            "speed": -1,  # TODO figure out what
+            "spanFloors": stair.end_level_index - stair.start_level_index,
+            "length": stair.staircase_length,  # Run length
+            "width": stair.staircase_width,  # Staircase width
+            "stands": 5,  # TODO figure out where to get
+            "rotation": 0,  # Can be inferred from rotation matrix or axis. 0 means facing north
+            "type": 1,  # Read from enum
+            "direction": 0,
+            "upper": {
+                "level": stair.end_level_index,
+                "gate": {
+                        "id": self._get_id(),
+                        "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
+                        "angle": 90,  # TODO find out what
+                        "destination": False,  # let the software figure out I suppose
+                        "counter": False,  # TODO find out what
+                        "transparent": False,
+                        "designatedOnly": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(stair.upper_gate_edge[0]),
+                                self._get_vertex(stair.upper_gate_edge[1]),
+                            ]
+                        }
+                }
+            },
+            "lower": {
+                "level": stair.start_level_index,
+                "gate": {
+                    "id": self._get_id(),
+                    "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
+                    "angle": 90,  # TODO find out what
+                    "destination": False,  # let the software figure out I suppose
+                    "counter": False,  # TODO find out what
+                    "transparent": False,
+                    "designatedOnly": False,
+                    "vertices": {
+                        "Vertex": [
+                            self._get_vertex(stair.lower_gate_edge[0]),
+                            self._get_vertex(stair.lower_gate_edge[1]),
+                        ]
+                    }
+                }
+            },
+            "walls": {
+                "Wall": [
+                    # Left wall
+                    {
+                        "id": self._get_id(),
+                        "length": stair.staircase_length,
+                        "angle": 0,
+                        "isLow": False,
+                        "isTransparent": False,
+                        "isWlWG": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(stair.first_wall_edge[0]),
+                                self._get_vertex(stair.first_wall_edge[1]),
+                            ]
+                        }
+                    },
+                    # Right wall
+                    {
+                        "id": self._get_id(),
+                        "length": stair.staircase_length,
+                        "angle": 180,
+                        "isLow": False,
+                        "isTransparent": False,
+                        "isWlWG": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(stair.second_wall_edge[0]),
+                                self._get_vertex(stair.second_wall_edge[1]),
+                            ]
+                        }
+                    },
+                    # Back wall = upper gate
+                    {
+                        "id": self._get_id(),
+                        "length": stair.staircase_width,
+                        "angle": 270,
+                        "isLow": False,
+                        "isTransparent": False,
+                        "isWlWG": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(stair.upper_gate_edge[0]),
+                                self._get_vertex(stair.upper_gate_edge[1]),
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+
+    def _get_vertex(self, vertex):
+        x, y = vertex
+        return {"X": x, "Y": y, "id": self._get_vertex_id(vertex)}
 
     def _get_vertex_id(self, vertex):
         if vertex not in self.vertices:
