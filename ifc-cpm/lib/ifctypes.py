@@ -69,17 +69,10 @@ class Gate(BuildingElement):
 
 class Stair(BuildingElement):
     __type__ = "Stair"
-    start_level = None
-    end_level = None
-    lower_gate_edge = None
-    upper_gate_edge = None
-    first_wall_edge = None
-    second_wall_edge = None
 
-    def __init__(self, *args, start_level=None, end_level=None, lower_gate_edge=None, upper_gate_edge=None, first_wall_edge=None, second_wall_edge=None, **kwargs):
+    def __init__(self, *args, floor_span=1, lower_gate_edge=None, upper_gate_edge=None, first_wall_edge=None, second_wall_edge=None, **kwargs):
         super().__init__(*args, **kwargs, type="Stair")
-        self.start_level = start_level
-        self.end_level = end_level
+        self.floor_span = floor_span
         self.lower_gate_edge = lower_gate_edge
         self.upper_gate_edge = upper_gate_edge
         self.first_wall_edge = first_wall_edge

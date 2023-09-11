@@ -1,6 +1,6 @@
 from typing import List
 import xmltodict
-from .ifctypes import BuildingElement, Wall, Gate, Barricade
+from .ifctypes import BuildingElement, Wall, Gate, Barricade, Stair
 from .utils import filter
 
 
@@ -20,6 +20,10 @@ class Level:
     @property
     def gates(self) -> List[Gate]:
         return filter(self.elements, lambda x: x.__type__ == 'Gate')
+
+    @property
+    def stairs(self) -> List[Stair]:
+        return filter(self.elements, lambda x: x.__type__ == 'Stair')
 
 
 class CrowdSimulationEnvironment:
@@ -52,69 +56,9 @@ class CrowdSimulationEnvironment:
     def _get_level(self, level: Level):
         level_id = self._get_id()
 
-        walls = []
-        for wall in level.walls:
-            wall_id = self._get_id()
-            (x1, y1), (x2, y2) = wall.start_vertex, wall.end_vertex
-
-            walls.append(
-                {
-                    "id": wall_id,
-                    "length": wall.length,
-                    "isLow": False,
-                    "isTransparent": False,
-                    "isWlWG": False,
-                    "vertices": {
-                        "Vertex": [
-                            {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                            {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
-                        ]
-                    },
-                }
-            )
-
-        gates = []
-        for gate in level.gates:
-            gate_id = self._get_id()
-            (x1, y1), (x2, y2) = gate.start_vertex, gate.end_vertex
-            gates.append(
-                {
-                    "id": gate_id,
-                    "length": gate.length,
-                    "angle": 0,  # TODO?
-                    "destination": False,
-                    "counter": False,
-                    "transparent": False,
-                    "designatedOnly": False,
-                    "vertices": {
-                        "Vertex": [
-                            {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                            {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
-                        ]
-                    },
-                }
-            )
-
-        barricades = []
-        for barricade in level.barricades:
-            barricade_id = self._get_id()
-            (x1, y1), (x2, y2) = barricade.start_vertex, barricade.end_vertex
-
-            barricades.append(
-                {
-                    "id": barricade_id,
-                    "length": barricade.length,
-                    "isLow": False,
-                    "isTransparent": False,
-                    "isWlWG": False,
-                    "vertices": {
-                        "Vertex": [
-                            {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                            {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
-                        ]
-                    },
-                }
-            )
+        walls = [self._create_wall_json(x) for x in level.walls]
+        gates = [self._create_gate_json(x) for x in level.gates]
+        barricades = [self._create_barricade_json(x) for x in level.barricades]
 
         return {
             "id": level_id,
@@ -123,6 +67,61 @@ class CrowdSimulationEnvironment:
             "wall_pkg": {"walls": {"Wall": walls}},
             "barricade_pkg": {"barricade_walls": {"Wall": barricades}},
             "gate_pkg": {"gates": {"Gate": gates}},
+        }
+
+    def _create_wall_json(self, wall: Wall):
+        wall_id = self._get_id()
+        (x1, y1), (x2, y2) = wall.start_vertex, wall.end_vertex
+
+        return {
+            "id": wall_id,
+            "length": wall.length,
+            "isLow": False,
+            "isTransparent": False,
+            "isWlWG": False,
+            "vertices": {
+                "Vertex": [
+                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
+                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                ]
+            },
+        }
+
+    def _create_gate_json(self, gate: Gate):
+        gate_id = self._get_id()
+        (x1, y1), (x2, y2) = gate.start_vertex, gate.end_vertex
+        return {
+            "id": gate_id,
+            "length": gate.length,
+            "angle": 0,  # TODO?
+            "destination": False,
+            "counter": False,
+            "transparent": False,
+            "designatedOnly": False,
+            "vertices": {
+                "Vertex": [
+                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
+                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                ]
+            },
+        }
+
+    def _create_barricade_json(self, barricade: Barricade):
+        barricade_id = self._get_id()
+        (x1, y1), (x2, y2) = barricade.start_vertex, barricade.end_vertex
+
+        return {
+            "id": barricade_id,
+            "length": barricade.length,
+            "isLow": False,
+            "isTransparent": False,
+            "isWlWG": False,
+            "vertices": {
+                "Vertex": [
+                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
+                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                ]
+            },
         }
 
     def _get_vertex_id(self, vertex):
