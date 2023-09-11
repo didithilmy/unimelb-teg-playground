@@ -127,3 +127,21 @@ def find_index(list, matcher):
 
 def filter(list, matcher):
     return [x for x in list if matcher(x)]
+
+
+def calculate_line_angle_relative_to_north(vertex1, vertex2):
+    # Extract the coordinates
+    x1, y1 = vertex1
+    x2, y2 = vertex2
+
+    # Calculate the angle using arctangent (atan2) function
+    angle_rad = math.atan2(x2 - x1, y2 - y1)
+
+    # Convert radians to degrees
+    angle_deg = math.degrees(angle_rad)
+
+    # Ensure the angle is between 0 and 360 degrees
+    if angle_deg < 0:
+        angle_deg += 360
+
+    return angle_deg

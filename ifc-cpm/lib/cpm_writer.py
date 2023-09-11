@@ -81,7 +81,7 @@ class CrowdSimulationEnvironment:
             "length": wall.length,
             "isLow": False,
             "isTransparent": False,
-            "isWlWG": False,
+            "iWlWG": False,
             "vertices": {
                 "Vertex": [
                         {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
@@ -118,7 +118,7 @@ class CrowdSimulationEnvironment:
             "length": barricade.length,
             "isLow": False,
             "isTransparent": False,
-            "isWlWG": False,
+            "iWlWG": False,
             "vertices": {
                 "Vertex": [
                         {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
@@ -132,14 +132,15 @@ class CrowdSimulationEnvironment:
 
         return {
             "id": stair_id,
-            "X": stair.lower_gate_edge[0][0],  # X coordinate of first lower vertex
-            "Y": stair.lower_gate_edge[0][1],  # Y coordinate of first lower vertex
+            "x": stair.lower_gate_edge[0][0],  # X coordinate of first lower vertex
+            "y": stair.lower_gate_edge[0][1],  # Y coordinate of first lower vertex
             "speed": -1,  # TODO figure out what
             "spanFloors": stair.end_level_index - stair.start_level_index,
             "length": stair.staircase_length,  # Run length
             "width": stair.staircase_width,  # Staircase width
+            "widthLanding": stair.staircase_width,
             "stands": 5,  # TODO figure out where to get
-            "rotation": 0,  # Can be inferred from rotation matrix or axis. 0 means facing north
+            "rotation": stair.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
             "type": 1,  # Read from enum
             "direction": 0,
             "upper": {
@@ -187,7 +188,7 @@ class CrowdSimulationEnvironment:
                         "angle": 0,
                         "isLow": False,
                         "isTransparent": False,
-                        "isWlWG": False,
+                        "iWlWG": False,
                         "vertices": {
                             "Vertex": [
                                 self._get_vertex(stair.first_wall_edge[0]),
@@ -202,7 +203,7 @@ class CrowdSimulationEnvironment:
                         "angle": 180,
                         "isLow": False,
                         "isTransparent": False,
-                        "isWlWG": False,
+                        "iWlWG": False,
                         "vertices": {
                             "Vertex": [
                                 self._get_vertex(stair.second_wall_edge[0]),
@@ -217,7 +218,7 @@ class CrowdSimulationEnvironment:
                         "angle": 270,
                         "isLow": False,
                         "isTransparent": False,
-                        "isWlWG": False,
+                        "iWlWG": False,
                         "vertices": {
                             "Vertex": [
                                 self._get_vertex(stair.upper_gate_edge[0]),

@@ -70,8 +70,9 @@ class Gate(BuildingElement):
 class Stair(BuildingElement):
     __type__ = "Stair"
 
-    def __init__(self, *args, start_level_index, end_level_index, lower_gate_edge=None, upper_gate_edge=None, first_wall_edge=None, second_wall_edge=None, **kwargs):
+    def __init__(self, *args, rotation, start_level_index, end_level_index, lower_gate_edge=None, upper_gate_edge=None, first_wall_edge=None, second_wall_edge=None, **kwargs):
         super().__init__(*args, **kwargs, type="Stair")
+        self.rotation = rotation
         self.start_level_index = start_level_index
         self.end_level_index = end_level_index
         self.lower_gate_edge = lower_gate_edge

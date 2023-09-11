@@ -1,6 +1,4 @@
 import copy
-from collections import defaultdict
-from itertools import combinations
 import math
 from typing import Tuple, List
 import numpy as np
@@ -13,14 +11,9 @@ from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
 
-from .ifctypes import BuildingElement, Wall, Gate, Barricade, WallWithOpening, Stair
-from .utils import (
-    find_lines_intersection,
-    find,
-    transform_vertex,
-    eucledian_distance,
-    find_unbounded_lines_intersection,
-)
+from .ifctypes import BuildingElement, Barricade, WallWithOpening, Stair
+from .stairs import StairBuilder
+from .utils import transform_vertex
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -99,6 +92,13 @@ class IfcToCpmConverter:
 
     def write(self, cpm_out_filepath):
         for storey_id, storey in enumerate(self.storeys):
+            building_elements = ifcopenshell.util.element.get_decomposition(storey)
+            stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
+            for stair_in_storey in stairs_in_storey:
+                stair = StairBuilder(storey_id, stair_in_storey, vertex_normalizer=self._normalize_vertex).build()
+                self.crowd_environment.add_stair(stair)
+
+        for storey_id, storey in enumerate(self.storeys):
             elements = self._get_storey_elements(storey_id, storey)
 
             if self.dimension is None:
@@ -127,10 +127,6 @@ class IfcToCpmConverter:
                 print("Error parsing wall", wall.Name, exc)
                 raise Exception
 
-        stairs = [x for x in elements if x.is_a("IfcStair")]
-        for ifc_stair in stairs:
-            self._get_stair(ifc_stair)
-
         if self.close_wall_gap_metre is not None:
             tolerance = self.close_wall_gap_metre / self.unit_scale
             building_elements = infer_wall_connections(tolerance, building_elements)
@@ -139,7 +135,7 @@ class IfcToCpmConverter:
         building_elements = decompose_wall_with_openings(building_elements)
         building_elements = split_intersecting_elements(building_elements)
         building_elements = convert_disconnected_walls_into_barricades(building_elements)
-        building_elements += self._get_storey_void_barricade_elements(storey)
+        # building_elements += self._get_storey_void_barricade_elements(storey)
         return building_elements
 
     def _get_wall_with_opening(self, ifc_wall) -> WallWithOpening:
@@ -235,12 +231,6 @@ class IfcToCpmConverter:
 
         return elements
 
-    def _get_stair(self, ifc_stair) -> Stair:
-        # Currently, only supports Straight Run Stairs
-        stair_type = ifc_stair.PredefinedType
-        if stair_type != "STRAIGHT_RUN_STAIR":
-            return None
-
     def _get_storey_size(self, elements: List[BuildingElement]):
         x_max = 0
         y_max = 0
@@ -263,16 +253,19 @@ class IfcToCpmConverter:
     def _normalize_vertices(self, elements: List[BuildingElement]) -> List[BuildingElement]:
         out_elements = copy.deepcopy(elements)
         for element in out_elements:
-            x1, y1 = element.start_vertex
-            x2, y2 = element.end_vertex
-            x1, y1, x2, y2 = self._scale_to_metric((x1, y1, x2, y2))
-            x1, y1 = x1 + self.x_offset, y1 + self.y_offset
-            x2, y2 = x2 + self.x_offset, y2 + self.y_offset
+            x1, y1 = self._normalize_vertex(element.start_vertex)
+            x2, y2 = self._normalize_vertex(element.end_vertex)
 
             element.start_vertex = (x1, y1)
             element.end_vertex = (x2, y2)
 
         return out_elements
+
+    def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
+        x1, y1 = vertex
+        x1, y1 = self._scale_to_metric((x1, y1))
+        x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+        return x1, y1
 
     def _transform_vertex(self, vertex, transformation_matrix):
         # Building location correction
