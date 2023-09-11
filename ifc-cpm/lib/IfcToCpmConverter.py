@@ -11,12 +11,13 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
+from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
 
-from .ifctypes import BuildingElement, Wall, Gate, Barricade, WallWithOpening
+from .ifctypes import BuildingElement, Wall, Gate, Barricade, WallWithOpening, Stair
 from .utils import (
     find_lines_intersection,
     find,
-    filter,
+    transform_vertex,
     eucledian_distance,
     find_unbounded_lines_intersection,
 )
@@ -142,13 +143,18 @@ class IfcToCpmConverter:
                 print("Error parsing wall", wall.Name, exc)
                 raise Exception
 
-        if self.close_wall_gap_metre is not None:
-            building_elements = self._infer_wall_connections(building_elements)
+        stairs = [x for x in elements if x.is_a("IfcStair")]
+        for ifc_stair in stairs:
+            self._get_stair(ifc_stair)
 
-        building_elements = self._join_connected_walls(building_elements)
-        building_elements = self._decompose_wall_with_openings(building_elements)
-        building_elements = self._split_intersecting_elements(building_elements)
-        building_elements = self._convert_disconnected_walls_into_barricades(building_elements)
+        if self.close_wall_gap_metre is not None:
+            tolerance = self.close_wall_gap_metre / self.unit_scale
+            building_elements = infer_wall_connections(tolerance, building_elements)
+
+        building_elements = join_connected_walls(building_elements)
+        building_elements = decompose_wall_with_openings(building_elements)
+        building_elements = split_intersecting_elements(building_elements)
+        building_elements = convert_disconnected_walls_into_barricades(building_elements)
         building_elements += self._get_storey_void_barricade_elements(storey)
         return building_elements
 
@@ -212,194 +218,6 @@ class IfcToCpmConverter:
         if door_filling is not None:
             return door_filling.OverallWidth
 
-    def _infer_wall_connections(self, building_elements: List[BuildingElement]) -> List[BuildingElement]:
-        # TODO evaluate if this method is reliable
-        tolerance = self.close_wall_gap_metre / self.unit_scale
-        walls = [x for x in building_elements if x.__type__ in ('Wall', 'WallWithOpening')]
-        for wall1, wall2 in combinations(walls, 2):
-            wall1_vertices = (wall1.start_vertex, wall1.end_vertex)
-            wall2_vertices = (wall2.start_vertex, wall2.end_vertex)
-            intersection = find_unbounded_lines_intersection(wall1_vertices, wall2_vertices)
-            if intersection is not None:
-                # Wall has intersection
-                w1_v1_distance_to_intersection = eucledian_distance(wall1.start_vertex, intersection)
-                w1_v2_distance_to_intersection = eucledian_distance(wall1.end_vertex, intersection)
-                w2_v1_distance_to_intersection = eucledian_distance(wall2.start_vertex, intersection)
-                w2_v2_distance_to_intersection = eucledian_distance(wall2.end_vertex, intersection)
-
-                wall1_near_intersection = w1_v1_distance_to_intersection <= tolerance or w1_v2_distance_to_intersection <= tolerance
-                wall2_near_intersection = w2_v1_distance_to_intersection <= tolerance or w2_v2_distance_to_intersection <= tolerance
-                if wall1_near_intersection or wall2_near_intersection:
-                    # Wall 1 and 2 has connections
-                    if wall2.object_id not in wall1.connected_to:
-                        connection_type = "ATSTART" if wall1_near_intersection and wall1_near_intersection else "ATPATH"
-                        wall1.connected_to.append((wall2.object_id, connection_type))
-
-        return building_elements
-
-    def _join_connected_walls(self, building_elements: List[BuildingElement]) -> List[BuildingElement]:
-        walls = [x for x in building_elements if x.__type__ == 'WallWithOpening']
-        for wall in walls:
-            for (connected_wall_id, connection_type) in wall.connected_to:
-                related_wall = find(
-                    walls, lambda x: x.object_id == connected_wall_id
-                )
-                intersection = find_unbounded_lines_intersection(
-                    (wall.start_vertex, wall.end_vertex),
-                    (related_wall.start_vertex, related_wall.end_vertex),
-                )
-
-                if intersection:
-                    # Update related wall vertices
-                    v1_distance = eucledian_distance(
-                        related_wall.start_vertex, intersection
-                    )
-                    v2_distance = eucledian_distance(
-                        related_wall.end_vertex, intersection
-                    )
-                    if v1_distance < v2_distance:
-                        related_wall.start_vertex = intersection
-                    else:
-                        related_wall.end_vertex = intersection
-
-                    # Update current wall vertices
-                    if connection_type != 'ATPATH':
-                        wall_v1_distance = eucledian_distance(
-                            wall.start_vertex, intersection
-                        )
-                        wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
-                        if wall_v1_distance < wall_v2_distance:
-                            wall.start_vertex = intersection
-                        else:
-                            wall.end_vertex = intersection
-
-        return building_elements
-
-    def _decompose_wall_with_openings(self, elements: List[BuildingElement]) -> List[BuildingElement]:
-        out_elements = []
-        for element in elements:
-            if element.__type__ == 'WallWithOpening':
-                gates_vertices = element.opening_vertices
-
-                def get_first_contained_gate(p1, p2):
-                    p1_x, p1_y = min(p1[0], p2[0]), min(p1[1], p2[1])
-                    p2_x, p2_y = max(p1[0], p2[0]), max(p1[1], p2[1])
-                    for gate_vertices in gates_vertices:
-                        (g1_x, g1_y), (g2_x, g2_y) = gate_vertices
-                        if g1_x >= p1_x and g2_x <= p2_x and g1_y >= p1_y and g2_y <= p2_y:
-                            return gate_vertices
-
-                elements_queue = [Wall(start_vertex=element.start_vertex, end_vertex=element.end_vertex)]
-                while len(elements_queue) > 0:
-                    el = elements_queue.pop(0)
-                    gate_vertices = get_first_contained_gate(el.start_vertex, el.end_vertex)
-                    if gate_vertices is None:
-                        out_elements.append(el)
-                    else:
-                        gate_vert1, gate_vert2 = gate_vertices
-                        wall1 = Wall(start_vertex=el.start_vertex, end_vertex=gate_vert1)
-                        wall2 = Wall(start_vertex=gate_vert2, end_vertex=el.end_vertex)
-                        gate = Gate(start_vertex=gate_vert1, end_vertex=gate_vert2)
-                        elements_queue += [wall1, gate, wall2]
-                        gates_vertices.remove(gate_vertices)
-
-            else:
-                out_elements.append(element)
-
-        return out_elements
-
-    def _split_intersecting_elements(self, elements: List[BuildingElement]) -> List[BuildingElement]:
-        """
-        Split intersecting elements to get new vertices.
-        Input: Array of BuildingElement
-        Output: Array of BuildingElement
-        """
-        elements_queue = copy.copy(elements)
-        output_elements = []
-        while len(elements_queue) > 0:
-            element = elements_queue.pop(0)
-            intersection = self._find_first_intersection(element, elements_queue)
-            if intersection is None:
-                output_elements.append(element)
-            else:
-                split_elements = self._split_element_at_point(intersection, element)
-                elements_queue += split_elements
-
-        return output_elements
-
-    def _find_first_intersection(self, target_element: BuildingElement, other_elements: List[BuildingElement]) -> Tuple[float, float]:
-        for other_element in other_elements:
-            target_line = target_element.start_vertex, target_element.end_vertex
-            other_line = other_element.start_vertex, other_element.end_vertex
-            intersection = find_lines_intersection(target_line, other_line)
-            if intersection is not None:
-                wall_vertices = [
-                    target_line[0],
-                    target_line[1],
-                    other_line[0],
-                    other_line[1],
-                ]
-                # Only add intersections that are T or +
-                if wall_vertices.count(intersection) <= 1:
-                    return intersection
-        return None
-
-    def _split_element_at_point(self, point, element: BuildingElement):
-        """
-        Input:
-            point (x, y)
-            element: BuildingElement
-            (x, y) must fall within the line.
-        """
-        x, y = point
-        (x1, y1), (x2, y2) = element.start_vertex, element.end_vertex
-
-        element1 = BuildingElement(
-            type=element.__type__,
-            name=f"{element.name}-1",
-            start_vertex=(x1, y1),
-            end_vertex=(x, y),
-        )
-
-        element2 = BuildingElement(
-            type=element.__type__,
-            name=f"{element.name}-2",
-            start_vertex=(x, y),
-            end_vertex=(x2, y2),
-        )
-
-        out = []
-        if element1.length > 0:
-            out.append(element1)
-
-        if element2.length > 0:
-            out.append(element2)
-
-        return out
-
-    def _convert_disconnected_walls_into_barricades(self, elements: List[BuildingElement]):
-        vertices_count = defaultdict(lambda: 0)
-        for el in elements:
-            vertices_count[el.start_vertex] += 1
-            vertices_count[el.end_vertex] += 1
-
-        output_elements = copy.copy(elements)
-        walls = [x for x in output_elements if x.__type__ == "Wall"]
-        for wall in walls:
-            if (
-                vertices_count[wall.start_vertex] < 2
-                or vertices_count[wall.end_vertex] < 2
-            ):
-                barricade = Barricade(
-                    object_id=wall.object_id,
-                    name=wall.name,
-                    start_vertex=wall.start_vertex,
-                    end_vertex=wall.end_vertex,
-                )
-                output_elements.remove(wall)
-                output_elements.append(barricade)
-        return output_elements
-
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
         slabs = [x for x in elements if x.is_a("IfcSlab")]
@@ -433,6 +251,12 @@ class IfcToCpmConverter:
 
         return elements
 
+    def _get_stair(self, ifc_stair) -> Stair:
+        # Currently, only supports Straight Run Stairs
+        stair_type = ifc_stair.PredefinedType
+        if stair_type != "STRAIGHT_RUN_STAIR":
+            return None
+
     def _get_storey_size(self, elements: List[BuildingElement]):
         x_max = 0
         y_max = 0
@@ -453,17 +277,11 @@ class IfcToCpmConverter:
         return x_max, y_max
 
     def _transform_vertex(self, vertex, transformation_matrix):
-        x, y = vertex
-
-        vertex_matrix = np.array([[x], [y], [0], [1]])
-
         # Building location correction
         total_transformation_matrix = np.dot(
             self.base_transformation_matrix, transformation_matrix
         )
-        transformed_matrix = np.dot(total_transformation_matrix, vertex_matrix)
-
-        transformed_x, transformed_y, _, _ = np.transpose(transformed_matrix)[0]
+        transformed_x, transformed_y = transform_vertex(total_transformation_matrix, vertex)
         transformed_x = self.round(transformed_x)
         transformed_y = self.round(transformed_y)
         return (transformed_x, transformed_y)

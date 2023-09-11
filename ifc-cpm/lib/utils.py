@@ -1,4 +1,15 @@
+from typing import Tuple
 import math
+import numpy as np
+
+
+def transform_vertex(transformation_matrix, vertex: Tuple[float, float]) -> Tuple[float, float]:
+    x, y = vertex
+
+    vertex_matrix = np.array([[x], [y], [0], [1]])
+    transformed_matrix = np.dot(transformation_matrix, vertex_matrix)
+    transformed_x, transformed_y, _, _ = np.transpose(transformed_matrix)[0]
+    return (transformed_x, transformed_y)
 
 
 def find_unbounded_lines_intersection(line1, line2):
@@ -100,6 +111,16 @@ def find(list, matcher):
     for element in list:
         if matcher(element):
             return element
+
+    return None
+
+
+def find_index(list, matcher):
+    i = 0
+    for element in list:
+        if matcher(element):
+            return i
+        i += 1
 
     return None
 
