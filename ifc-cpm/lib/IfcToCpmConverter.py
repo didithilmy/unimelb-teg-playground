@@ -11,9 +11,9 @@ from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
 
-from .ifctypes import BuildingElement, Barricade, WallWithOpening, Stair
+from .ifctypes import BuildingElement, Barricade, WallWithOpening, Wall, Stair
 from .stairs import StairBuilder
-from .utils import transform_vertex
+from .utils import transform_vertex, filter
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -83,21 +83,31 @@ class IfcToCpmConverter:
         if round_function is not None:
             self.round = round_function
         else:
-            self.round = lambda x: x
+            self.round = lambda x: round(x * 100) / 100
 
         self.close_wall_gap_metre = close_wall_gap_metre
 
         building_elements = ifcopenshell.util.element.get_decomposition(self.ifc_building)
         self.storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
 
+        self._parse_stairs()
+        self._parse_storeys()
+
     def write(self, cpm_out_filepath):
+        with open(cpm_out_filepath, "w") as f:
+            f.write(self.crowd_environment.write())
+
+    def _parse_stairs(self):
+        self.stairs = []
         for storey_id, storey in enumerate(self.storeys):
             building_elements = ifcopenshell.util.element.get_decomposition(storey)
             stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
             for stair_in_storey in stairs_in_storey:
-                stair = StairBuilder(storey_id, stair_in_storey, vertex_normalizer=self._normalize_vertex).build()
-                self.crowd_environment.add_stair(stair)
+                stair = StairBuilder(storey_id, stair_in_storey).build()
+                self.crowd_environment.add_stair(stair.normalize(self._normalize_vertex))
+                self.stairs.append(stair)
 
+    def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
             elements = self._get_storey_elements(storey_id, storey)
 
@@ -111,9 +121,6 @@ class IfcToCpmConverter:
             normalized_elements = self._normalize_vertices(elements)
             level = Level(index=storey_id, elements=normalized_elements, width=width, height=height)
             self.crowd_environment.add_level(level)
-
-        with open(cpm_out_filepath, "w") as f:
-            f.write(self.crowd_environment.write())
 
     def _get_storey_elements(self, storey_id, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
@@ -136,7 +143,24 @@ class IfcToCpmConverter:
         building_elements = split_intersecting_elements(building_elements)
         building_elements = convert_disconnected_walls_into_barricades(building_elements)
         # building_elements += self._get_storey_void_barricade_elements(storey)
+        building_elements += self._get_storey_stair_border_walls(storey_id)
         return building_elements
+
+    def _get_storey_stair_border_walls(self, storey_id):
+        walls: List[Wall] = []
+        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
+        for stair in stairs_voiding_storey:
+            walls += [
+                Wall(start_vertex=stair.first_wall_edge[0], end_vertex=stair.first_wall_edge[1]),
+                Wall(start_vertex=stair.second_wall_edge[0], end_vertex=stair.second_wall_edge[1]),
+                Wall(start_vertex=stair.lower_gate_edge[0], end_vertex=stair.lower_gate_edge[1])
+            ]
+
+            if storey_id < stair.end_level_index:
+                # Draw a wall where the upper gate is
+                walls.append(Wall(start_vertex=stair.upper_gate_edge[0], end_vertex=stair.upper_gate_edge[1]))
+
+        return walls
 
     def _get_wall_with_opening(self, ifc_wall) -> WallWithOpening:
         gates_vertices = []
@@ -251,13 +275,9 @@ class IfcToCpmConverter:
         return x_max, y_max
 
     def _normalize_vertices(self, elements: List[BuildingElement]) -> List[BuildingElement]:
-        out_elements = copy.deepcopy(elements)
-        for element in out_elements:
-            x1, y1 = self._normalize_vertex(element.start_vertex)
-            x2, y2 = self._normalize_vertex(element.end_vertex)
-
-            element.start_vertex = (x1, y1)
-            element.end_vertex = (x2, y2)
+        out_elements = []
+        for element in elements:
+            out_elements.append(element.normalize(self._normalize_vertex))
 
         return out_elements
 
