@@ -83,11 +83,7 @@ class IfcToCpmConverter:
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
 
-        building_transformation_matrix = (
-            ifcopenshell.util.placement.get_local_placement(
-                ifc_building.ObjectPlacement
-            )
-        )
+        building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
 
         if round_function is not None:
@@ -97,13 +93,12 @@ class IfcToCpmConverter:
 
         self.close_wall_gap_metre = close_wall_gap_metre
 
+        building_elements = ifcopenshell.util.element.get_decomposition(self.ifc_building)
+        self.storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
+
     def write(self, cpm_out_filepath):
-        building_elements = ifcopenshell.util.element.get_decomposition(
-            self.ifc_building
-        )
-        storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
-        for storey in storeys:
-            elements = self._get_storey_elements(storey)
+        for storey_id, storey in enumerate(self.storeys):
+            elements = self._get_storey_elements(storey_id, storey)
 
             if self.dimension is None:
                 width, height = self._get_storey_size(elements)
@@ -135,7 +130,7 @@ class IfcToCpmConverter:
         with open(cpm_out_filepath, "w") as f:
             f.write(self.crowd_environment.write())
 
-    def _get_storey_elements(self, storey):
+    def _get_storey_elements(self, storey_id, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
         walls = [x for x in elements if x.is_a("IfcWall")]
         building_elements = []
@@ -149,6 +144,7 @@ class IfcToCpmConverter:
 
         if self.close_wall_gap_metre is not None:
             building_elements = self._infer_wall_connections(building_elements)
+
         building_elements = self._join_connected_walls(building_elements)
         building_elements = self._decompose_wall_with_openings(building_elements)
         building_elements = self._split_intersecting_elements(building_elements)
@@ -188,7 +184,7 @@ class IfcToCpmConverter:
             v2 = self._transform_vertex(v2, transformation_matrix)
             opening_vertices.append((v1, v2))
 
-        start_vertex, end_vertex = self._get_relative_ifcwall_vertices(ifc_wall)
+        start_vertex, end_vertex = WallVertices.infer(ifc_wall.Representation.Representations)
         start_vertex = self._transform_vertex(start_vertex, transformation_matrix)
         end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
 
@@ -436,10 +432,6 @@ class IfcToCpmConverter:
                     )
 
         return elements
-
-    def _get_relative_ifcwall_vertices(self, ifc_wall):
-        representations = ifc_wall.Representation.Representations
-        return WallVertices.infer(representations)
 
     def _get_storey_size(self, elements: List[BuildingElement]):
         x_max = 0
