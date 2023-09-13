@@ -1,4 +1,5 @@
 from typing import List
+from collections import defaultdict
 import xmltodict
 from .ifctypes import BuildingElement, Wall, Gate, Barricade, Stair
 from .utils import filter
@@ -25,9 +26,7 @@ class Level:
 
 class CrowdSimulationEnvironment:
     def __init__(self):
-        self.highest_id = 0
-        self.highest_vertex_id = 0
-        self.highest_level_id = 0
+        self.highest_id_map = defaultdict(lambda: 0)
         self.levels: List[Level] = []
         self.stairs: List[Stair] = []
         self.vertices = {}
@@ -59,8 +58,7 @@ class CrowdSimulationEnvironment:
         return xmltodict.unparse(data, pretty=True)
 
     def _get_level(self, level: Level):
-        level_id = self.highest_level_id
-        self.highest_level_id += 1
+        level_id = self._get_id(Level)
 
         walls = [self._create_wall_json(x) for x in level.walls]
         gates = [self._create_gate_json(x) for x in level.gates]
@@ -76,7 +74,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_wall_json(self, wall: Wall):
-        wall_id = self._get_id()
+        wall_id = self._get_id(Wall)
         (x1, y1), (x2, y2) = wall.start_vertex, wall.end_vertex
 
         return {
@@ -94,7 +92,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_gate_json(self, gate: Gate):
-        gate_id = self._get_id()
+        gate_id = self._get_id(Gate)
         (x1, y1), (x2, y2) = gate.start_vertex, gate.end_vertex
         return {
             "id": gate_id,
@@ -113,7 +111,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_barricade_json(self, barricade: Barricade):
-        barricade_id = self._get_id()
+        barricade_id = self._get_id(Barricade)
         (x1, y1), (x2, y2) = barricade.start_vertex, barricade.end_vertex
 
         return {
@@ -131,7 +129,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_stair_json(self, stair: Stair):
-        stair_id = self._get_id()
+        stair_id = self._get_id(Stair)
 
         return {
             "id": stair_id,
@@ -149,7 +147,7 @@ class CrowdSimulationEnvironment:
             "upper": {
                 "level": stair.end_level_index,
                 "gate": {
-                        "id": self._get_id(),
+                        "id": self._get_id(Gate),
                         "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
                         "angle": 90,  # TODO find out what
                         "destination": False,  # let the software figure out I suppose
@@ -167,7 +165,7 @@ class CrowdSimulationEnvironment:
             "lower": {
                 "level": stair.start_level_index,
                 "gate": {
-                    "id": self._get_id(),
+                    "id": self._get_id(Gate),
                     "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
                     "angle": 90,  # TODO find out what
                     "destination": False,  # let the software figure out I suppose
@@ -186,7 +184,7 @@ class CrowdSimulationEnvironment:
                 "Wall": [
                     # Left wall
                     {
-                        "id": self._get_id(),
+                        "id": self._get_id(Wall),
                         "length": stair.staircase_length,
                         "angle": 0,
                         "isLow": False,
@@ -201,7 +199,7 @@ class CrowdSimulationEnvironment:
                     },
                     # Right wall
                     {
-                        "id": self._get_id(),
+                        "id": self._get_id(Wall),
                         "length": stair.staircase_length,
                         "angle": 180,
                         "isLow": False,
@@ -216,7 +214,7 @@ class CrowdSimulationEnvironment:
                     },
                     # Back wall = upper gate
                     {
-                        "id": self._get_id(),
+                        "id": self._get_id(Wall),
                         "length": stair.staircase_width,
                         "angle": 270,
                         "isLow": False,
@@ -239,10 +237,10 @@ class CrowdSimulationEnvironment:
 
     def _get_vertex_id(self, vertex):
         if vertex not in self.vertices:
-            self.vertices[vertex] = self.highest_vertex_id
-            self.highest_vertex_id += 1
+            self.vertices[vertex] = self._get_id("Vertex")
         return self.vertices[vertex]
 
-    def _get_id(self):
-        self.highest_id += 1
-        return self.highest_id
+    def _get_id(self, entity):
+        id = self.highest_id_map[entity]
+        self.highest_id_map[entity] += 1
+        return id
