@@ -201,7 +201,7 @@ class CrowdSimulationEnvironment:
                     {
                         "id": self._get_id(Wall),
                         "length": stair.staircase_length,
-                        "angle": 180,
+                        "angle": 0,
                         "isLow": False,
                         "isTransparent": False,
                         "iWlWG": False,
@@ -216,7 +216,7 @@ class CrowdSimulationEnvironment:
                     {
                         "id": self._get_id(Wall),
                         "length": stair.staircase_width,
-                        "angle": 270,
+                        "angle": 0,
                         "isLow": False,
                         "isTransparent": False,
                         "iWlWG": False,

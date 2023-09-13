@@ -152,17 +152,20 @@ class IfcToCpmConverter:
 
     def _get_storey_stair_border_walls(self, storey_id):
         walls: List[Wall] = []
-        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
+        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id >= s.start_level_index and storey_id <= s.end_level_index)
         for stair in stairs_voiding_storey:
+            if storey_id > stair.start_level_index:
+                # Draw a wall where the lower gate is
+                walls += [Wall(start_vertex=stair.lower_gate_edge[0], end_vertex=stair.lower_gate_edge[1])]
+
             walls += [
                 Wall(start_vertex=stair.first_wall_edge[0], end_vertex=stair.first_wall_edge[1]),
-                Wall(start_vertex=stair.second_wall_edge[0], end_vertex=stair.second_wall_edge[1]),
-                Wall(start_vertex=stair.lower_gate_edge[0], end_vertex=stair.lower_gate_edge[1])
+                Wall(start_vertex=stair.second_wall_edge[0], end_vertex=stair.second_wall_edge[1])
             ]
 
             if storey_id < stair.end_level_index:
                 # Draw a wall where the upper gate is
-                walls.append(Wall(start_vertex=stair.upper_gate_edge[0], end_vertex=stair.upper_gate_edge[1]))
+                walls += [Wall(start_vertex=stair.upper_gate_edge[0], end_vertex=stair.upper_gate_edge[1])]
 
         return walls
 

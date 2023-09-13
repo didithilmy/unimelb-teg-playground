@@ -78,6 +78,11 @@ class StairBuilder:
 
         floor_span = self._determine_straight_run_stair_floor_span(ifc_stair)
 
+        run_length = eucledian_distance(run_start_vertex, run_end_vertex)
+        run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
+        staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
+        staircase_origin = 0, 0 # TODO fix
+
         return Stair(
             object_id=ifc_stair.GlobalId,
             rotation=int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex))),

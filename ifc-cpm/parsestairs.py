@@ -6,7 +6,7 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from lib.utils import find_unbounded_lines_intersection
+from lib.utils import find_unbounded_lines_intersection, eucledian_distance, find, filter
 from lib.ifctypes import Wall, Gate, BuildingElement
 from lib.representation_helpers import XYBoundingBox, get_representation, Extrusion2DVertices
 
@@ -17,26 +17,29 @@ model = ifcopenshell.open("ifc/Project1-4-Arch.ifc")
 unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 
 
-def create_stair_xml():
+def create_stair_xml(start_level, lower_gate, upper_gate, first_wall, right_wall):
+    staircase_width = eucledian_distance(lower_gate[0], lower_gate[1])
+    staircase_length = eucledian_distance(first_wall[0], first_wall[1])
+    
     data = {
         "Stair": [
             {
                 "id": 0,
-                "X": 19,  # X coordinate of first lower vertex
-                "Y": 27,  # Y coordinate of first lower vertex
+                "X": lower_gate[0][0],  # X coordinate of first lower vertex
+                "Y": lower_gate[0][1],  # Y coordinate of first lower vertex
                 "speed": -1,  # TODO figure out what
                 "spanFloors": 1,
-                "length": 5,  # Run length
-                "width": 2,  # Staircase width
+                "length": staircase_length,  # Run length
+                "width": staircase_width,  # Staircase width
                 "stands": 5,  # TODO figure out where to get
                 "rotation": 0,  # Can be inferred from rotation matrix or axis. 0 means facing north
                 "type": 1,  # Read from enum
                 "direction": 0,
                 "upper": {
-                    "level": 1,
+                    "level": start_level + 1, # TODO change
                     "gate": {
                         "id": 11,
-                        "length": 2,  # should be the same as width, if stair is STRAIGHT
+                        "length": staircase_width,  # should be the same as width, if stair is STRAIGHT
                         "angle": 90,  # TODO find out what
                         "destination": False,  # let the software figure out I suppose
                         "counter": False,  # TODO find out what
@@ -51,7 +54,7 @@ def create_stair_xml():
                     }
                 },
                 "lower": {
-                    "level": 0,
+                    "level": start_level,
                     "gate": {
                         "id": 12,
                         "length": 2,  # should be the same as width, if stair is STRAIGHT
@@ -143,14 +146,12 @@ def process_stair(ifc_stair):
         if v1 != v2:
             edges.append((v1, v2))
 
-    print("Footprint edges:", edges)
-
     axis_repr = [x for x in representations if x.RepresentationIdentifier == 'Axis'][0]
     ifc_geometric_set = axis_repr.Items[0]
     ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
     ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
     run_vertices = ifc_cartesian_point_list_2d.CoordList
-    print(run_vertices)
+    run_start_vertex, run_end_vertex = run_vertices
 
     edge1, edge2, edge3, edge4 = edges
     edge1_int = find_unbounded_lines_intersection(run_vertices, edge1)
@@ -158,9 +159,28 @@ def process_stair(ifc_stair):
     edge3_int = find_unbounded_lines_intersection(run_vertices, edge3)
     edge4_int = find_unbounded_lines_intersection(run_vertices, edge4)
 
-    print(edge1_int, edge2_int, edge3_int, edge4_int)
+    edges_map = {
+        edge1: dict(edge=edge1, intersection=edge1_int, designation="WALL"),
+        edge2: dict(edge=edge2, intersection=edge2_int, designation="WALL"),
+        edge3: dict(edge=edge3, intersection=edge3_int, designation="WALL"),
+        edge4: dict(edge=edge4, intersection=edge4_int, designation="WALL"),
+    }
 
-    # print(footprint_repr, axis_repr)
+    closest_to_run_start = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
+    closest_to_run_start['designation'] = "BOTTOM_GATE"
+    closest_to_run_end = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
+    closest_to_run_end['designation'] = "TOP_GATE"
+
+    lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')
+    upper_gate = find(edges_map.values(), lambda x: x['designation'] == 'TOP_GATE')
+    side_walls = filter(edges_map.values(), lambda x: x['designation'] == 'WALL')
+    first_wall = side_walls[0]
+    second_wall = side_walls[1]
+
+    staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
+    staircase_length = eucledian_distance(first_wall['edge'][0], first_wall['edge'][1])
+
+    print(staircase_width, staircase_length)
 
 
 for storey in model.by_type("IfcBuildingStorey"):
