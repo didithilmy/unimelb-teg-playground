@@ -26,6 +26,7 @@ class Level:
 class CrowdSimulationEnvironment:
     def __init__(self):
         self.highest_id = 0
+        self.highest_vertex_id = 0
         self.levels: List[Level] = []
         self.stairs: List[Stair] = []
         self.vertices = {}
@@ -84,8 +85,8 @@ class CrowdSimulationEnvironment:
             "iWlWG": False,
             "vertices": {
                 "Vertex": [
-                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                    self._get_vertex((x1, y1)),
+                    self._get_vertex((x2, y2))
                 ]
             },
         }
@@ -103,8 +104,8 @@ class CrowdSimulationEnvironment:
             "designatedOnly": False,
             "vertices": {
                 "Vertex": [
-                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                    self._get_vertex((x1, y1)),
+                    self._get_vertex((x2, y2))
                 ]
             },
         }
@@ -121,8 +122,8 @@ class CrowdSimulationEnvironment:
             "iWlWG": False,
             "vertices": {
                 "Vertex": [
-                        {"X": x1, "Y": y1, "id": self._get_vertex_id((x1, y1))},
-                        {"X": x2, "Y": y2, "id": self._get_vertex_id((x2, y2))},
+                    self._get_vertex((x1, y1)),
+                    self._get_vertex((x2, y2))
                 ]
             },
         }
@@ -236,7 +237,8 @@ class CrowdSimulationEnvironment:
 
     def _get_vertex_id(self, vertex):
         if vertex not in self.vertices:
-            self.vertices[vertex] = self._get_id()
+            self.vertices[vertex] = self.highest_vertex_id
+            self.highest_vertex_id += 1
         return self.vertices[vertex]
 
     def _get_id(self):
