@@ -1,4 +1,4 @@
-import copy
+import logging
 import math
 from typing import Tuple, List
 import numpy as np
@@ -17,6 +17,8 @@ from .utils import transform_vertex, filter
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
+
+logger = logging.getLogger("IfcToCpmConverter")
 
 
 class IfcToCpmConverterBuilder:
@@ -103,9 +105,12 @@ class IfcToCpmConverter:
             building_elements = ifcopenshell.util.element.get_decomposition(storey)
             stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
             for stair_in_storey in stairs_in_storey:
-                stair = StairBuilder(storey_id, stair_in_storey).build()
-                self.crowd_environment.add_stair(stair.normalize(self._normalize_vertex))
-                self.stairs.append(stair)
+                try:
+                    stair = StairBuilder(storey_id, stair_in_storey).build()
+                    self.crowd_environment.add_stair(stair.normalize(self._normalize_vertex))
+                    self.stairs.append(stair)
+                except Exception as e:
+                    logger.warning(f"Skipping stair parsing: error parsing stair {stair_in_storey.Name}: {e}")
 
     def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
@@ -131,8 +136,7 @@ class IfcToCpmConverter:
                 wall_with_opening = self._get_wall_with_opening(wall)
                 building_elements.append(wall_with_opening)
             except Exception as exc:
-                print("Error parsing wall", wall.Name, exc)
-                raise Exception
+                logger.warning(f"Skipped wall parsing: error parsing wall {wall.Name}: {exc}")
 
         if self.close_wall_gap_metre is not None:
             tolerance = self.close_wall_gap_metre / self.unit_scale
