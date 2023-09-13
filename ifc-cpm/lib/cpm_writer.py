@@ -27,6 +27,7 @@ class CrowdSimulationEnvironment:
     def __init__(self):
         self.highest_id = 0
         self.highest_vertex_id = 0
+        self.highest_level_id = 0
         self.levels: List[Level] = []
         self.stairs: List[Stair] = []
         self.vertices = {}
@@ -58,7 +59,8 @@ class CrowdSimulationEnvironment:
         return xmltodict.unparse(data, pretty=True)
 
     def _get_level(self, level: Level):
-        level_id = self._get_id()
+        level_id = self.highest_level_id
+        self.highest_level_id += 1
 
         walls = [self._create_wall_json(x) for x in level.walls]
         gates = [self._create_gate_json(x) for x in level.gates]
