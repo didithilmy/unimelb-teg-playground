@@ -125,6 +125,7 @@ class IfcToCpmConverter:
                 building_elements.append(wall_with_opening)
             except Exception as exc:
                 logger.warning(f"Skipped wall parsing: error parsing wall {wall.Name}: {exc}")
+                logger.error(exc, exc_info=True)
 
         if self.close_wall_gap_metre is not None:
             tolerance = self.close_wall_gap_metre / self.unit_scale
@@ -162,8 +163,9 @@ class IfcToCpmConverter:
         openings = ifc_wall.HasOpenings
         for opening in openings:
             opening_element = opening.RelatedOpeningElement
-            opening_length = self._get_opening_width(opening_element)
-            if opening_length is not None:
+            opening_size = self._get_opening_width(opening_element)
+            if opening_size is not None:
+                offset_x, opening_length = opening_size
                 opening_location_relative_to_wall = (
                     opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
                 )
@@ -172,7 +174,10 @@ class IfcToCpmConverter:
 
                 # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
                 # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
-                x = x - opening_length / 2
+                # Only set the coordinate to be centric IF and only IF the x coordinate is NOT zero. Zero means the coordinate is not used. TODO find out if this always holds true.
+                if x != 0:
+                    x = x - opening_length / 2
+                x += offset_x
                 y = 0  # FIXME investigate other representations where the y is NOT zero.
                 if z == 0:
                     gates_vertices.append(
@@ -203,8 +208,8 @@ class IfcToCpmConverter:
             # Get the width from the shape representations.
             representations = opening_element.Representation.Representations
             try:
-                opening_length, _ = XYBoundingBox.infer(representations)
-                return opening_length
+                (offset_x, _), (opening_length, _) = XYBoundingBox.infer(representations)
+                return offset_x, opening_length
             except Exception as e:
                 logger.warning(f"Skipping opening parsing: cannot infer length of opening {opening_element.Name}")
                 logger.error(e, exc_info=True)
@@ -217,7 +222,7 @@ class IfcToCpmConverter:
                 break
 
         if door_filling is not None:
-            return door_filling.OverallWidth
+            return 0, door_filling.OverallWidth
 
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)

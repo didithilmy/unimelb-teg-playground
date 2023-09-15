@@ -7,9 +7,16 @@ def get_representation(representations, identifier):
 class XYBoundingBox:
     @staticmethod
     def infer(representations):
+        """
+        Returns a tuple of origin, width, and height in the XY plane, given a list of object representations.
+        Origin is set at coordinate (0, 0) relative to the bounding box
+        """
         for repr in representations:
-            if repr.RepresentationIdentifier == "Box":
+            repr_id = repr.RepresentationIdentifier
+            if repr_id == "Box":
                 return XYBoundingBox.from_bounding_box(repr)
+            elif repr_id == "Body":
+                return XYBoundingBox.from_body(repr)
 
         raise Exception("Cannot infer bounding box")
 
@@ -17,8 +24,28 @@ class XYBoundingBox:
     def from_bounding_box(representation):
         x = representation.Items[0].XDim
         y = representation.Items[0].YDim
+        corner = representation.Items[0].Corner
+        corner_x, corner_y = corner.Coordinates[:2]
 
-        return x, y
+        return (corner_x, corner_y), (x, y)
+
+    @staticmethod
+    def from_body(representation):
+        edges = Extrusion2DVertices.from_body(representation)
+        vertices = []
+        for v1, v2 in edges:
+            vertices += [v1, v2]
+        x_min = min(vertices, key=lambda v: v[0])[0]
+        y_min = min(vertices, key=lambda v: v[1])[1]
+        x_max = max(vertices, key=lambda v: v[0])[0]
+        y_max = max(vertices, key=lambda v: v[1])[1]
+
+        width = x_max - x_min
+        height = y_max - y_min
+
+        corner = (x_min, y_min)
+        dimension = width, height
+        return corner, dimension
 
     @staticmethod
     def from_swept_solid(representation):
@@ -164,7 +191,6 @@ class WallVertices:
             print(
                 curve.Trim1, curve.Trim2, curve.BasisCurve, curve.MasterRepresentation
             )
-            print((curve.BasisCurve.Pnt, curve.BasisCurve.Dir))
             # TODO handle trimmed curve
         elif curve.is_a("IfcPolyline"):
             origin_vertex, dest_vertex = representation.Items[0].Points
