@@ -69,15 +69,12 @@ class IfcToCpmConverter:
         round_function=None,
         close_wall_gap_metre=None
     ):
-        self.dimension = dimension
         if origin is None:
             origin = (0, 0)
-        self.x_offset = origin[0]
-        self.y_offset = origin[1]
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
 
         building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
@@ -115,15 +112,7 @@ class IfcToCpmConverter:
     def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
             elements = self._get_storey_elements(storey_id, storey)
-
-            if self.dimension is None:
-                width, height = self._get_storey_size(elements)
-                width = math.ceil(width)
-                height = math.ceil(height)
-            else:
-                width, height = self.dimension
-
-            level = Level(index=storey_id, elements=elements, width=width, height=height)
+            level = Level(index=storey_id, elements=elements)
             self.crowd_environment.add_level(level)
 
     def _get_storey_elements(self, storey_id, storey):
@@ -260,31 +249,6 @@ class IfcToCpmConverter:
                     )
 
         return elements
-
-    def _get_storey_size(self, elements: List[BuildingElement]):
-        x_max = 0
-        y_max = 0
-        for element in elements:
-            x_max = max(x_max, element.start_vertex[0], element.end_vertex[0])
-            y_max = max(y_max, element.start_vertex[1], element.end_vertex[1])
-
-        x_max = math.ceil(x_max)
-        y_max = math.ceil(y_max)
-
-        # Scale to metric
-        # x_max, y_max = self._scale_to_metric((x_max, y_max))
-
-        # Account for x and y offset
-        # x_max += 2 * self.x_offset
-        # y_max += 2 * self.y_offset
-
-        return x_max, y_max
-
-    # def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
-    #     x1, y1 = vertex
-    #     x1, y1 = self._scale_to_metric((x1, y1))
-    #     x1, y1 = x1 + self.x_offset, y1 + self.y_offset
-    #     return x1, y1
 
     def _transform_vertex(self, vertex, transformation_matrix):
         # Building location correction

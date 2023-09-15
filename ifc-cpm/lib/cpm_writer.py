@@ -7,9 +7,8 @@ from .utils import filter
 
 
 class Level:
-    def __init__(self, index, elements: List[BuildingElement], width=100, height=100):
+    def __init__(self, index, elements: List[BuildingElement]):
         self.index = index
-        self.dimension = (width, height)
         self.elements = elements
 
     @property
@@ -26,13 +25,14 @@ class Level:
 
 
 class CrowdSimulationEnvironment:
-    def __init__(self, offset=(0, 0), unit_scaler=lambda x: x):
+    def __init__(self, offset=(0, 0), dimension=None, unit_scaler=lambda x: x):
         self.highest_id_map = defaultdict(lambda: 0)
         self.levels: List[Level] = []
         self.stairs: List[StraightSingleRunStair] = []
         self.vertices = {}
         self.x_offset, self.y_offset = offset
         self.unit_scaler = unit_scaler
+        self.dimension = dimension
 
     def add_level(self, level):
         self.levels.append(level)
@@ -67,10 +67,15 @@ class CrowdSimulationEnvironment:
         gates = [self._create_gate_json(x) for x in level.gates]
         barricades = [self._create_barricade_json(x) for x in level.barricades]
 
+        if self.dimension is not None:
+            width, height = self.dimension
+        else:
+            width, height = self._get_map_size()
+
         return {
             "id": level_id,
-            "width": math.ceil(self.unit_scaler(level.dimension[0])),
-            "height": math.ceil(self.unit_scaler(level.dimension[1])),
+            "width": math.ceil(width),
+            "height": math.ceil(height),
             "wall_pkg": {"walls": {"Wall": walls}},
             "barricade_pkg": {"barricade_walls": {"Wall": barricades}},
             "gate_pkg": {"gates": {"Gate": gates}},
@@ -219,3 +224,23 @@ class CrowdSimulationEnvironment:
             return new_list
 
         return self.unit_scaler(length)
+
+    def _get_map_size(self):
+        x_max = 0
+        y_max = 0
+        for level in self.levels:
+            for element in level.elements:
+                x_max = max(x_max, element.start_vertex[0], element.end_vertex[0])
+                y_max = max(y_max, element.start_vertex[1], element.end_vertex[1])
+
+        x_max = math.ceil(x_max)
+        y_max = math.ceil(y_max)
+
+        # Scale to metric
+        x_max, y_max = self._scale_to_metric((x_max, y_max))
+
+        # Account for x and y offset
+        x_max += 2 * self.x_offset
+        y_max += 2 * self.y_offset
+
+        return x_max, y_max
