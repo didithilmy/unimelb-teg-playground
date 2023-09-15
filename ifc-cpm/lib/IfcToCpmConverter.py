@@ -23,7 +23,6 @@ logger = logging.getLogger("IfcToCpmConverter")
 
 class IfcToCpmConverterBuilder:
     def __init__(self, ifc_filepath: str):
-        self.crowd_environment = CrowdSimulationEnvironment()
         self.model = ifcopenshell.open(ifc_filepath)
         self.unit_scale = ifcopenshell.util.unit.calculate_unit_scale(self.model)
 
