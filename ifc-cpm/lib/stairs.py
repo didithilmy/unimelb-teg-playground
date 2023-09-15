@@ -65,9 +65,11 @@ class StraightSingleRunStairBuilder:
             edge4: dict(edge=edge4, intersection=edge4_int, designation="WALL"),
         }
 
-        closest_to_run_start = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
+        edges_with_intersection = filter(edges_map.values(), matcher=lambda x: x['intersection'] is not None)
+
+        closest_to_run_start = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
         closest_to_run_start['designation'] = "BOTTOM_GATE"
-        closest_to_run_end = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
+        closest_to_run_end = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
         closest_to_run_end['designation'] = "TOP_GATE"
 
         lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')

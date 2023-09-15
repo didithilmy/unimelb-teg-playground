@@ -1,5 +1,5 @@
 import logging
-import math
+import traceback
 from typing import Tuple, List
 import numpy as np
 import ifcopenshell
@@ -108,6 +108,7 @@ class IfcToCpmConverter:
                     self.crowd_environment.add_stair(stair)
                 except Exception as e:
                     logger.warning(f"Skipping stair parsing: error parsing stair {stair_in_storey.Name}: {e}")
+                    logger.error(e, exc_info=True)
 
     def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
