@@ -74,7 +74,7 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 100) / 100)
 
         building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
