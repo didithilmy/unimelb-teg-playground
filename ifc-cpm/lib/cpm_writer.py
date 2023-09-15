@@ -82,7 +82,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_wall_json(self, wall: Wall):
-        wall_id = self._get_id(Wall)
+        wall_id = self._get_id()
         (x1, y1), (x2, y2) = self._normalize_vertex(wall.start_vertex), self._normalize_vertex(wall.end_vertex)
 
         return {
@@ -100,7 +100,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_gate_json(self, gate: Gate):
-        gate_id = self._get_id(Gate)
+        gate_id = self._get_id()
         (x1, y1), (x2, y2) = self._normalize_vertex(gate.start_vertex), self._normalize_vertex(gate.end_vertex)
         return {
             "id": gate_id,
@@ -119,7 +119,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_barricade_json(self, barricade: Barricade):
-        barricade_id = self._get_id(Barricade)
+        barricade_id = self._get_id()
         (x1, y1), (x2, y2) = barricade.start_vertex, barricade.end_vertex
 
         return {
@@ -137,7 +137,7 @@ class CrowdSimulationEnvironment:
         }
 
     def _create_straight_single_run_stair_json(self, stair: StraightSingleRunStair):
-        stair_id = self._get_id(StraightSingleRunStair)
+        stair_id = self._get_id()
         stair_vertex = self._normalize_vertex(stair.vertex)
 
         return {
@@ -156,7 +156,7 @@ class CrowdSimulationEnvironment:
             "upper": {
                 "level": stair.end_level_index,
                 "gate": {
-                        "id": self._get_id(Gate),
+                        "id": self._get_id(),
                         "length": self.unit_scaler(stair.staircase_width),  # should be the same as width, if stair is STRAIGHT
                         "angle": 90,  # TODO find out what
                         "destination": False,  # let the software figure out I suppose
@@ -174,7 +174,7 @@ class CrowdSimulationEnvironment:
             "lower": {
                 "level": stair.start_level_index,
                 "gate": {
-                    "id": self._get_id(Gate),
+                    "id": self._get_id(),
                     "length": self.unit_scaler(stair.staircase_width),  # should be the same as width, if stair is STRAIGHT
                     "angle": 90,  # TODO find out what
                     "destination": False,  # let the software figure out I suppose
@@ -204,7 +204,7 @@ class CrowdSimulationEnvironment:
             self.vertices[vertex] = self._get_id("Vertex")
         return self.vertices[vertex]
 
-    def _get_id(self, entity):
+    def _get_id(self, entity=None):
         id = self.highest_id_map[entity]
         self.highest_id_map[entity] += 1
         return id
