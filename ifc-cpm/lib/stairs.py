@@ -88,7 +88,7 @@ class StraightSingleRunStairBuilder:
 
         return StraightSingleRunStair(
             object_id=ifc_stair.GlobalId,
-            rotation=0,
+            rotation=run_rotation,
             vertex=staircase_origin,
             staircase_width=staircase_width,
             run_length=run_length,

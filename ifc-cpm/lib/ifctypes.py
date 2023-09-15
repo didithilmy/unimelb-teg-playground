@@ -1,7 +1,7 @@
 from typing import Tuple
 import copy
 import numpy as np
-from .utils import eucledian_distance
+from .utils import rotate_point_around_point
 
 
 class BuildingElement:
@@ -91,7 +91,7 @@ class StraightSingleRunStair(BuildingElement):
     def lower_gate(self):
         x1, y1 = self.vertex
         x2, y2 = (x1 + self.staircase_width, y1)
-        # TODO rotate against vertex
+        x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
 
     @property
@@ -99,7 +99,9 @@ class StraightSingleRunStair(BuildingElement):
         x0, y0 = self.vertex
         x1, y1 = (x0, y0 + self.run_length)
         x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
-        # TODO rotate against vertex
+
+        x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
+        x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
 
     @property
@@ -107,7 +109,9 @@ class StraightSingleRunStair(BuildingElement):
         x0, y0 = self.vertex
         x1, y1 = (x0, y0)
         x2, y2 = (x0, y0 + self.run_length)
-        # TODO rotate against vertex
+        
+        x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
+        x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
 
     @property
@@ -115,7 +119,9 @@ class StraightSingleRunStair(BuildingElement):
         x0, y0 = self.vertex
         x1, y1 = (x0 + self.staircase_width, y0)
         x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
-        # TODO rotate against vertex
+        
+        x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
+        x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
 
     def normalize(self, vertex_normalizer):

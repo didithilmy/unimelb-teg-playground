@@ -145,3 +145,31 @@ def calculate_line_angle_relative_to_north(vertex1, vertex2):
         angle_deg += 360
 
     return angle_deg
+
+
+def rotate_point_around_origin(x, y, angle_degrees):
+    # Convert the angle from degrees to radians
+    angle_radians = math.radians(angle_degrees)
+
+    # Calculate the new coordinates after rotation
+    new_x = x * math.cos(angle_radians) - y * math.sin(angle_radians)
+    new_y = x * math.sin(angle_radians) + y * math.cos(angle_radians)
+
+    return new_x, new_y
+
+
+def rotate_point_around_point(origin, vertex, angle_degrees):
+    ax, ay = origin
+    bx, by = vertex
+    # Translate point B to the origin
+    translated_bx = bx - ax
+    translated_by = by - ay
+
+    # Rotate the translated point B
+    rotated_bx, rotated_by = rotate_point_around_origin(translated_bx, translated_by, angle_degrees)
+
+    # Translate the rotated point B back to its original position
+    new_bx = rotated_bx + ax
+    new_by = rotated_by + ay
+
+    return new_bx, new_by
