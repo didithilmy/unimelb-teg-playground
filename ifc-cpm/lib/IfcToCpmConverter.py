@@ -206,7 +206,9 @@ class IfcToCpmConverter:
             try:
                 opening_length, _ = XYBoundingBox.infer(representations)
                 return opening_length
-            except:
+            except Exception as e:
+                logger.warning(f"Skipping opening parsing: cannot infer length of opening {opening_element.Name}")
+                logger.error(e, exc_info=True)
                 return None
 
         door_filling = None
