@@ -11,8 +11,8 @@ from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
 
-from .ifctypes import BuildingElement, Barricade, WallWithOpening, Wall, Stair
-from .stairs import StairBuilder
+from .ifctypes import BuildingElement, Barricade, WallWithOpening, Wall, StraightSingleRunStair
+from .stairs import StraightSingleRunStairBuilder
 from .utils import transform_vertex, filter
 
 settings = ifcopenshell.geom.settings()
@@ -75,9 +75,9 @@ class IfcToCpmConverter:
         self.x_offset = origin[0]
         self.y_offset = origin[1]
 
-        self.crowd_environment = CrowdSimulationEnvironment()
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
+        self.crowd_environment = CrowdSimulationEnvironment(unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
 
         building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
@@ -106,9 +106,9 @@ class IfcToCpmConverter:
             stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
             for stair_in_storey in stairs_in_storey:
                 try:
-                    stair = StairBuilder(storey_id, stair_in_storey).build()
-                    self.crowd_environment.add_stair(stair.normalize(self._normalize_vertex))
+                    stair = StraightSingleRunStairBuilder(storey_id, stair_in_storey).build()
                     self.stairs.append(stair)
+                    self.crowd_environment.add_stair(stair)
                 except Exception as e:
                     logger.warning(f"Skipping stair parsing: error parsing stair {stair_in_storey.Name}: {e}")
 
@@ -123,8 +123,7 @@ class IfcToCpmConverter:
             else:
                 width, height = self.dimension
 
-            normalized_elements = self._normalize_vertices(elements)
-            level = Level(index=storey_id, elements=normalized_elements, width=width, height=height)
+            level = Level(index=storey_id, elements=elements, width=width, height=height)
             self.crowd_environment.add_level(level)
 
     def _get_storey_elements(self, storey_id, storey):
@@ -152,20 +151,20 @@ class IfcToCpmConverter:
 
     def _get_storey_stair_border_walls(self, storey_id):
         walls: List[Wall] = []
-        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id >= s.start_level_index and storey_id <= s.end_level_index)
+        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
         for stair in stairs_voiding_storey:
             if storey_id > stair.start_level_index:
                 # Draw a wall where the lower gate is
-                walls += [Wall(start_vertex=stair.lower_gate_edge[0], end_vertex=stair.lower_gate_edge[1])]
+                walls += [Wall(start_vertex=stair.lower_gate[0], end_vertex=stair.lower_gate[1])]
 
             walls += [
-                Wall(start_vertex=stair.first_wall_edge[0], end_vertex=stair.first_wall_edge[1]),
-                Wall(start_vertex=stair.second_wall_edge[0], end_vertex=stair.second_wall_edge[1])
+                Wall(start_vertex=stair.first_wall[0], end_vertex=stair.first_wall[1]),
+                Wall(start_vertex=stair.second_wall[0], end_vertex=stair.second_wall[1])
             ]
 
             if storey_id < stair.end_level_index:
                 # Draw a wall where the upper gate is
-                walls += [Wall(start_vertex=stair.upper_gate_edge[0], end_vertex=stair.upper_gate_edge[1])]
+                walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
 
         return walls
 
@@ -273,26 +272,19 @@ class IfcToCpmConverter:
         y_max = math.ceil(y_max)
 
         # Scale to metric
-        x_max, y_max = self._scale_to_metric((x_max, y_max))
+        # x_max, y_max = self._scale_to_metric((x_max, y_max))
 
         # Account for x and y offset
-        x_max += 2 * self.x_offset
-        y_max += 2 * self.y_offset
+        # x_max += 2 * self.x_offset
+        # y_max += 2 * self.y_offset
 
         return x_max, y_max
 
-    def _normalize_vertices(self, elements: List[BuildingElement]) -> List[BuildingElement]:
-        out_elements = []
-        for element in elements:
-            out_elements.append(element.normalize(self._normalize_vertex))
-
-        return out_elements
-
-    def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
-        x1, y1 = vertex
-        x1, y1 = self._scale_to_metric((x1, y1))
-        x1, y1 = x1 + self.x_offset, y1 + self.y_offset
-        return x1, y1
+    # def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
+    #     x1, y1 = vertex
+    #     x1, y1 = self._scale_to_metric((x1, y1))
+    #     x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+    #     return x1, y1
 
     def _transform_vertex(self, vertex, transformation_matrix):
         # Building location correction

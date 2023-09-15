@@ -74,39 +74,70 @@ class Gate(BuildingElement):
         super().__init__(*args, **kwargs, type="Gate")
 
 
-class Stair(BuildingElement):
-    __type__ = "Stair"
+class StraightSingleRunStair(BuildingElement):
+    __type__ = "StraightSingleRunStair"
 
-    def __init__(self, *args, rotation, start_level_index, end_level_index, lower_gate_edge=None, upper_gate_edge=None, first_wall_edge=None, second_wall_edge=None, **kwargs):
-        super().__init__(*args, **kwargs, type="Stair")
-        self.rotation = rotation
+    def __init__(self, *args, vertex, rotation, run_length, staircase_width, start_level_index, end_level_index, **kwargs):
+        super().__init__(*args, **kwargs, type="StraightSingleRunStair")
+
+        self.vertex = vertex
         self.start_level_index = start_level_index
         self.end_level_index = end_level_index
-        self.lower_gate_edge = lower_gate_edge
-        self.upper_gate_edge = upper_gate_edge
-        self.first_wall_edge = first_wall_edge
-        self.second_wall_edge = second_wall_edge
+        self.rotation = rotation
+        self.run_length = run_length
+        self.staircase_width = staircase_width
 
     @property
-    def staircase_width(self):
-        staircase_width = eucledian_distance(self.lower_gate_edge[0], self.lower_gate_edge[1])
-        return staircase_width
+    def lower_gate(self):
+        x1, y1 = self.vertex
+        x2, y2 = (x1 + self.staircase_width, y1)
+        # TODO rotate against vertex
+        return ((x1, y1), (x2, y2))
 
     @property
-    def staircase_length(self):
-        staircase_length = eucledian_distance(self.first_wall_edge[0], self.first_wall_edge[1])
-        return staircase_length
+    def upper_gate(self):
+        x0, y0 = self.vertex
+        x1, y1 = (x0, y0 + self.run_length)
+        x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
+        # TODO rotate against vertex
+        return ((x1, y1), (x2, y2))
+
+    @property
+    def first_wall(self):
+        x0, y0 = self.vertex
+        x1, y1 = (x0, y0)
+        x2, y2 = (x0, y0 + self.run_length)
+        # TODO rotate against vertex
+        return ((x1, y1), (x2, y2))
+
+    @property
+    def second_wall(self):
+        x0, y0 = self.vertex
+        x1, y1 = (x0 + self.staircase_width, y0)
+        x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
+        # TODO rotate against vertex
+        return ((x1, y1), (x2, y2))
 
     def normalize(self, vertex_normalizer):
-        return Stair(
+        x, y = vertex_normalizer(self.vertex)
+        x, y = self._round(x), self._round(y)
+
+        return StraightSingleRunStair(
             object_id=self.object_id,
             rotation=self.rotation,
-            start_vertex=vertex_normalizer(self.lower_gate_edge[0]),
-            end_vertex=vertex_normalizer(self.lower_gate_edge[1]),
+            vertex=(x, y),
+            run_length=self._round(self._normalize_scalar(vertex_normalizer, self.run_length)),
+            staircase_width=self._round(self._normalize_scalar(vertex_normalizer, self.staircase_width)),
             start_level_index=self.start_level_index,
             end_level_index=self.end_level_index,
-            lower_gate_edge=(vertex_normalizer(self.lower_gate_edge[0]), vertex_normalizer(self.lower_gate_edge[1])),
-            upper_gate_edge=(vertex_normalizer(self.upper_gate_edge[0]), vertex_normalizer(self.upper_gate_edge[1])),
-            first_wall_edge=(vertex_normalizer(self.first_wall_edge[0]), vertex_normalizer(self.first_wall_edge[1])),
-            second_wall_edge=(vertex_normalizer(self.second_wall_edge[0]), vertex_normalizer(self.second_wall_edge[1])),
         )
+    
+    def _normalize_scalar(self, vertex_normalizer, scalar_value):
+        _, y1 = vertex_normalizer((0, 0))
+        _, y2 = vertex_normalizer((0, scalar_value))
+        return y2 - y1
+    
+    def _round(self, value):
+        return round(value * 1) / 1
+
+

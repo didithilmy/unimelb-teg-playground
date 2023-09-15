@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Tuple
+import math
 from collections import defaultdict
 import xmltodict
-from .ifctypes import BuildingElement, Wall, Gate, Barricade, Stair
+from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair
 from .utils import filter
 
 
@@ -25,21 +26,23 @@ class Level:
 
 
 class CrowdSimulationEnvironment:
-    def __init__(self):
+    def __init__(self, offset=(0, 0), unit_scaler=lambda x: x):
         self.highest_id_map = defaultdict(lambda: 0)
         self.levels: List[Level] = []
-        self.stairs: List[Stair] = []
+        self.stairs: List[StraightSingleRunStair] = []
         self.vertices = {}
+        self.x_offset, self.y_offset = offset
+        self.unit_scaler = unit_scaler
 
     def add_level(self, level):
         self.levels.append(level)
 
-    def add_stair(self, stair: Stair):
+    def add_stair(self, stair: StraightSingleRunStair):
         self.stairs.append(stair)
 
     def write(self):
         levels = [self._get_level(x) for x in self.levels]
-        stairs = [self._create_stair_json(s) for s in self.stairs]
+        stairs = [self._create_straight_single_run_stair_json(s) for s in self.stairs]
         data = {
             "Model": {
                 "@xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
@@ -66,8 +69,8 @@ class CrowdSimulationEnvironment:
 
         return {
             "id": level_id,
-            "width": level.dimension[0],
-            "height": level.dimension[1],
+            "width": math.ceil(self.unit_scaler(level.dimension[0])),
+            "height": math.ceil(self.unit_scaler(level.dimension[1])),
             "wall_pkg": {"walls": {"Wall": walls}},
             "barricade_pkg": {"barricade_walls": {"Wall": barricades}},
             "gate_pkg": {"gates": {"Gate": gates}},
@@ -75,11 +78,11 @@ class CrowdSimulationEnvironment:
 
     def _create_wall_json(self, wall: Wall):
         wall_id = self._get_id(Wall)
-        (x1, y1), (x2, y2) = wall.start_vertex, wall.end_vertex
+        (x1, y1), (x2, y2) = self._normalize_vertex(wall.start_vertex), self._normalize_vertex(wall.end_vertex)
 
         return {
             "id": wall_id,
-            "length": wall.length,
+            "length": self.unit_scaler(wall.length),
             "isLow": False,
             "isTransparent": False,
             "iWlWG": False,
@@ -93,10 +96,10 @@ class CrowdSimulationEnvironment:
 
     def _create_gate_json(self, gate: Gate):
         gate_id = self._get_id(Gate)
-        (x1, y1), (x2, y2) = gate.start_vertex, gate.end_vertex
+        (x1, y1), (x2, y2) = self._normalize_vertex(gate.start_vertex), self._normalize_vertex(gate.end_vertex)
         return {
             "id": gate_id,
-            "length": gate.length,
+            "length": self.unit_scaler(gate.length),
             "angle": 0,  # TODO?
             "destination": False,
             "counter": False,
@@ -116,30 +119,31 @@ class CrowdSimulationEnvironment:
 
         return {
             "id": barricade_id,
-            "length": barricade.length,
+            "length": self.unit_scaler(barricade.length),
             "isLow": False,
             "isTransparent": False,
             "iWlWG": False,
             "vertices": {
                 "Vertex": [
-                    self._get_vertex((x1, y1)),
-                    self._get_vertex((x2, y2))
+                    self._get_vertex(self._normalize_vertex((x1, y1))),
+                    self._get_vertex(self._normalize_vertex((x2, y2)))
                 ]
             },
         }
 
-    def _create_stair_json(self, stair: Stair):
-        stair_id = self._get_id(Stair)
+    def _create_straight_single_run_stair_json(self, stair: StraightSingleRunStair):
+        stair_id = self._get_id(StraightSingleRunStair)
+        stair_vertex = self._normalize_vertex(stair.vertex)
 
         return {
             "id": stair_id,
-            "x": stair.lower_gate_edge[0][0],  # X coordinate of first lower vertex
-            "y": stair.lower_gate_edge[0][1],  # Y coordinate of first lower vertex
+            "x": stair_vertex[0],  # X coordinate of first lower vertex
+            "y": stair_vertex[1],  # Y coordinate of first lower vertex
             "speed": -1,  # TODO figure out what
             "spanFloors": stair.end_level_index - stair.start_level_index,
-            "length": stair.staircase_length,  # Run length
-            "width": stair.staircase_width,  # Staircase width
-            "widthLanding": stair.staircase_width,
+            "length": self.unit_scaler(stair.run_length),  # Run length
+            "width": self.unit_scaler(stair.staircase_width),  # Staircase width
+            "widthLanding": self.unit_scaler(stair.staircase_width),
             "stands": 5,  # TODO figure out where to get
             "rotation": stair.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
             "type": 1,  # Read from enum
@@ -148,7 +152,7 @@ class CrowdSimulationEnvironment:
                 "level": stair.end_level_index,
                 "gate": {
                         "id": self._get_id(Gate),
-                        "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
+                        "length": self.unit_scaler(stair.staircase_width),  # should be the same as width, if stair is STRAIGHT
                         "angle": 90,  # TODO find out what
                         "destination": False,  # let the software figure out I suppose
                         "counter": False,  # TODO find out what
@@ -156,8 +160,8 @@ class CrowdSimulationEnvironment:
                         "designatedOnly": False,
                         "vertices": {
                             "Vertex": [
-                                self._get_vertex(stair.upper_gate_edge[0]),
-                                self._get_vertex(stair.upper_gate_edge[1]),
+                                self._get_vertex(self._normalize_vertex(stair.upper_gate[0])),
+                                self._get_vertex(self._normalize_vertex(stair.upper_gate[1])),
                             ]
                         }
                 }
@@ -166,7 +170,7 @@ class CrowdSimulationEnvironment:
                 "level": stair.start_level_index,
                 "gate": {
                     "id": self._get_id(Gate),
-                    "length": stair.staircase_width,  # should be the same as width, if stair is STRAIGHT
+                    "length": self.unit_scaler(stair.staircase_width),  # should be the same as width, if stair is STRAIGHT
                     "angle": 90,  # TODO find out what
                     "destination": False,  # let the software figure out I suppose
                     "counter": False,  # TODO find out what
@@ -174,59 +178,14 @@ class CrowdSimulationEnvironment:
                     "designatedOnly": False,
                     "vertices": {
                         "Vertex": [
-                            self._get_vertex(stair.lower_gate_edge[0]),
-                            self._get_vertex(stair.lower_gate_edge[1]),
+                            self._get_vertex(self._normalize_vertex(stair.lower_gate[0])),
+                            self._get_vertex(self._normalize_vertex(stair.lower_gate[1])),
                         ]
                     }
                 }
             },
             "walls": {
                 "Wall": [
-                    # Left wall
-                    {
-                        "id": self._get_id(Wall),
-                        "length": stair.staircase_length,
-                        "angle": 0,
-                        "isLow": False,
-                        "isTransparent": False,
-                        "iWlWG": False,
-                        "vertices": {
-                            "Vertex": [
-                                self._get_vertex(stair.first_wall_edge[0]),
-                                self._get_vertex(stair.first_wall_edge[1]),
-                            ]
-                        }
-                    },
-                    # Right wall
-                    {
-                        "id": self._get_id(Wall),
-                        "length": stair.staircase_length,
-                        "angle": 0,
-                        "isLow": False,
-                        "isTransparent": False,
-                        "iWlWG": False,
-                        "vertices": {
-                            "Vertex": [
-                                self._get_vertex(stair.second_wall_edge[0]),
-                                self._get_vertex(stair.second_wall_edge[1]),
-                            ]
-                        }
-                    },
-                    # Back wall = upper gate
-                    {
-                        "id": self._get_id(Wall),
-                        "length": stair.staircase_width,
-                        "angle": 0,
-                        "isLow": False,
-                        "isTransparent": False,
-                        "iWlWG": False,
-                        "vertices": {
-                            "Vertex": [
-                                self._get_vertex(stair.upper_gate_edge[0]),
-                                self._get_vertex(stair.upper_gate_edge[1]),
-                            ]
-                        }
-                    }
                 ]
             }
         }
@@ -244,3 +203,19 @@ class CrowdSimulationEnvironment:
         id = self.highest_id_map[entity]
         self.highest_id_map[entity] += 1
         return id
+
+    def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
+        x1, y1 = vertex
+        x1, y1 = self._scale_to_metric((x1, y1))
+        x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+        return x1, y1
+
+    def _scale_to_metric(self, length):
+        if isinstance(length, tuple):
+            new_list = [self.unit_scaler(x) for x in length]
+            return tuple(new_list)
+        elif isinstance(length, list):
+            new_list = [self.unit_scaler(x) for x in length]
+            return new_list
+
+        return self.unit_scaler(length)

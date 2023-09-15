@@ -5,10 +5,10 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north
-from .ifctypes import Stair
+from .ifctypes import StraightSingleRunStair
 
 
-class StairBuilder:
+class StraightSingleRunStairBuilder:
     def __init__(self, start_level_index, ifc_stair, vertex_normalizer=lambda x: x):
         self.start_level_index = start_level_index
         self.ifc_stair = ifc_stair
@@ -81,19 +81,19 @@ class StairBuilder:
         run_length = eucledian_distance(run_start_vertex, run_end_vertex)
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
         staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
-        staircase_origin = 0, 0 # TODO fix
 
-        return Stair(
+        # FIXME determine if this is a reliable way of getting the edge (e.g., the first vertex may not be the left side of the stair)
+        # A correct representation in the crowd model must use the left side of the bottom gate as the stair vertex.
+        staircase_origin = lower_gate['edge'][0]
+
+        return StraightSingleRunStair(
             object_id=ifc_stair.GlobalId,
-            rotation=int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex))),
-            start_vertex=self.vertex_normalizer(lower_gate['edge'][0]),
-            end_vertex=self.vertex_normalizer(lower_gate['edge'][1]),
+            rotation=0,
+            vertex=staircase_origin,
+            staircase_width=staircase_width,
+            run_length=run_length,
             start_level_index=self.start_level_index,
             end_level_index=self.start_level_index + floor_span,
-            lower_gate_edge=(self.vertex_normalizer(lower_gate['edge'][0]), self.vertex_normalizer(lower_gate['edge'][1])),
-            upper_gate_edge=(self.vertex_normalizer(upper_gate['edge'][0]), self.vertex_normalizer(upper_gate['edge'][1])),
-            first_wall_edge=(self.vertex_normalizer(first_wall['edge'][0]), self.vertex_normalizer(first_wall['edge'][1])),
-            second_wall_edge=(self.vertex_normalizer(second_wall['edge'][0]), self.vertex_normalizer(second_wall['edge'][1])),
         )
 
     def _determine_straight_run_stair_floor_span(self, ifc_stair) -> int:
