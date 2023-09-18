@@ -11,9 +11,9 @@ from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
 
-from .ifctypes import BuildingElement, Barricade, WallWithOpening, Wall, StraightSingleRunStair
+from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
-from .utils import transform_vertex, filter
+from .utils import transform_vertex, filter, get_sorted_building_storeys
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -84,9 +84,7 @@ class IfcToCpmConverter:
             self.round = lambda x: round(x * 100) / 100
 
         self.close_wall_gap_metre = close_wall_gap_metre
-
-        building_elements = ifcopenshell.util.element.get_decomposition(self.ifc_building)
-        self.storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
+        self.storeys = get_sorted_building_storeys(ifc_building)
 
         self._parse_stairs()
         self._parse_storeys()
