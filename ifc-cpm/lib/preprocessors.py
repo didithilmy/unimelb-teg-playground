@@ -27,45 +27,44 @@ def infer_wall_connections(tolerance, building_elements: List[BuildingElement]) 
                 if wall2.object_id not in wall1.connected_to:
                     connection_type = "ATSTART" if wall1_near_intersection and wall1_near_intersection else "ATPATH"
                     wall1.connected_to.append((wall2.object_id, connection_type))
-    
+
     return walls
 
 
 def join_connected_walls(building_elements: List[BuildingElement]) -> List[BuildingElement]:
-    walls = [x for x in building_elements if x.__type__ == 'WallWithOpening']
+    walls = [x for x in building_elements if x.__type__ in ('WallWithOpening', 'Wall')]
     for wall in walls:
         for (connected_wall_id, connection_type) in wall.connected_to:
-            related_wall = find(
-                walls, lambda x: x.object_id == connected_wall_id
-            )
-            intersection = find_unbounded_lines_intersection(
-                (wall.start_vertex, wall.end_vertex),
-                (related_wall.start_vertex, related_wall.end_vertex),
-            )
-
-            if intersection:
-                # Update related wall vertices
-                v1_distance = eucledian_distance(
-                    related_wall.start_vertex, intersection
+            related_wall = find(walls, lambda x: x.object_id == connected_wall_id)
+            if related_wall is not None:
+                intersection = find_unbounded_lines_intersection(
+                    (wall.start_vertex, wall.end_vertex),
+                    (related_wall.start_vertex, related_wall.end_vertex),
                 )
-                v2_distance = eucledian_distance(
-                    related_wall.end_vertex, intersection
-                )
-                if v1_distance < v2_distance:
-                    related_wall.start_vertex = intersection
-                else:
-                    related_wall.end_vertex = intersection
 
-                # Update current wall vertices
-                if connection_type != 'ATPATH':
-                    wall_v1_distance = eucledian_distance(
-                        wall.start_vertex, intersection
+                if intersection:
+                    # Update related wall vertices
+                    v1_distance = eucledian_distance(
+                        related_wall.start_vertex, intersection
                     )
-                    wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
-                    if wall_v1_distance < wall_v2_distance:
-                        wall.start_vertex = intersection
+                    v2_distance = eucledian_distance(
+                        related_wall.end_vertex, intersection
+                    )
+                    if v1_distance < v2_distance:
+                        related_wall.start_vertex = intersection
                     else:
-                        wall.end_vertex = intersection
+                        related_wall.end_vertex = intersection
+
+                    # Update current wall vertices
+                    if connection_type != 'ATPATH':
+                        wall_v1_distance = eucledian_distance(
+                            wall.start_vertex, intersection
+                        )
+                        wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
+                        if wall_v1_distance < wall_v2_distance:
+                            wall.start_vertex = intersection
+                        else:
+                            wall.end_vertex = intersection
 
     return building_elements
 
