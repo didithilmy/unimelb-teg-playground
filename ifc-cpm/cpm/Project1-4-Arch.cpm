@@ -13,14 +13,15 @@
 				<walls>
 					<Wall>
 						<id>0</id>
-						<length>3.385</length>
+						<name>Basic Wall:Generic - 200mm:352553</name>
+						<length>3.38</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.615</Y>
+								<Y>9.620000000000001</Y>
 								<id>0</id>
 							</Vertex>
 							<Vertex>
@@ -32,6 +33,7 @@
 					</Wall>
 					<Wall>
 						<id>1</id>
+						<name>Basic Wall:Generic - 200mm:352645</name>
 						<length>8.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -51,6 +53,7 @@
 					</Wall>
 					<Wall>
 						<id>2</id>
+						<name>Basic Wall:Generic - 200mm:352683</name>
 						<length>6.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -70,52 +73,55 @@
 					</Wall>
 					<Wall>
 						<id>3</id>
-						<length>3.1274999999999995</length>
+						<name>Basic Wall:Generic - 200mm:352852</name>
+						<length>3.13</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.600000000000001</Y>
+								<Y>9.6</Y>
 								<id>5</id>
 							</Vertex>
 							<Vertex>
-								<X>8.1275</X>
-								<Y>9.600000000000001</Y>
+								<X>8.129999999999999</X>
+								<Y>9.6</Y>
 								<id>6</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>4</id>
-						<length>0.9574999999999996</length>
+						<name>Basic Wall:Generic - 200mm:352852</name>
+						<length>0.96</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>9.0425</X>
-								<Y>9.600000000000001</Y>
+								<X>9.04</X>
+								<Y>9.6</Y>
 								<id>7</id>
 							</Vertex>
 							<Vertex>
 								<X>10.0</X>
-								<Y>9.600000000000001</Y>
+								<Y>9.6</Y>
 								<id>8</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>5</id>
-						<length>3.3999999999999986</length>
+						<name>Basic Wall:Generic - 200mm:352885</name>
+						<length>3.4</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>10.0</X>
-								<Y>9.600000000000001</Y>
+								<Y>9.6</Y>
 								<id>8</id>
 							</Vertex>
 							<Vertex>
@@ -127,52 +133,55 @@
 					</Wall>
 					<Wall>
 						<id>6</id>
-						<length>2.9000000000000004</length>
+						<name>Basic Wall:Generic - 200mm:353276</name>
+						<length>2.9</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>7.800000000000001</Y>
+								<Y>7.8</Y>
 								<id>10</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
-								<Y>7.800000000000001</Y>
+								<Y>7.8</Y>
 								<id>11</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>7</id>
-						<length>0.7575000000000003</length>
+						<name>Basic Wall:Generic - 200mm:353329</name>
+						<length>0.76</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>7.9</X>
-								<Y>7.800000000000001</Y>
+								<Y>7.8</Y>
 								<id>11</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
-								<Y>7.0425</Y>
+								<Y>7.04</Y>
 								<id>12</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>8</id>
-						<length>1.1274999999999995</length>
+						<name>Basic Wall:Generic - 200mm:353329</name>
+						<length>1.13</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>7.9</X>
-								<Y>6.1274999999999995</Y>
+								<Y>6.13</Y>
 								<id>13</id>
 							</Vertex>
 							<Vertex>
@@ -184,7 +193,8 @@
 					</Wall>
 					<Wall>
 						<id>9</id>
-						<length>2.8000000000000007</length>
+						<name>Basic Wall:Generic - 200mm:352553-1</name>
+						<length>2.8</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -196,21 +206,22 @@
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
-								<Y>7.800000000000001</Y>
+								<Y>7.8</Y>
 								<id>10</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>10</id>
-						<length>0.8999999999999986</length>
+						<name>Basic Wall:Generic - 200mm:352553-2</name>
+						<length>0.9</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>7.800000000000001</Y>
+								<Y>7.8</Y>
 								<id>10</id>
 							</Vertex>
 							<Vertex>
@@ -222,6 +233,7 @@
 					</Wall>
 					<Wall>
 						<id>11</id>
+						<name>Basic Wall:Generic - 200mm:352603-1</name>
 						<length>5.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -241,13 +253,34 @@
 					</Wall>
 					<Wall>
 						<id>12</id>
-						<length>2.1850000000000005</length>
+						<name>Basic Wall:Generic - 200mm:352603-2</name>
+						<length>7.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>10.085</X>
+								<X>10.0</X>
+								<Y>13.0</Y>
+								<id>9</id>
+							</Vertex>
+							<Vertex>
+								<X>17.0</X>
+								<Y>13.0</Y>
+								<id>2</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+					<Wall>
+						<id>13</id>
+						<name>Basic Wall:Generic - 200mm:352683-1</name>
+						<length>2.18</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>10.08</X>
 								<Y>5.0</Y>
 								<id>17</id>
 							</Vertex>
@@ -259,8 +292,9 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>13</id>
-						<length>2.9000000000000004</length>
+						<id>14</id>
+						<name>Basic Wall:Generic - 200mm:352683-2</name>
+						<length>2.9</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -277,131 +311,17 @@
 							</Vertex>
 						</vertices>
 					</Wall>
-					<Wall>
-						<id>14</id>
-						<length>3.9000000000000004</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>10.0</X>
-								<Y>13.0</Y>
-								<id>9</id>
-							</Vertex>
-							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>15</id>
-						<length>3.0999999999999996</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
-							</Vertex>
-							<Vertex>
-								<X>17.0</X>
-								<Y>13.0</Y>
-								<id>2</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>16</id>
-						<length>2.5</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>16.229948793310136</X>
-								<Y>9.731824087633438</Y>
-								<id>19</id>
-							</Vertex>
-							<Vertex>
-								<X>16.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>20</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>17</id>
-						<length>2.5</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>15.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>21</id>
-							</Vertex>
-							<Vertex>
-								<X>15.229948793310138</X>
-								<Y>9.731824087633438</Y>
-								<id>22</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>18</id>
-						<length>0.9999999999999982</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>15.229948793310138</X>
-								<Y>9.731824087633438</Y>
-								<id>22</id>
-							</Vertex>
-							<Vertex>
-								<X>16.229948793310136</X>
-								<Y>9.731824087633438</Y>
-								<id>19</id>
-							</Vertex>
-						</vertices>
-					</Wall>
 				</walls>
 			</wall_pkg>
 			<barricade_pkg>
 				<barricade_walls>
-					<Wall>
-						<id>0</id>
-						<length>3.3999999999999986</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
-							</Vertex>
-							<Vertex>
-								<X>13.9</X>
-								<Y>9.600000000000001</Y>
-								<id>23</id>
-							</Vertex>
-						</vertices>
-					</Wall>
 				</barricade_walls>
 			</barricade_pkg>
 			<gate_pkg>
 				<gates>
 					<Gate>
-						<id>0</id>
-						<length>0.9149999999999991</length>
+						<id>15</id>
+						<length>0.92</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -414,15 +334,15 @@
 								<id>4</id>
 							</Vertex>
 							<Vertex>
-								<X>10.085</X>
+								<X>10.08</X>
 								<Y>5.0</Y>
 								<id>17</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>1</id>
-						<length>0.9150000000000009</length>
+						<id>16</id>
+						<length>0.92</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -430,20 +350,20 @@
 						<designatedOnly>false</designatedOnly>
 						<vertices>
 							<Vertex>
-								<X>8.1275</X>
-								<Y>9.600000000000001</Y>
+								<X>8.129999999999999</X>
+								<Y>9.6</Y>
 								<id>6</id>
 							</Vertex>
 							<Vertex>
-								<X>9.0425</X>
-								<Y>9.600000000000001</Y>
+								<X>9.04</X>
+								<Y>9.6</Y>
 								<id>7</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>2</id>
-						<length>0.9150000000000009</length>
+						<id>17</id>
+						<length>0.92</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -452,19 +372,19 @@
 						<vertices>
 							<Vertex>
 								<X>7.9</X>
-								<Y>7.0425</Y>
+								<Y>7.04</Y>
 								<id>12</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
-								<Y>6.1274999999999995</Y>
+								<Y>6.13</Y>
 								<id>13</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>3</id>
-						<length>0.9000000000000021</length>
+						<id>18</id>
+						<length>0.9</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -478,14 +398,14 @@
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.600000000000001</Y>
+								<Y>9.6</Y>
 								<id>5</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>4</id>
-						<length>0.014999999999998792</length>
+						<id>19</id>
+						<length>0.02</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -494,12 +414,12 @@
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.600000000000001</Y>
+								<Y>9.6</Y>
 								<id>5</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.615</Y>
+								<Y>9.620000000000001</Y>
 								<id>0</id>
 							</Vertex>
 						</vertices>
@@ -514,7 +434,28 @@
 			<wall_pkg>
 				<walls>
 					<Wall>
-						<id>19</id>
+						<id>20</id>
+						<name>Basic Wall:Generic - 200mm:353688</name>
+						<length>12.0</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>5.0</X>
+								<Y>13.0</Y>
+								<id>1</id>
+							</Vertex>
+							<Vertex>
+								<X>17.0</X>
+								<Y>13.0</Y>
+								<id>2</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+					<Wall>
+						<id>21</id>
+						<name>Basic Wall:Generic - 200mm:353745</name>
 						<length>8.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -533,8 +474,9 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>20</id>
-						<length>0.7574999999999994</length>
+						<id>22</id>
+						<name>Basic Wall:Generic - 200mm:355173</name>
+						<length>0.76</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -542,37 +484,39 @@
 							<Vertex>
 								<X>10.0</X>
 								<Y>7.1</Y>
-								<id>24</id>
+								<id>18</id>
 							</Vertex>
 							<Vertex>
 								<X>10.0</X>
-								<Y>6.3425</Y>
-								<id>25</id>
+								<Y>6.34</Y>
+								<id>19</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>21</id>
-						<length>0.4275000000000002</length>
+						<id>23</id>
+						<name>Basic Wall:Generic - 200mm:355173</name>
+						<length>0.43</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
 								<X>10.0</X>
-								<Y>5.4275</Y>
-								<id>26</id>
+								<Y>5.43</Y>
+								<id>20</id>
 							</Vertex>
 							<Vertex>
 								<X>10.0</X>
 								<Y>5.0</Y>
-								<id>27</id>
+								<id>21</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>22</id>
-						<length>0.8575000000000017</length>
+						<id>24</id>
+						<name>Basic Wall:Generic - 200mm:355300</name>
+						<length>0.86</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -580,74 +524,38 @@
 							<Vertex>
 								<X>7.9</X>
 								<Y>10.8</Y>
-								<id>28</id>
+								<id>22</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
-								<Y>9.942499999999999</Y>
-								<id>29</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>23</id>
-						<length>1.9275000000000002</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>7.9</X>
-								<Y>9.0275</Y>
-								<id>30</id>
-							</Vertex>
-							<Vertex>
-								<X>7.9</X>
-								<Y>7.1</Y>
-								<id>31</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>24</id>
-						<length>8.9</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>5.0</X>
-								<Y>13.0</Y>
-								<id>1</id>
-							</Vertex>
-							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
+								<Y>9.940000000000001</Y>
+								<id>23</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>25</id>
-						<length>3.0999999999999996</length>
+						<name>Basic Wall:Generic - 200mm:355300</name>
+						<length>1.93</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
+								<X>7.9</X>
+								<Y>9.030000000000001</Y>
+								<id>24</id>
 							</Vertex>
 							<Vertex>
-								<X>17.0</X>
-								<Y>13.0</Y>
-								<id>2</id>
+								<X>7.9</X>
+								<Y>7.1</Y>
+								<id>25</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>26</id>
+						<name>Basic Wall:Generic - 200mm:353809-1</name>
 						<length>7.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -661,12 +569,13 @@
 							<Vertex>
 								<X>10.0</X>
 								<Y>5.0</Y>
-								<id>27</id>
+								<id>21</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>27</id>
+						<name>Basic Wall:Generic - 200mm:353809-2</name>
 						<length>5.0</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
@@ -675,7 +584,7 @@
 							<Vertex>
 								<X>10.0</X>
 								<Y>5.0</Y>
-								<id>27</id>
+								<id>21</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
@@ -686,7 +595,8 @@
 					</Wall>
 					<Wall>
 						<id>28</id>
-						<length>2.0999999999999996</length>
+						<name>Basic Wall:Generic - 200mm:353866-1</name>
+						<length>2.1</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -699,13 +609,14 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>7.1</Y>
-								<id>32</id>
+								<id>26</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>29</id>
-						<length>2.9000000000000004</length>
+						<name>Basic Wall:Generic - 200mm:355120-1</name>
+						<length>2.9</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -713,18 +624,19 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>7.1</Y>
-								<id>32</id>
+								<id>26</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
 								<Y>7.1</Y>
-								<id>31</id>
+								<id>25</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>30</id>
-						<length>2.0999999999999996</length>
+						<name>Basic Wall:Generic - 200mm:355120-2</name>
+						<length>2.1</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -732,18 +644,19 @@
 							<Vertex>
 								<X>7.9</X>
 								<Y>7.1</Y>
-								<id>31</id>
+								<id>25</id>
 							</Vertex>
 							<Vertex>
 								<X>10.0</X>
 								<Y>7.1</Y>
-								<id>24</id>
+								<id>18</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>31</id>
-						<length>2.9000000000000004</length>
+						<name>Basic Wall:Generic - 200mm:355262-2</name>
+						<length>2.9</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -751,18 +664,19 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>10.8</Y>
-								<id>33</id>
+								<id>27</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
 								<Y>10.8</Y>
-								<id>28</id>
+								<id>22</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>32</id>
-						<length>3.700000000000001</length>
+						<name>Basic Wall:Generic - 200mm:353866-2-1</name>
+						<length>3.7</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -770,18 +684,19 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>7.1</Y>
-								<id>32</id>
+								<id>26</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
 								<Y>10.8</Y>
-								<id>33</id>
+								<id>27</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>33</id>
-						<length>2.1999999999999993</length>
+						<name>Basic Wall:Generic - 200mm:353866-2-2</name>
+						<length>2.2</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
@@ -789,7 +704,7 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>10.8</Y>
-								<id>33</id>
+								<id>27</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
@@ -800,58 +715,61 @@
 					</Wall>
 					<Wall>
 						<id>34</id>
-						<length>1.0</length>
+						<name></name>
+						<length>2.64</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>16.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>20</id>
+								<X>16.42</X>
+								<Y>10.7</Y>
+								<id>28</id>
 							</Vertex>
 							<Vertex>
-								<X>15.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>21</id>
+								<X>13.78</X>
+								<Y>10.7</Y>
+								<id>29</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>35</id>
+						<name></name>
 						<length>2.5</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>16.229948793310136</X>
-								<Y>9.731824087633438</Y>
-								<id>19</id>
+								<X>16.42</X>
+								<Y>10.7</Y>
+								<id>28</id>
 							</Vertex>
 							<Vertex>
-								<X>16.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>20</id>
+								<X>16.42</X>
+								<Y>8.2</Y>
+								<id>30</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
 						<id>36</id>
+						<name></name>
 						<length>2.5</length>
 						<isLow>false</isLow>
 						<isTransparent>false</isTransparent>
 						<iWlWG>false</iWlWG>
 						<vertices>
 							<Vertex>
-								<X>15.229948793310143</X>
-								<Y>12.231824087633438</Y>
-								<id>21</id>
+								<X>13.78</X>
+								<Y>10.7</Y>
+								<id>29</id>
 							</Vertex>
 							<Vertex>
-								<X>15.229948793310138</X>
-								<Y>9.731824087633438</Y>
-								<id>22</id>
+								<X>13.78</X>
+								<Y>8.2</Y>
+								<id>31</id>
 							</Vertex>
 						</vertices>
 					</Wall>
@@ -859,32 +777,13 @@
 			</wall_pkg>
 			<barricade_pkg>
 				<barricade_walls>
-					<Wall>
-						<id>1</id>
-						<length>3.3999999999999986</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>13.9</X>
-								<Y>13.0</Y>
-								<id>18</id>
-							</Vertex>
-							<Vertex>
-								<X>13.9</X>
-								<Y>9.600000000000001</Y>
-								<id>23</id>
-							</Vertex>
-						</vertices>
-					</Wall>
 				</barricade_walls>
 			</barricade_pkg>
 			<gate_pkg>
 				<gates>
 					<Gate>
-						<id>5</id>
-						<length>0.915</length>
+						<id>37</id>
+						<length>0.92</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -893,19 +792,19 @@
 						<vertices>
 							<Vertex>
 								<X>10.0</X>
-								<Y>6.3425</Y>
-								<id>25</id>
+								<Y>6.34</Y>
+								<id>19</id>
 							</Vertex>
 							<Vertex>
 								<X>10.0</X>
-								<Y>5.4275</Y>
-								<id>26</id>
+								<Y>5.43</Y>
+								<id>20</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>6</id>
-						<length>0.9149999999999991</length>
+						<id>38</id>
+						<length>0.92</length>
 						<angle>0</angle>
 						<destination>false</destination>
 						<counter>false</counter>
@@ -914,13 +813,13 @@
 						<vertices>
 							<Vertex>
 								<X>7.9</X>
-								<Y>9.942499999999999</Y>
-								<id>29</id>
+								<Y>9.940000000000001</Y>
+								<id>23</id>
 							</Vertex>
 							<Vertex>
 								<X>7.9</X>
-								<Y>9.0275</Y>
-								<id>30</id>
+								<Y>9.030000000000001</Y>
+								<id>24</id>
 							</Vertex>
 						</vertices>
 					</Gate>
@@ -930,23 +829,23 @@
 	</levels>
 	<stairs>
 		<Stair>
-			<id>0</id>
-			<x>16.229948793310143</x>
-			<y>12.231824087633438</y>
+			<id>39</id>
+			<x>16.42</x>
+			<y>10.7</y>
 			<speed>-1</speed>
 			<spanFloors>1</spanFloors>
 			<length>2.5</length>
-			<width>1.0</width>
-			<widthLanding>1.0</widthLanding>
-			<stands>5</stands>
+			<width>2.64</width>
+			<widthLanding>2.64</widthLanding>
+			<stands>10</stands>
 			<rotation>180</rotation>
 			<type>1</type>
 			<direction>0</direction>
 			<upper>
 				<level>1</level>
 				<gate>
-					<id>7</id>
-					<length>1.0</length>
+					<id>40</id>
+					<length>2.64</length>
 					<angle>90</angle>
 					<destination>false</destination>
 					<counter>false</counter>
@@ -954,14 +853,14 @@
 					<designatedOnly>false</designatedOnly>
 					<vertices>
 						<Vertex>
-							<X>15.229948793310138</X>
-							<Y>9.731824087633438</Y>
-							<id>22</id>
+							<X>16.42</X>
+							<Y>8.2</Y>
+							<id>30</id>
 						</Vertex>
 						<Vertex>
-							<X>16.229948793310136</X>
-							<Y>9.731824087633438</Y>
-							<id>19</id>
+							<X>13.78</X>
+							<Y>8.2</Y>
+							<id>31</id>
 						</Vertex>
 					</vertices>
 				</gate>
@@ -969,8 +868,8 @@
 			<lower>
 				<level>0</level>
 				<gate>
-					<id>8</id>
-					<length>1.0</length>
+					<id>41</id>
+					<length>2.64</length>
 					<angle>90</angle>
 					<destination>false</destination>
 					<counter>false</counter>
@@ -978,79 +877,19 @@
 					<designatedOnly>false</designatedOnly>
 					<vertices>
 						<Vertex>
-							<X>16.229948793310143</X>
-							<Y>12.231824087633438</Y>
-							<id>20</id>
+							<X>16.42</X>
+							<Y>10.7</Y>
+							<id>28</id>
 						</Vertex>
 						<Vertex>
-							<X>15.229948793310143</X>
-							<Y>12.231824087633438</Y>
-							<id>21</id>
+							<X>13.78</X>
+							<Y>10.7</Y>
+							<id>29</id>
 						</Vertex>
 					</vertices>
 				</gate>
 			</lower>
 			<walls>
-				<Wall>
-					<id>37</id>
-					<length>2.5</length>
-					<angle>0</angle>
-					<isLow>false</isLow>
-					<isTransparent>false</isTransparent>
-					<iWlWG>false</iWlWG>
-					<vertices>
-						<Vertex>
-							<X>16.229948793310136</X>
-							<Y>9.731824087633438</Y>
-							<id>19</id>
-						</Vertex>
-						<Vertex>
-							<X>16.229948793310143</X>
-							<Y>12.231824087633438</Y>
-							<id>20</id>
-						</Vertex>
-					</vertices>
-				</Wall>
-				<Wall>
-					<id>38</id>
-					<length>2.5</length>
-					<angle>0</angle>
-					<isLow>false</isLow>
-					<isTransparent>false</isTransparent>
-					<iWlWG>false</iWlWG>
-					<vertices>
-						<Vertex>
-							<X>15.229948793310143</X>
-							<Y>12.231824087633438</Y>
-							<id>21</id>
-						</Vertex>
-						<Vertex>
-							<X>15.229948793310138</X>
-							<Y>9.731824087633438</Y>
-							<id>22</id>
-						</Vertex>
-					</vertices>
-				</Wall>
-				<Wall>
-					<id>39</id>
-					<length>1.0</length>
-					<angle>0</angle>
-					<isLow>false</isLow>
-					<isTransparent>false</isTransparent>
-					<iWlWG>false</iWlWG>
-					<vertices>
-						<Vertex>
-							<X>15.229948793310138</X>
-							<Y>9.731824087633438</Y>
-							<id>22</id>
-						</Vertex>
-						<Vertex>
-							<X>16.229948793310136</X>
-							<Y>9.731824087633438</Y>
-							<id>19</id>
-						</Vertex>
-					</vertices>
-				</Wall>
 			</walls>
 		</Stair>
 	</stairs>

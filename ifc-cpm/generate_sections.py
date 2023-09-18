@@ -36,7 +36,7 @@ occ_display = ifcopenshell.geom.utils.initialize_display()
 # occ_display.View.SetBackgroundImage("white_bg.bmp")
 
 # Open the IFC file using IfcOpenShell
-ifc_file = ifcopenshell.open(os.path.join(os.path.dirname(__file__), "house.ifc"))
+ifc_file = ifcopenshell.open(os.path.join(os.path.dirname(__file__), "ifc/house.ifc"))
 
 # The geometric elements in an IFC file are the IfcProduct elements. So these are 
 # opened and displayed.
