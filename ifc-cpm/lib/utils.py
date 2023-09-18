@@ -1,6 +1,14 @@
 from typing import Tuple
 import math
 import numpy as np
+import ifcopenshell.util.element
+
+
+def get_sorted_building_storeys(ifc_building):
+    building_elements = ifcopenshell.util.element.get_decomposition(ifc_building)
+    storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
+    sorted_storeys = sorted(storeys, key=lambda s: s.Elevation)
+    return sorted_storeys
 
 
 def transform_vertex(transformation_matrix, vertex: Tuple[float, float]) -> Tuple[float, float]:

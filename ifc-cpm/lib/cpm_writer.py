@@ -149,7 +149,7 @@ class CrowdSimulationEnvironment:
             "length": self.unit_scaler(stair.run_length),  # Run length
             "width": self.unit_scaler(stair.staircase_width),  # Staircase width
             "widthLanding": self.unit_scaler(stair.staircase_width),
-            "stands": 5,  # TODO figure out where to get
+            "stands": int(stair.no_of_treads),
             "rotation": stair.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
             "type": 1,  # Read from enum
             "direction": 0,

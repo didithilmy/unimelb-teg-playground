@@ -102,7 +102,7 @@ class IfcToCpmConverter:
             stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
             for stair_in_storey in stairs_in_storey:
                 try:
-                    stair = StraightSingleRunStairBuilder(storey_id, stair_in_storey).build()
+                    stair = StraightSingleRunStairBuilder(self.ifc_building, storey_id, stair_in_storey).build()
                     self.stairs.append(stair)
                     self.crowd_environment.add_stair(stair)
                 except Exception as e:

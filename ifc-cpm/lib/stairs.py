@@ -1,18 +1,17 @@
-import numpy as np
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys
 from .ifctypes import StraightSingleRunStair
 
 
 class StraightSingleRunStairBuilder:
-    def __init__(self, start_level_index, ifc_stair, vertex_normalizer=lambda x: x):
+    def __init__(self, ifc_building, start_level_index, ifc_stair):
+        self.ifc_building = ifc_building
         self.start_level_index = start_level_index
         self.ifc_stair = ifc_stair
-        self.vertex_normalizer = vertex_normalizer
 
     def build(self):
         stair_type = self.ifc_stair.PredefinedType
@@ -27,6 +26,7 @@ class StraightSingleRunStairBuilder:
         assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
         stair_flight = stair_flights[0]
+        psets = ifcopenshell.util.element.get_psets(stair_flight)
         representations = stair_flight.Representation.Representations
         footprint_repr = find(representations, lambda x: x.RepresentationIdentifier == 'FootPrint')
         assert footprint_repr is not None, "There should be a FootPrint representation"
@@ -94,9 +94,26 @@ class StraightSingleRunStairBuilder:
             vertex=staircase_origin,
             staircase_width=staircase_width,
             run_length=run_length,
+            no_of_treads=psets['Pset_StairFlightCommon'].get("NumberOfTreads"),
             start_level_index=self.start_level_index,
             end_level_index=self.start_level_index + floor_span,
         )
 
     def _determine_straight_run_stair_floor_span(self, ifc_stair) -> int:
-        return 1  # TODO infer from level height and bounding box
+        storey = ifcopenshell.util.element.get_container(ifc_stair)
+        building_storeys = get_sorted_building_storeys(self.ifc_building)
+
+        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+        assert len(stair_flights) == 1, "There should be exactly one stair flight"
+
+        stair_flight = stair_flights[0]
+        psets = ifcopenshell.util.element.get_psets(stair_flight)
+        pset_stairflight = psets['Pset_StairFlightCommon']
+        run_height = pset_stairflight.get("NumberOfRiser", 1) * pset_stairflight.get("RiserHeight", 1)
+
+        starting_elevation = storey.Elevation
+        ending_elevation = starting_elevation + run_height
+        storeys_in_stair = filter(building_storeys, matcher=lambda s: s.Elevation > starting_elevation and s.Elevation <= ending_elevation)
+
+        return len(storeys_in_stair)

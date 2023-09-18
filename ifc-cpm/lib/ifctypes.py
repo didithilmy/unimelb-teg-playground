@@ -1,4 +1,5 @@
 from typing import Tuple
+import math
 import copy
 import numpy as np
 from .utils import rotate_point_around_point
@@ -77,7 +78,7 @@ class Gate(BuildingElement):
 class StraightSingleRunStair(BuildingElement):
     __type__ = "StraightSingleRunStair"
 
-    def __init__(self, *args, vertex, rotation, run_length, staircase_width, start_level_index, end_level_index, **kwargs):
+    def __init__(self, *args, vertex, rotation, run_length, staircase_width, no_of_treads, start_level_index, end_level_index, **kwargs):
         super().__init__(*args, **kwargs, type="StraightSingleRunStair")
 
         self.vertex = vertex
@@ -86,6 +87,9 @@ class StraightSingleRunStair(BuildingElement):
         self.rotation = rotation
         self.run_length = run_length
         self.staircase_width = staircase_width
+        self.no_of_treads = no_of_treads
+        if no_of_treads is None:
+            self.no_of_treads = math.ceil(run_length)
 
     @property
     def lower_gate(self):
@@ -109,7 +113,7 @@ class StraightSingleRunStair(BuildingElement):
         x0, y0 = self.vertex
         x1, y1 = (x0, y0)
         x2, y2 = (x0, y0 + self.run_length)
-        
+
         x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
         x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
@@ -119,7 +123,7 @@ class StraightSingleRunStair(BuildingElement):
         x0, y0 = self.vertex
         x1, y1 = (x0 + self.staircase_width, y0)
         x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
-        
+
         x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
         x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
@@ -134,16 +138,15 @@ class StraightSingleRunStair(BuildingElement):
             vertex=(x, y),
             run_length=self._round(self._normalize_scalar(vertex_normalizer, self.run_length)),
             staircase_width=self._round(self._normalize_scalar(vertex_normalizer, self.staircase_width)),
+            no_of_treads=self.no_of_treads,
             start_level_index=self.start_level_index,
             end_level_index=self.end_level_index,
         )
-    
+
     def _normalize_scalar(self, vertex_normalizer, scalar_value):
         _, y1 = vertex_normalizer((0, 0))
         _, y2 = vertex_normalizer((0, scalar_value))
         return y2 - y1
-    
+
     def _round(self, value):
         return round(value * 1) / 1
-
-
