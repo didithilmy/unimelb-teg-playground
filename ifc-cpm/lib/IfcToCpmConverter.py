@@ -199,7 +199,7 @@ class IfcToCpmConverter:
         end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
-        return WallWithOpening(object_id=ifc_wall.GlobalId, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
+        return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
 
     def _get_opening_width(self, opening_element):
         fillings = opening_element.HasFillings

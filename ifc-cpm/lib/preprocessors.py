@@ -129,7 +129,7 @@ def decompose_wall_with_openings(elements: List[BuildingElement]) -> List[Buildi
                     if g1_x >= p1_x and g2_x <= p2_x and g1_y >= p1_y and g2_y <= p2_y:
                         return gate_vertices
 
-            elements_queue = [Wall(start_vertex=element.start_vertex, end_vertex=element.end_vertex)]
+            elements_queue = [Wall(name=element.name, start_vertex=element.start_vertex, end_vertex=element.end_vertex)]
             while len(elements_queue) > 0:
                 el = elements_queue.pop(0)
                 gate_vertices = get_first_contained_gate(el.start_vertex, el.end_vertex)
@@ -137,9 +137,9 @@ def decompose_wall_with_openings(elements: List[BuildingElement]) -> List[Buildi
                     out_elements.append(el)
                 else:
                     gate_vert1, gate_vert2 = gate_vertices
-                    wall1 = Wall(start_vertex=el.start_vertex, end_vertex=gate_vert1)
-                    wall2 = Wall(start_vertex=gate_vert2, end_vertex=el.end_vertex)
-                    gate = Gate(start_vertex=gate_vert1, end_vertex=gate_vert2)
+                    wall1 = Wall(name=element.name, start_vertex=el.start_vertex, end_vertex=gate_vert1)
+                    wall2 = Wall(name=element.name, start_vertex=gate_vert2, end_vertex=el.end_vertex)
+                    gate = Gate(name=element.name, start_vertex=gate_vert1, end_vertex=gate_vert2)
                     elements_queue += [wall1, gate, wall2]
                     gates_vertices.remove(gate_vertices)
 

@@ -87,6 +87,7 @@ class CrowdSimulationEnvironment:
 
         return {
             "id": wall_id,
+            "name": wall.name,
             "length": self.unit_scaler(wall.length),
             "isLow": False,
             "isTransparent": False,
