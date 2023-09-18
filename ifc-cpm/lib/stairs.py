@@ -3,7 +3,7 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point
 from .ifctypes import StraightSingleRunStair
 
 
@@ -84,9 +84,8 @@ class StraightSingleRunStairBuilder:
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
         staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
 
-        # FIXME determine if this is a reliable way of getting the edge (e.g., the first vertex may not be the left side of the stair)
-        # A correct representation in the crowd model must use the left side of the bottom gate as the stair vertex.
-        staircase_origin = lower_gate['edge'][0]
+        # Staircase origin must be to the LEFT of the run axis.
+        staircase_origin = self._determine_origin_vertex(lower_gate, run_rotation)
 
         return StraightSingleRunStair(
             object_id=ifc_stair.GlobalId,
@@ -117,3 +116,17 @@ class StraightSingleRunStairBuilder:
         storeys_in_stair = filter(building_storeys, matcher=lambda s: s.Elevation > starting_elevation and s.Elevation <= ending_elevation)
 
         return len(storeys_in_stair)
+
+    def _determine_origin_vertex(self, lower_gate, run_rotation):
+        lv1, lv2 = lower_gate['edge']
+        intersection = lower_gate['intersection']
+
+        # Counter-rotate vertex around intersection
+        lv1_rotated_x, _ = rotate_point_around_point(intersection, lv1, -run_rotation)
+        lv2_rotated_x, _ = rotate_point_around_point(intersection, lv2, -run_rotation)
+
+        # Determine which one is the left one
+        if lv1_rotated_x < lv2_rotated_x:
+            return lv1
+
+        return lv2
