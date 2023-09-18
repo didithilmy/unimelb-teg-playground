@@ -14,9 +14,13 @@ class XYBoundingBox:
         for repr in representations:
             repr_id = repr.RepresentationIdentifier
             if repr_id == "Box":
-                return XYBoundingBox.from_bounding_box(repr)
+                bbox = XYBoundingBox.from_bounding_box(repr)
+                if bbox:
+                    return bbox
             elif repr_id == "Body":
-                return XYBoundingBox.from_body(repr)
+                bbox = XYBoundingBox.from_body(repr)
+                if bbox:
+                    return bbox
 
         raise Exception("Cannot infer bounding box")
 
@@ -32,6 +36,9 @@ class XYBoundingBox:
     @staticmethod
     def from_body(representation):
         edges = Extrusion2DVertices.from_body(representation)
+        if not edges:
+            return None
+
         vertices = []
         for v1, v2 in edges:
             vertices += [v1, v2]
@@ -63,11 +70,13 @@ class Extrusion2DVertices:
 
             if repr.RepresentationIdentifier == "Box":
                 vertices = Extrusion2DVertices.from_bounding_box(repr)
+                if vertices:
+                    return vertices
             elif repr.RepresentationIdentifier == "Body":
                 vertices = Extrusion2DVertices.from_body(repr)
+                if vertices:
+                    return vertices
 
-        if vertices:
-            return vertices
         raise Exception("Cannot infer 2D extrusion vertices.")
 
     @staticmethod
@@ -94,15 +103,16 @@ class Extrusion2DVertices:
     @staticmethod
     def from_body(representation):
         body_rep = representation.Items[0]
-        swept_area = body_rep.SweptArea
-        if swept_area.is_a("IfcRectangleProfileDef"):
-            return Extrusion2DVertices._from_body_rectangle_profile(representation)
-        elif swept_area.is_a("IfcArbitraryClosedProfileDef"):
-            outer_curve = swept_area.OuterCurve
-            if outer_curve.is_a("IfcIndexedPolyCurve"):
-                return Extrusion2DVertices._from_indexed_poly_curve(representation)
-            elif outer_curve.is_a("IfcPolyline"):
-                return Extrusion2DVertices._from_poly_line(representation)
+        if body_rep.is_a("IfcSweptAreaSolid"):
+            swept_area = body_rep.SweptArea
+            if swept_area.is_a("IfcRectangleProfileDef"):
+                return Extrusion2DVertices._from_body_rectangle_profile(representation)
+            elif swept_area.is_a("IfcArbitraryClosedProfileDef"):
+                outer_curve = swept_area.OuterCurve
+                if outer_curve.is_a("IfcIndexedPolyCurve"):
+                    return Extrusion2DVertices._from_indexed_poly_curve(representation)
+                elif outer_curve.is_a("IfcPolyline"):
+                    return Extrusion2DVertices._from_poly_line(representation)
 
     @staticmethod
     def _from_body_rectangle_profile(representation):
