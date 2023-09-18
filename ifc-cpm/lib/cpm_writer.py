@@ -41,6 +41,7 @@ class CrowdSimulationEnvironment:
         self.stairs.append(stair)
 
     def write(self):
+        self.map_bounds = self._get_map_bounds()
         levels = [self._get_level(x) for x in self.levels]
         stairs = [self._create_straight_single_run_stair_json(s) for s in self.stairs]
         data = {
@@ -213,7 +214,10 @@ class CrowdSimulationEnvironment:
     def _normalize_vertex(self, vertex: Tuple[float, float]) -> Tuple[float, float]:
         x1, y1 = vertex
         x1, y1 = self._scale_to_metric((x1, y1))
-        x1, y1 = x1 + self.x_offset, y1 + self.y_offset
+        (x_min, y_min), _ = self.map_bounds
+
+        x1, y1 = x1 + self.x_offset - x_min, y1 + self.y_offset - y_min
+
         return x1, y1
 
     def _scale_to_metric(self, length):
@@ -227,21 +231,33 @@ class CrowdSimulationEnvironment:
         return self.unit_scaler(length)
 
     def _get_map_size(self):
+        (x_min, y_min), (x_max, y_max) = self.map_bounds
+
+        # Account for x and y offset
+        w = x_max - x_min + 2 * self.x_offset
+        h = y_max - y_min + 2 * self.y_offset
+
+        return w, h
+
+    def _get_map_bounds(self):
         x_max = 0
+        x_min = math.inf
         y_max = 0
+        y_min = math.inf
         for level in self.levels:
             for element in level.elements:
                 x_max = max(x_max, element.start_vertex[0], element.end_vertex[0])
+                x_min = min(x_min, element.start_vertex[0], element.end_vertex[0])
                 y_max = max(y_max, element.start_vertex[1], element.end_vertex[1])
+                y_min = min(y_min, element.start_vertex[1], element.end_vertex[1])
 
         x_max = math.ceil(x_max)
         y_max = math.ceil(y_max)
+        x_min = math.floor(x_min)
+        y_min = math.floor(y_min)
 
         # Scale to metric
         x_max, y_max = self._scale_to_metric((x_max, y_max))
+        x_min, y_min = self._scale_to_metric((x_min, y_min))
 
-        # Account for x and y offset
-        x_max += 2 * self.x_offset
-        y_max += 2 * self.y_offset
-
-        return x_max, y_max
+        return (x_min, y_min), (x_max, y_max)
