@@ -3,7 +3,7 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex
 from .ifctypes import StraightSingleRunStair
 
 
@@ -26,6 +26,9 @@ class StraightSingleRunStairBuilder:
         assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
         stair_flight = stair_flights[0]
+
+        transformation_matrix = ifcopenshell.util.placement.get_local_placement(stair_flight.ObjectPlacement)
+
         psets = ifcopenshell.util.element.get_psets(stair_flight)
         representations = stair_flight.Representation.Representations
         footprint_repr = find(representations, lambda x: x.RepresentationIdentifier == 'FootPrint')
@@ -41,6 +44,9 @@ class StraightSingleRunStairBuilder:
             v1 = vertices[i]
             v2 = vertices[(i + 1) % len(vertices)]
             if v1 != v2:
+                # Transform vertices
+                v1 = transform_vertex(transformation_matrix, v1)
+                v2 = transform_vertex(transformation_matrix, v2)
                 edges.append((v1, v2))
 
         axis_repr = find(representations, lambda x: x.RepresentationIdentifier == 'Axis')
@@ -50,6 +56,9 @@ class StraightSingleRunStairBuilder:
         ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
         ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
         run_vertices = ifc_cartesian_point_list_2d.CoordList
+
+        # Transform vertices
+        run_vertices = [transform_vertex(transformation_matrix, x) for x in run_vertices]
         run_start_vertex, run_end_vertex = run_vertices
 
         edge1, edge2, edge3, edge4 = edges
