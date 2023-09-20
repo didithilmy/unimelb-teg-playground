@@ -78,8 +78,8 @@ class Gate(BuildingElement):
 class StraightSingleRunStair(BuildingElement):
     __type__ = "StraightSingleRunStair"
 
-    def __init__(self, *args, vertex, rotation, run_length, staircase_width, no_of_treads, start_level_index, end_level_index, **kwargs):
-        super().__init__(*args, **kwargs, type="StraightSingleRunStair")
+    def __init__(self, *args, vertex, rotation, run_length, staircase_width, no_of_treads, start_level_index, end_level_index, type="StraightSingleRunStair", **kwargs):
+        super().__init__(*args, **kwargs, type=type)
 
         self.vertex = vertex
         self.start_level_index = start_level_index
@@ -150,3 +150,10 @@ class StraightSingleRunStair(BuildingElement):
 
     def _round(self, value):
         return round(value * 1) / 1
+
+
+class StraightSingleRunEscalator(StraightSingleRunStair):
+    __type__ = "StraightSingleRunEscalator"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, type="StraightSingleRunEscalator")

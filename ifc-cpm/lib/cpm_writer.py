@@ -2,7 +2,7 @@ from typing import List, Tuple
 import math
 from collections import defaultdict
 import xmltodict
-from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair
+from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair, StraightSingleRunEscalator
 from .utils import filter
 
 
@@ -29,6 +29,7 @@ class CrowdSimulationEnvironment:
         self.highest_id_map = defaultdict(lambda: 0)
         self.levels: List[Level] = []
         self.stairs: List[StraightSingleRunStair] = []
+        self.escalators: List[StraightSingleRunEscalator] = []
         self.vertices = {}
         self.x_offset, self.y_offset = offset
         self.unit_scaler = unit_scaler
@@ -40,10 +41,14 @@ class CrowdSimulationEnvironment:
     def add_stair(self, stair: StraightSingleRunStair):
         self.stairs.append(stair)
 
+    def add_escalator(self, escalator: StraightSingleRunEscalator):
+        self.escalators.append(escalator)
+
     def write(self):
         self.map_bounds = self._get_map_bounds()
         levels = [self._get_level(x) for x in self.levels]
         stairs = [self._create_straight_single_run_stair_json(s) for s in self.stairs]
+        stairs += [self._create_straight_single_run_escalator_json(s) for s in self.escalators]
         data = {
             "Model": {
                 "@xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
@@ -187,6 +192,65 @@ class CrowdSimulationEnvironment:
                         "Vertex": [
                             self._get_vertex(self._normalize_vertex(stair.lower_gate[0])),
                             self._get_vertex(self._normalize_vertex(stair.lower_gate[1])),
+                        ]
+                    }
+                }
+            },
+            "walls": {
+                "Wall": [
+                ]
+            }
+        }
+
+    def _create_straight_single_run_escalator_json(self, escalator: StraightSingleRunEscalator):
+        stair_id = self._get_id()
+        stair_vertex = self._normalize_vertex(escalator.vertex)
+
+        return {
+            "id": stair_id,
+            "x": stair_vertex[0],  # X coordinate of first lower vertex
+            "y": stair_vertex[1],  # Y coordinate of first lower vertex
+            "speed": -1,  # TODO figure out what
+            "spanFloors": escalator.end_level_index - escalator.start_level_index,
+            "length": self.unit_scaler(escalator.run_length),  # Run length
+            "width": self.unit_scaler(escalator.staircase_width),  # Staircase width
+            "widthLanding": self.unit_scaler(escalator.staircase_width),
+            "stands": int(escalator.no_of_treads),
+            "rotation": escalator.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
+            "type": 6,  # Read from enum
+            "direction": 0,
+            "upper": {
+                "level": escalator.end_level_index,
+                "gate": {
+                        "id": self._get_id(),
+                        "length": self.unit_scaler(escalator.staircase_width),  # should be the same as width, if stair is STRAIGHT
+                        "angle": 90,  # TODO find out what
+                        "destination": False,  # let the software figure out I suppose
+                        "counter": False,  # TODO find out what
+                        "transparent": False,
+                        "designatedOnly": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(self._normalize_vertex(escalator.upper_gate[0])),
+                                self._get_vertex(self._normalize_vertex(escalator.upper_gate[1])),
+                            ]
+                        }
+                }
+            },
+            "lower": {
+                "level": escalator.start_level_index,
+                "gate": {
+                    "id": self._get_id(),
+                    "length": self.unit_scaler(escalator.staircase_width),  # should be the same as width, if stair is STRAIGHT
+                    "angle": 90,  # TODO find out what
+                    "destination": False,  # let the software figure out I suppose
+                    "counter": False,  # TODO find out what
+                    "transparent": False,
+                    "designatedOnly": False,
+                    "vertices": {
+                        "Vertex": [
+                            self._get_vertex(self._normalize_vertex(escalator.lower_gate[0])),
+                            self._get_vertex(self._normalize_vertex(escalator.lower_gate[1])),
                         ]
                     }
                 }

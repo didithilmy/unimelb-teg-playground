@@ -13,6 +13,7 @@ from .preprocessors import convert_disconnected_walls_into_barricades, split_int
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
+from .transport_elements import TransportElementBuilder
 from .utils import transform_vertex, filter, get_sorted_building_storeys
 
 settings = ifcopenshell.geom.settings()
@@ -87,6 +88,7 @@ class IfcToCpmConverter:
         self.storeys = get_sorted_building_storeys(ifc_building)
 
         self._parse_stairs()
+        self._parse_escalators()
         self._parse_storeys()
 
     def write(self, cpm_out_filepath):
@@ -106,6 +108,20 @@ class IfcToCpmConverter:
                 except Exception as e:
                     logger.warning(f"Skipping stair parsing: error parsing stair {stair_in_storey.Name}: {e}")
                     logger.error(e, exc_info=True)
+
+    def _parse_escalators(self):
+        self.escalators = []
+        for storey_id, storey in enumerate(self.storeys):
+            building_elements = ifcopenshell.util.element.get_decomposition(storey)
+            trelements_in_storey = [x for x in building_elements if x.is_a("IfcTransportElement") and x.PredefinedType == 'ESCALATOR']
+            for trelement_in_storey in trelements_in_storey:
+                try:
+                    escalator = TransportElementBuilder(self.ifc_building, storey_id, trelement_in_storey).build()
+                    self.escalators.append(escalator)
+                    self.crowd_environment.add_escalator(escalator)
+                except Exception as e:
+                    logger.warning(f"Skipping escalator parsing: error parsing escalator {trelement_in_storey.Name}: {e}")
+                    logger.warning(e, exc_info=True)
 
     def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
@@ -139,7 +155,8 @@ class IfcToCpmConverter:
 
     def _get_storey_stair_border_walls(self, storey_id):
         walls: List[Wall] = []
-        stairs_voiding_storey = filter(self.stairs, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
+        stairs_and_escalators = self.stairs + self.escalators
+        stairs_voiding_storey = filter(stairs_and_escalators, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
         for stair in stairs_voiding_storey:
             if storey_id > stair.start_level_index:
                 # Draw a wall where the lower gate is
