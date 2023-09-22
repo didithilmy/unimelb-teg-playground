@@ -205,10 +205,9 @@ def get_composite_verts(ifc_product):
         return list(rel_vertices)
 
     vertices = []
-    for decomposition in ifc_product.IsDecomposedBy:
-        relobjects = decomposition.RelatedObjects
-        for relobj in relobjects:
-            vertices += get_composite_verts(relobj)
+    products = ifcopenshell.util.element.get_decomposition(ifc_product)
+    for product in products:
+        vertices += get_composite_verts(product)
 
     return vertices
 
