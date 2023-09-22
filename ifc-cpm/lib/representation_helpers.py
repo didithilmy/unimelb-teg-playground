@@ -1,3 +1,9 @@
+import numpy as np
+from compas.geometry import oriented_bounding_box_xy_numpy
+import ifcopenshell.util.placement
+from .utils import get_composite_verts, get_edge_from_bounding_box, transform_vertex
+
+
 def get_representation(representations, identifier):
     for repr in representations:
         if repr.RepresentationIdentifier == identifier:
@@ -182,6 +188,24 @@ class Extrusion2DVertices:
 
 
 class WallVertices:
+    @staticmethod
+    def from_product(ifc_product):
+        if ifc_product.Representation is not None:
+            vertices = WallVertices.infer(ifc_product.Representation.Representations)
+            matrix = ifcopenshell.util.placement.get_local_placement(ifc_product.ObjectPlacement)
+            vertices = [transform_vertex(matrix, x) for x in vertices]
+            return vertices
+
+        return WallVertices.from_point_cloud(ifc_product)
+
+    @staticmethod
+    def from_point_cloud(ifc_product):
+        vertices = get_composite_verts(ifc_product)
+        if len(vertices) > 0:
+            bbox = oriented_bounding_box_xy_numpy(vertices)
+            edge = get_edge_from_bounding_box(bbox)
+            return edge
+
     @staticmethod
     def infer(representations):
         for repr in representations:

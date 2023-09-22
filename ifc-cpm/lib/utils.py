@@ -2,6 +2,9 @@ from typing import Tuple
 import math
 import numpy as np
 import ifcopenshell.util.element
+import ifcopenshell.util.shape
+import ifcopenshell.util.placement
+import ifcopenshell.geom
 
 
 def get_sorted_building_storeys(ifc_building):
@@ -18,6 +21,15 @@ def transform_vertex(transformation_matrix, vertex: Tuple[float, float]) -> Tupl
     transformed_matrix = np.dot(transformation_matrix, vertex_matrix)
     transformed_x, transformed_y, _, _ = np.transpose(transformed_matrix)[0]
     return (transformed_x, transformed_y)
+
+
+def transform_vertex_3d(transformation_matrix, vertex: Tuple[float, float, float]) -> Tuple[float, float, float]:
+    x, y, z = vertex
+
+    vertex_matrix = np.array([[x], [y], [z], [1]])
+    transformed_matrix = np.dot(transformation_matrix, vertex_matrix)
+    transformed_x, transformed_y, transformed_z, _ = np.transpose(transformed_matrix)[0]
+    return (transformed_x, transformed_y, transformed_z)
 
 
 def find_unbounded_lines_intersection(line1, line2):
@@ -181,3 +193,47 @@ def rotate_point_around_point(origin, vertex, angle_degrees):
     new_by = rotated_by + ay
 
     return new_bx, new_by
+
+
+def get_composite_verts(ifc_product):
+    if ifc_product.Representation is not None:
+        settings = ifcopenshell.geom.settings()
+        shape = ifcopenshell.geom.create_shape(settings, ifc_product)
+        vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
+        matrix = ifcopenshell.util.placement.get_local_placement(ifc_product.ObjectPlacement)
+        rel_vertices = [transform_vertex_3d(matrix, x) for x in vertices]
+        return list(rel_vertices)
+
+    vertices = []
+    for decomposition in ifc_product.IsDecomposedBy:
+        relobjects = decomposition.RelatedObjects
+        for relobj in relobjects:
+            vertices += get_composite_verts(relobj)
+
+    return vertices
+
+
+def get_edge_from_bounding_box(bbox):
+    v1, v2, v3, v4 = bbox
+    e1 = (v1, v2)
+    e2 = (v2, v3)
+    e3 = (v3, v4)
+    e4 = (v4, v1)
+
+    e1_dist = eucledian_distance(v1, v2)
+    e2_dist = eucledian_distance(v2, v3)
+
+    if e1_dist < e2_dist:
+        midpoint_vertex_1 = e1
+        midpoint_vertex_2 = e3
+    else:
+        midpoint_vertex_1 = e2
+        midpoint_vertex_2 = e4
+
+    midpoint_x_1 = (midpoint_vertex_1[0][0] + midpoint_vertex_1[1][0]) / 2
+    midpoint_y_1 = (midpoint_vertex_1[0][1] + midpoint_vertex_1[1][1]) / 2
+
+    midpoint_x_2 = (midpoint_vertex_2[0][0] + midpoint_vertex_2[1][0]) / 2
+    midpoint_y_2 = (midpoint_vertex_2[0][1] + midpoint_vertex_2[1][1]) / 2
+
+    return (midpoint_x_1, midpoint_y_1), (midpoint_x_2, midpoint_y_2)
