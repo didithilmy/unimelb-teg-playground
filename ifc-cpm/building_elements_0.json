@@ -1,0 +1,166 @@
+[
+    {
+        "object_id": "3fRnTpWk1Fv9pP2GsGSE5v",
+        "name": "Basic Wall:Generic - 200mm:352553",
+        "start_vertex": [
+            0.0,
+            0.0
+        ],
+        "end_vertex": [
+            0.0,
+            8000.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    0.0,
+                    3700.0
+                ],
+                [
+                    0.0,
+                    4615.0
+                ]
+            ]
+        ],
+        "connected_to": []
+    },
+    {
+        "object_id": "3fRnTpWk1Fv9pP2GsGSE4B",
+        "name": "Basic Wall:Generic - 200mm:352603",
+        "start_vertex": [
+            0.0,
+            8000.0
+        ],
+        "end_vertex": [
+            12000.0,
+            8000.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3fRnTpWk1Fv9pP2GsGSE7L",
+        "name": "Basic Wall:Generic - 200mm:352645",
+        "start_vertex": [
+            12000.0,
+            8000.0
+        ],
+        "end_vertex": [
+            12000.0,
+            0.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3fRnTpWk1Fv9pP2GsGSE7x",
+        "name": "Basic Wall:Generic - 200mm:352683",
+        "start_vertex": [
+            12000.0,
+            0.0
+        ],
+        "end_vertex": [
+            0.0,
+            0.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    6000.0,
+                    0.0
+                ],
+                [
+                    5085.0,
+                    0.0
+                ]
+            ]
+        ],
+        "connected_to": []
+    },
+    {
+        "object_id": "2m566w6K19l815bJZZY8yN",
+        "name": "Basic Wall:Generic - 200mm:352852",
+        "start_vertex": [
+            0.0,
+            4600.0
+        ],
+        "end_vertex": [
+            5000.0,
+            4600.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    3127.5,
+                    4600.0
+                ],
+                [
+                    4042.5,
+                    4600.0
+                ]
+            ]
+        ],
+        "connected_to": []
+    },
+    {
+        "object_id": "2m566w6K19l815bJZZY8ys",
+        "name": "Basic Wall:Generic - 200mm:352885",
+        "start_vertex": [
+            5000.0,
+            4600.0
+        ],
+        "end_vertex": [
+            5000.0,
+            8000.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2m566w6K19l815bJZZY8w$",
+        "name": "Basic Wall:Generic - 200mm:353276",
+        "start_vertex": [
+            0.0,
+            2800.0
+        ],
+        "end_vertex": [
+            2900.0,
+            2800.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2m566w6K19l815bJZZY8bo",
+        "name": "Basic Wall:Generic - 200mm:353329",
+        "start_vertex": [
+            2900.0,
+            2800.0
+        ],
+        "end_vertex": [
+            2900.0,
+            0.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    2900.0,
+                    2042.5
+                ],
+                [
+                    2900.0,
+                    1127.5
+                ]
+            ]
+        ],
+        "connected_to": []
+    }
+]

@@ -1,0 +1,891 @@
+[
+    {
+        "object_id": "3EYxooj415QgvrtcQsy2Kh",
+        "name": "Wand-002",
+        "start_vertex": [
+            0.0,
+            14.0
+        ],
+        "end_vertex": [
+            18.0,
+            14.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2PEohQWxr83Q$dJApWgZz7",
+                "ATPATH"
+            ],
+            [
+                "0f4gVmdAr50OHIxcdU7ZHw",
+                "ATPATH"
+            ],
+            [
+                "10upAxJXj11PJZmCgdwBQv",
+                "ATPATH"
+            ],
+            [
+                "2Zd2aBx0TC58gDRfGak1gB",
+                "ATPATH"
+            ],
+            [
+                "1ame9iIALAvw$79YOmjYpD",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "1zxqAr$Mf44Qt0StYZlpmU",
+        "name": "Wand-004",
+        "start_vertex": [
+            18.0,
+            16.0
+        ],
+        "end_vertex": [
+            24.0,
+            16.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3BIJVubgnERQcs0rJzA8XO",
+        "name": "Wand-006",
+        "start_vertex": [
+            24.0,
+            14.0
+        ],
+        "end_vertex": [
+            42.0,
+            14.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2PRVpojvP8fPtR7ZH8qagD",
+                "ATPATH"
+            ],
+            [
+                "15DaMtku1EowtkGqYps1Sn",
+                "ATPATH"
+            ],
+            [
+                "3ts3ZsbjXDlv2btICYqqvu",
+                "ATPATH"
+            ],
+            [
+                "3VEwjtZZHA4P7U0POkvM8h",
+                "ATPATH"
+            ],
+            [
+                "3wYiknQvv0EvKo$0bWGoQ0",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "3qMdsXfXrAvuL60mUR_8Vj",
+        "name": "Wand-007",
+        "start_vertex": [
+            42.0,
+            14.0
+        ],
+        "end_vertex": [
+            42.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "3BIJVubgnERQcs0rJzA8XO",
+                "ATSTART"
+            ],
+            [
+                "1XFei80jz5HuhRQ3nkwKNk",
+                "ATPATH"
+            ],
+            [
+                "3Tizqrq5LBwRkVzeahshML",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "3QrI2pmPL8WPedMr4WdGPA",
+        "name": "Wand-001",
+        "start_vertex": [
+            0.0,
+            2.0
+        ],
+        "end_vertex": [
+            0.0,
+            14.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "3EYxooj415QgvrtcQsy2Kh",
+                "ATEND"
+            ],
+            [
+                "3e8jVE_ETEZugvuYOVjgPL",
+                "ATPATH"
+            ],
+            [
+                "3Tizqrq5LBwRkVzeahshML",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2udBPbKibCZ8zbfpJmtDTM",
+        "name": "Wand-010",
+        "start_vertex": [
+            42.0,
+            2.0
+        ],
+        "end_vertex": [
+            0.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "3qMdsXfXrAvuL60mUR_8Vj",
+                "ATSTART"
+            ],
+            [
+                "3QrI2pmPL8WPedMr4WdGPA",
+                "ATEND"
+            ],
+            [
+                "1uJooYa2n4hffNW04AKDA2",
+                "ATPATH"
+            ],
+            [
+                "33jlsNXXLCaQ28opnwDi77",
+                "ATPATH"
+            ],
+            [
+                "1y52BJ9iLBoAyZV5YvNxz0",
+                "ATPATH"
+            ],
+            [
+                "36O0Kh7cH6TQcDT6_PZUT$",
+                "ATPATH"
+            ],
+            [
+                "3hlocwRv9E28ldFEZcrJKR",
+                "ATPATH"
+            ],
+            [
+                "3s$opTy0vANQ_jzKgb0VhR",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "3e8jVE_ETEZugvuYOVjgPL",
+        "name": "Wand-015",
+        "start_vertex": [
+            18.0,
+            9.0
+        ],
+        "end_vertex": [
+            0.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    16.2,
+                    9.0
+                ],
+                [
+                    15.2,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    14.8,
+                    9.0
+                ],
+                [
+                    13.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    5.800000000000001,
+                    9.0
+                ],
+                [
+                    4.800000000000001,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    8.8,
+                    9.0
+                ],
+                [
+                    7.800000000000001,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    11.8,
+                    9.0
+                ],
+                [
+                    10.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    2.8000000000000007,
+                    9.0
+                ],
+                [
+                    1.8000000000000007,
+                    9.0
+                ]
+            ]
+        ],
+        "connected_to": [
+            [
+                "2PEohQWxr83Q$dJApWgZz7",
+                "ATPATH"
+            ],
+            [
+                "0f4gVmdAr50OHIxcdU7ZHw",
+                "ATPATH"
+            ],
+            [
+                "10upAxJXj11PJZmCgdwBQv",
+                "ATPATH"
+            ],
+            [
+                "2Zd2aBx0TC58gDRfGak1gB",
+                "ATPATH"
+            ],
+            [
+                "1ame9iIALAvw$79YOmjYpD",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "1XFei80jz5HuhRQ3nkwKNk",
+        "name": "Wand-016",
+        "start_vertex": [
+            42.0,
+            9.0
+        ],
+        "end_vertex": [
+            24.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    41.6,
+                    9.0
+                ],
+                [
+                    40.6,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    38.8,
+                    9.0
+                ],
+                [
+                    37.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    35.8,
+                    9.0
+                ],
+                [
+                    34.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    32.8,
+                    9.0
+                ],
+                [
+                    31.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    29.8,
+                    9.0
+                ],
+                [
+                    28.8,
+                    9.0
+                ]
+            ],
+            [
+                [
+                    26.8,
+                    9.0
+                ],
+                [
+                    25.8,
+                    9.0
+                ]
+            ]
+        ],
+        "connected_to": [
+            [
+                "2PRVpojvP8fPtR7ZH8qagD",
+                "ATPATH"
+            ],
+            [
+                "15DaMtku1EowtkGqYps1Sn",
+                "ATPATH"
+            ],
+            [
+                "3ts3ZsbjXDlv2btICYqqvu",
+                "ATPATH"
+            ],
+            [
+                "3VEwjtZZHA4P7U0POkvM8h",
+                "ATPATH"
+            ],
+            [
+                "3wYiknQvv0EvKo$0bWGoQ0",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "3Tizqrq5LBwRkVzeahshML",
+        "name": "Wand-014",
+        "start_vertex": [
+            0.0,
+            7.0
+        ],
+        "end_vertex": [
+            42.0,
+            7.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    0.4,
+                    7.0
+                ],
+                [
+                    1.4,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    6.2,
+                    7.0
+                ],
+                [
+                    7.2,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    12.2,
+                    7.0
+                ],
+                [
+                    13.2,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    21.0,
+                    7.0
+                ],
+                [
+                    22.0,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    27.2,
+                    7.0
+                ],
+                [
+                    28.2,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    36.1,
+                    7.0
+                ],
+                [
+                    37.1,
+                    7.0
+                ]
+            ],
+            [
+                [
+                    25.8,
+                    7.0
+                ],
+                [
+                    26.8,
+                    7.0
+                ]
+            ]
+        ],
+        "connected_to": [
+            [
+                "1uJooYa2n4hffNW04AKDA2",
+                "ATPATH"
+            ],
+            [
+                "33jlsNXXLCaQ28opnwDi77",
+                "ATPATH"
+            ],
+            [
+                "1y52BJ9iLBoAyZV5YvNxz0",
+                "ATPATH"
+            ],
+            [
+                "36O0Kh7cH6TQcDT6_PZUT$",
+                "ATPATH"
+            ],
+            [
+                "3hlocwRv9E28ldFEZcrJKR",
+                "ATPATH"
+            ],
+            [
+                "3s$opTy0vANQ_jzKgb0VhR",
+                "ATPATH"
+            ],
+            [
+                "1mSLMfkcfCPRJKG_3bRRxE",
+                "ATPATH"
+            ],
+            [
+                "2bI$bwQXP6BhqrBObsVIg2",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2PEohQWxr83Q$dJApWgZz7",
+        "name": "Wand-021",
+        "start_vertex": [
+            15.0,
+            14.0
+        ],
+        "end_vertex": [
+            15.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "0f4gVmdAr50OHIxcdU7ZHw",
+        "name": "Wand-023",
+        "start_vertex": [
+            6.0,
+            14.0
+        ],
+        "end_vertex": [
+            6.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "1uJooYa2n4hffNW04AKDA2",
+        "name": "Wand-020",
+        "start_vertex": [
+            18.0,
+            7.0
+        ],
+        "end_vertex": [
+            18.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "10upAxJXj11PJZmCgdwBQv",
+        "name": "Wand-023",
+        "start_vertex": [
+            3.0,
+            14.0
+        ],
+        "end_vertex": [
+            3.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2Zd2aBx0TC58gDRfGak1gB",
+        "name": "Wand-023",
+        "start_vertex": [
+            9.0,
+            14.0
+        ],
+        "end_vertex": [
+            9.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "1ame9iIALAvw$79YOmjYpD",
+        "name": "Wand-023",
+        "start_vertex": [
+            12.0,
+            14.0
+        ],
+        "end_vertex": [
+            12.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "33jlsNXXLCaQ28opnwDi77",
+        "name": "Wand-018",
+        "start_vertex": [
+            6.0,
+            7.0
+        ],
+        "end_vertex": [
+            6.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "1y52BJ9iLBoAyZV5YvNxz0",
+        "name": "Wand-019",
+        "start_vertex": [
+            12.0,
+            7.0
+        ],
+        "end_vertex": [
+            12.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "36O0Kh7cH6TQcDT6_PZUT$",
+        "name": "Wand-020",
+        "start_vertex": [
+            24.0,
+            7.0
+        ],
+        "end_vertex": [
+            24.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2PRVpojvP8fPtR7ZH8qagD",
+        "name": "Wand-022",
+        "start_vertex": [
+            27.0,
+            14.0
+        ],
+        "end_vertex": [
+            27.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "15DaMtku1EowtkGqYps1Sn",
+        "name": "Wand-024",
+        "start_vertex": [
+            30.0,
+            14.0
+        ],
+        "end_vertex": [
+            30.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3ts3ZsbjXDlv2btICYqqvu",
+        "name": "Wand-025",
+        "start_vertex": [
+            33.0,
+            14.0
+        ],
+        "end_vertex": [
+            33.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3VEwjtZZHA4P7U0POkvM8h",
+        "name": "Wand-026",
+        "start_vertex": [
+            36.0,
+            14.0
+        ],
+        "end_vertex": [
+            36.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3wYiknQvv0EvKo$0bWGoQ0",
+        "name": "Wand-027",
+        "start_vertex": [
+            39.0,
+            14.0
+        ],
+        "end_vertex": [
+            39.0,
+            9.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "3hlocwRv9E28ldFEZcrJKR",
+        "name": "Wand-028",
+        "start_vertex": [
+            33.0,
+            7.0
+        ],
+        "end_vertex": [
+            33.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    33.0,
+                    5.7
+                ],
+                [
+                    33.0,
+                    4.7
+                ]
+            ]
+        ],
+        "connected_to": []
+    },
+    {
+        "object_id": "3s$opTy0vANQ_jzKgb0VhR",
+        "name": "Wand-020",
+        "start_vertex": [
+            27.0,
+            7.0
+        ],
+        "end_vertex": [
+            27.0,
+            2.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "1mSLMfkcfCPRJKG_3bRRxE",
+        "name": "Wand-003",
+        "start_vertex": [
+            18.0,
+            7.0
+        ],
+        "end_vertex": [
+            18.0,
+            14.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    18.0,
+                    7.09960014048
+                ],
+                [
+                    18.0,
+                    8.89960014048
+                ]
+            ]
+        ],
+        "connected_to": [
+            [
+                "1uJooYa2n4hffNW04AKDA2",
+                "ATSTART"
+            ],
+            [
+                "3EYxooj415QgvrtcQsy2Kh",
+                "ATEND"
+            ],
+            [
+                "3e8jVE_ETEZugvuYOVjgPL",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "0_SIhNEQD0EBlBOnMVz61A",
+        "name": "Wand-034",
+        "start_vertex": [
+            18.0,
+            14.0
+        ],
+        "end_vertex": [
+            18.0,
+            16.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "3EYxooj415QgvrtcQsy2Kh",
+                "ATSTART"
+            ],
+            [
+                "1mSLMfkcfCPRJKG_3bRRxE",
+                "ATSTART"
+            ],
+            [
+                "1zxqAr$Mf44Qt0StYZlpmU",
+                "ATEND"
+            ]
+        ]
+    },
+    {
+        "object_id": "2$oqR_D2H8qOOk0Dye6UwH",
+        "name": "Wand-035",
+        "start_vertex": [
+            24.0,
+            16.0
+        ],
+        "end_vertex": [
+            24.0,
+            14.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "1zxqAr$Mf44Qt0StYZlpmU",
+                "ATSTART"
+            ],
+            [
+                "3BIJVubgnERQcs0rJzA8XO",
+                "ATEND"
+            ]
+        ]
+    },
+    {
+        "object_id": "2bI$bwQXP6BhqrBObsVIg2",
+        "name": "Wand-005",
+        "start_vertex": [
+            24.0,
+            14.0
+        ],
+        "end_vertex": [
+            24.0,
+            7.0
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [
+            [
+                [
+                    24.0,
+                    8.9
+                ],
+                [
+                    24.0,
+                    7.1000000000000005
+                ]
+            ]
+        ],
+        "connected_to": [
+            [
+                "3BIJVubgnERQcs0rJzA8XO",
+                "ATSTART"
+            ],
+            [
+                "2$oqR_D2H8qOOk0Dye6UwH",
+                "ATSTART"
+            ],
+            [
+                "36O0Kh7cH6TQcDT6_PZUT$",
+                "ATEND"
+            ],
+            [
+                "1XFei80jz5HuhRQ3nkwKNk",
+                "ATPATH"
+            ]
+        ]
+    }
+]

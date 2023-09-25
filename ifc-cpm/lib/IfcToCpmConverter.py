@@ -129,12 +129,16 @@ class IfcToCpmConverter:
         print("Glueing wall connections...")
         building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
 
+        # import json
+        # with open(f'building_elements_{storey_id}.json', 'w') as f:
+        #     f.write(json.dumps([x.__dict__ for x in building_elements], indent=4))
+
         print("Decomposing wall openings...")
         building_elements = decompose_wall_with_openings(building_elements)
 
         print("Splitting intersections...")
         building_elements = split_intersecting_elements(building_elements)
-        building_elements = convert_disconnected_walls_into_barricades(building_elements)
+        # building_elements = convert_disconnected_walls_into_barricades(building_elements)
         # building_elements += self._get_storey_void_barricade_elements(storey)
         building_elements += self._get_storey_stair_border_walls(storey_id)
         return building_elements

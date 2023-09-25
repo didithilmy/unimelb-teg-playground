@@ -30,13 +30,14 @@ import ifcopenshell.geom
 # Specify to return pythonOCC shapes from ifcopenshell.geom.create_shape()
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_PYTHON_OPENCASCADE, True)
+settings.set(settings.INCLUDE_CURVES, True)
 
 # Initialize a graphical display window
 occ_display = ifcopenshell.geom.utils.initialize_display()
 # occ_display.View.SetBackgroundImage("white_bg.bmp")
 
 # Open the IFC file using IfcOpenShell
-ifc_file = ifcopenshell.open(os.path.join(os.path.dirname(__file__), "ifc/house.ifc"))
+ifc_file = ifcopenshell.open(os.path.join(os.path.dirname(__file__), "ifc/IfcOpenHouse_IFC4.ifc"))
 
 # The geometric elements in an IFC file are the IfcProduct elements. So these are 
 # opened and displayed.
@@ -74,10 +75,10 @@ while section_height <= maximum_height:
     section_face = OCC.Core.BRepBuilderAPI.BRepBuilderAPI_MakeFace(section_plane, -10, 10, -10, 10).Face()
     
     section_face_display = ifcopenshell.geom.utils.display_shape(section_face)
-    ifcopenshell.geom.utils.set_shape_transparency(section_face_display, 0.5)
+    # ifcopenshell.geom.utils.set_shape_transparency(section_face_display, 0.5)
     for shape in product_shapes: ifcopenshell.geom.utils.display_shape(shape[1])
     
-    raw_input()
+    # raw_input()
     occ_display.EraseAll()
     
     # The surface area per section list is emptied every iteration
@@ -108,17 +109,17 @@ while section_height <= maximum_height:
             # sequence type. Hence, two sequences and handles, one for the input, one for the 
             # output, are created. 
             edges = OCC.Core.TopTools.TopTools_HSequenceOfShape()
-            edges_handle = OCC.Core.TopTools.Handle_TopTools_HSequenceOfShape(edges)
+            edges_handle = edges # OCC.Core.TopTools.Handle_TopTools_HSequenceOfShape_Create(edges)
             
             wires = OCC.Core.TopTools.TopTools_HSequenceOfShape()
-            wires_handle = OCC.Core.TopTools.Handle_TopTools_HSequenceOfShape(wires)
+            wires_handle = wires # OCC.Core.TopTools.Handle_TopTools_HSequenceOfShape_Create(wires)
             
             # The edges are copied to the sequence
             for edge in section_edges: edges.Append(edge)
                         
             # A wire is formed by connecting the edges
             OCC.Core.ShapeAnalysis.ShapeAnalysis_FreeBounds.ConnectEdgesToWires(edges_handle, 1e-5, True, wires_handle)
-            wires = wires_handle.GetObject()
+            wires = wires_handle #.GetObject()
                 
             # From each wire a face is created
             print("        number of faces = %d" % wires.Length())
@@ -130,7 +131,7 @@ while section_height <= maximum_height:
                 # The wires and the faces are displayed
                 ifcopenshell.geom.utils.display_shape(wire)
                 face_display = ifcopenshell.geom.utils.display_shape(face)
-                ifcopenshell.geom.utils.set_shape_transparency(face_display, 0.5)
+                # ifcopenshell.geom.utils.set_shape_transparency(face_display, 0.5)
                 
                 # Data about the wire is created to calculate the area
                 wire_data = OCC.Core.ShapeExtend.ShapeExtend_WireData(wire, True, True)

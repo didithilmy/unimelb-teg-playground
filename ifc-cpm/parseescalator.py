@@ -24,10 +24,14 @@ for storey in model.by_type("IfcBuildingStorey"):
     print(storey.Name)
     for escalator in escalators:
         representations = (escalator.Representation.Representations)
+        print(representations)
         vertices = Extrusion2DVertices.infer(representations)
         transformation_matrix = ifcopenshell.util.placement.get_local_placement(
             escalator.ObjectPlacement
         )
+
+        print(transformation_matrix)
+        print(vertices)
 
         psets = ifcopenshell.util.element.get_psets(escalator)
         # print(psets)
@@ -36,7 +40,9 @@ for storey in model.by_type("IfcBuildingStorey"):
 
         settings = ifcopenshell.geom.settings()
         shape = ifcopenshell.geom.create_shape(settings, escalator)
-        vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
-        print(vertices[:-10])
+        body_vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
+        # nparr = np.array(vertices)
+        # with open("escalator-pc.npy", 'wb') as f:
+        #     np.save(f, nparr)
 
         print()

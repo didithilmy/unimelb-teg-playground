@@ -10,7 +10,7 @@ import ifcopenshell.util.unit
 from compas.geometry import oriented_bounding_box_xy_numpy
 from lib.ifctypes import Wall, Gate, BuildingElement
 from lib.representation_helpers import WallVertices
-from lib.utils import transform_vertex_3d, eucledian_distance
+from lib.utils import transform_vertex_3d, eucledian_distance, filter, find_unbounded_lines_intersection
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, False)
@@ -57,8 +57,8 @@ def get_edge_from_bbox(bbox):
     midpoint_x = (midpoint_vertex[0][0] + midpoint_vertex[1][0]) / 2
     midpoint_y = (midpoint_vertex[0][1] + midpoint_vertex[1][1]) / 2
 
-    delta_x = run_vertex[1][0] - run_vertex[0][0]
-    delta_y = run_vertex[1][1] - run_vertex[0][1]
+    delta_x = run_vertex[0][0] - run_vertex[1][0]
+    delta_y = run_vertex[0][1] - run_vertex[1][1]
 
     x2 = midpoint_x + delta_x
     y2 = midpoint_y + delta_y
@@ -68,7 +68,10 @@ def get_edge_from_bbox(bbox):
 
 for storey in model.by_type("IfcBuildingStorey"):
     elements = ifcopenshell.util.element.get_decomposition(storey)
-    walls = [x for x in elements if x.is_a("IfcWall") or x.is_a("IfcCurtainWall")]
+    def matcher(x):
+        return "145547" in x.Name or "144837" in x.Name
+    walls = filter(elements, matcher)
+    # walls = [x for x in elements if x.is_a("IfcCurtainWall") or x.is_a("IfcWall") and "145547" in x.Name]
 
     print(storey.Name)
     for wall in walls:
@@ -79,4 +82,9 @@ for storey in model.by_type("IfcBuildingStorey"):
             bbox = oriented_bounding_box_xy_numpy(vertices)
             edge = get_edge_from_bbox(bbox)
 
-            print(wall.Name, edge, bbox)
+            print(wall.Name, edge)
+
+line1 = (0.0, -5.551115123125783e-17), (-8.249999999999986, -5.551115123125783e-17)
+line2 = (-4073.4244393429453, 6218.938619937839), (-4073.424439342919, 22180.290756191764)
+intr = find_unbounded_lines_intersection(line1, line2)
+print(intr)
