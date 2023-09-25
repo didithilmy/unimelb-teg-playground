@@ -3,14 +3,24 @@ from typing import List, Tuple
 from collections import defaultdict
 from itertools import combinations
 from .ifctypes import BuildingElement, Barricade, Wall, Gate
-from .utils import find_lines_intersection, find_unbounded_lines_intersection, find, eucledian_distance
+from .utils import find_lines_intersection, find_unbounded_lines_intersection, find, eucledian_distance, shortest_distance_between_two_lines
 
 
 def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:
-    out_elements = copy.copy(elements)
-    for element1, element2 in combinations(out_elements, 2):
+    out_elements = copy.deepcopy(elements)
+    n = len(out_elements)
+    for i1, i2 in combinations(range(n), 2):
+        element1 = out_elements[i1]
+        element2 = out_elements[i2]
+
         line1 = element1.start_vertex, element1.end_vertex
         line2 = element2.start_vertex, element2.end_vertex
+
+        # Glue walls when the gap between walls is less than tolerance.
+        is_gap_small_enough = shortest_distance_between_two_lines(line1, line2) <= tolerance
+        if not is_gap_small_enough:
+            continue
+
         intersection = find_unbounded_lines_intersection(line1, line2)
         if intersection is None:
             continue
@@ -28,6 +38,20 @@ def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -
             element2.start_vertex = intersection
         if w2_v2_distance_to_intersection <= tolerance:
             element2.end_vertex = intersection
+
+        # Handle walls with near vertices but far away intersection.
+        # This indicates that the walls are near parallel, but the vertices are close.
+        # In this case, draw a new wall that connects the two.
+        intersection_is_nearby = min(w1_v1_distance_to_intersection, w1_v2_distance_to_intersection, w2_v1_distance_to_intersection, w2_v2_distance_to_intersection) <= tolerance
+        if not intersection_is_nearby:
+            for w1_vertex in line1:
+                for w2_vertex in line2:
+                    if w1_vertex != w2_vertex:
+                        distance = eucledian_distance(w1_vertex, w2_vertex)
+                        if distance <= tolerance:
+                            print(distance, tolerance)
+                            connector_wall = Wall(name=f"Connector-[{element1.name}]-[{element2.name}]", start_vertex=w1_vertex, end_vertex=w2_vertex)
+                            out_elements.append(connector_wall)
 
     return out_elements
 
