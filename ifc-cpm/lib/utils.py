@@ -80,53 +80,37 @@ def find_lines_intersection(line1, line2):
     # Sort line1 and line2 to force a consistent output
     [line1, line2] = sorted([line1, line2])
 
-    line1_point1, line1_point2 = line1
-    line2_point1, line2_point2 = line2
+    (x1, y1), (x2, y2) = line1
+    (x3, y3), (x4, y4) = line2
+    # Calculate the slopes of the two line segments
+    m1 = (y2 - y1) / (x2 - x1) if (x2 - x1) != 0 else float('inf')
+    m2 = (y4 - y3) / (x4 - x3) if (x4 - x3) != 0 else float('inf')
 
-    x1, y1 = line1_point1
-    x2, y2 = line1_point2
-    x3, y3 = line2_point1
-    x4, y4 = line2_point2
+    # Check if the segments are parallel (the slopes are the same)
+    if m1 == m2:
+        return None  # No intersection, the lines are parallel
 
-    # Calculate slopes and intercepts of the two lines, if the line is NOT vertical.
-    m1, b1 = None, None
-    if x1 != x2:
-        m1 = (y2 - y1) / (x2 - x1)
-        b1 = y1 - m1 * x1
-
-    m2, b2 = None, None
-    if x3 != x4:
-        m2 = (y4 - y3) / (x4 - x3)
-        b2 = y3 - m2 * x3
-
-    if m1 == m2 and m1 is not None and m2 is not None:
-        return None
-
-    if m1 is None and m2 is None:
-        if x1 == x3:
-            return None  # FIXME TODO handle lines occupying the same space.
-        return None
-
-    if m1 is None:
-        intersection_x = x1
-        intersection_y = m2 * intersection_x + b2
-    elif m2 is None:
-        intersection_x = x3
-        intersection_y = m1 * intersection_x + b1
+    # Calculate the intersection point
+    if m1 == float('inf'):  # First line is vertical
+        x = x1
+        y = m2 * (x - x3) + y3
+    elif m2 == float('inf'):  # Second line is vertical
+        x = x3
+        y = m1 * (x - x1) + y1
     else:
-        intersection_x = (b2 - b1) / (m1 - m2)
-        intersection_y = m1 * intersection_x + b1
+        x = (m1 * x1 - y1 - m2 * x3 + y3) / (m1 - m2)
+        y = m1 * (x - x1) + y1
 
-    # Check if the intersection point is within the bounds of both line segments
+    # Check if the intersection point is within both line segments
     if (
-        min(x1, x2) <= intersection_x <= max(x1, x2)
-        and min(y1, y2) <= intersection_y <= max(y1, y2)
-        and min(x3, x4) <= intersection_x <= max(x3, x4)
-        and min(y3, y4) <= intersection_y <= max(y3, y4)
+        min(x1, x2) <= x <= max(x1, x2) and
+        min(y1, y2) <= y <= max(y1, y2) and
+        min(x3, x4) <= x <= max(x3, x4) and
+        min(y3, y4) <= y <= max(y3, y4)
     ):
-        return intersection_x, intersection_y
+        return (x, y)  # Intersection point is within both line segments
     else:
-        return None  # No intersection within bounds
+        return None  # Intersection point is outside one or both line segments
 
 
 def eucledian_distance(v1, v2):
