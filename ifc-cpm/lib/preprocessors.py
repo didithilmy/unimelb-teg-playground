@@ -6,65 +6,30 @@ from .ifctypes import BuildingElement, Barricade, Wall, Gate
 from .utils import find_lines_intersection, find_unbounded_lines_intersection, find, eucledian_distance
 
 
-def infer_wall_connections(tolerance, building_elements: List[BuildingElement]) -> List[BuildingElement]:
-    # TODO evaluate if this method is reliable
-    walls = [x for x in building_elements if x.__type__ in ('Wall', 'WallWithOpening')]
-    for wall1, wall2 in combinations(walls, 2):
-        wall1_vertices = (wall1.start_vertex, wall1.end_vertex)
-        wall2_vertices = (wall2.start_vertex, wall2.end_vertex)
-        intersection = find_unbounded_lines_intersection(wall1_vertices, wall2_vertices)
-        if intersection is not None:
-            # Wall has intersection
-            w1_v1_distance_to_intersection = eucledian_distance(wall1.start_vertex, intersection)
-            w1_v2_distance_to_intersection = eucledian_distance(wall1.end_vertex, intersection)
-            w2_v1_distance_to_intersection = eucledian_distance(wall2.start_vertex, intersection)
-            w2_v2_distance_to_intersection = eucledian_distance(wall2.end_vertex, intersection)
+def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:
+    out_elements = copy.copy(elements)
+    for element1, element2 in combinations(out_elements, 2):
+        line1 = element1.start_vertex, element1.end_vertex
+        line2 = element2.start_vertex, element2.end_vertex
+        intersection = find_unbounded_lines_intersection(line1, line2)
+        if intersection is None:
+            continue
 
-            wall1_near_intersection = w1_v1_distance_to_intersection <= tolerance or w1_v2_distance_to_intersection <= tolerance
-            wall2_near_intersection = w2_v1_distance_to_intersection <= tolerance or w2_v2_distance_to_intersection <= tolerance
-            if wall1_near_intersection or wall2_near_intersection:
-                # Wall 1 and 2 has connections
-                if wall2.object_id not in wall1.connected_to:
-                    connection_type = "ATSTART" if wall1_near_intersection and wall1_near_intersection else "ATPATH"
-                    wall1.connected_to.append((wall2.object_id, connection_type))
+        w1_v1_distance_to_intersection = eucledian_distance(element1.start_vertex, intersection)
+        w1_v2_distance_to_intersection = eucledian_distance(element1.end_vertex, intersection)
+        w2_v1_distance_to_intersection = eucledian_distance(element2.start_vertex, intersection)
+        w2_v2_distance_to_intersection = eucledian_distance(element2.end_vertex, intersection)
 
-    return walls
+        if w1_v1_distance_to_intersection <= tolerance:
+            element1.start_vertex = intersection
+        if w1_v2_distance_to_intersection <= tolerance:
+            element1.end_vertex = intersection
+        if w2_v1_distance_to_intersection <= tolerance:
+            element2.start_vertex = intersection
+        if w2_v2_distance_to_intersection <= tolerance:
+            element2.end_vertex = intersection
 
-
-def join_connected_walls(building_elements: List[BuildingElement], tolerance=None) -> List[BuildingElement]:
-    walls = [x for x in building_elements if x.__type__ in ('WallWithOpening', 'Wall')]
-    for wall in walls:
-        for (connected_wall_id, connection_type) in wall.connected_to:
-            related_wall = find(walls, lambda x: x.object_id == connected_wall_id)
-            if related_wall is not None:
-                intersection = find_unbounded_lines_intersection(
-                    (wall.start_vertex, wall.end_vertex),
-                    (related_wall.start_vertex, related_wall.end_vertex),
-                )
-
-                if intersection:
-                    # Update related wall vertices
-                    v1_distance = eucledian_distance(related_wall.start_vertex, intersection)
-                    v2_distance = eucledian_distance(related_wall.end_vertex, intersection)
-
-                    if tolerance is None or v1_distance <= tolerance or v2_distance <= tolerance:
-                        if v1_distance < v2_distance:
-                            related_wall.start_vertex = intersection
-                        else:
-                            related_wall.end_vertex = intersection
-
-                        # Update current wall vertices
-                        if connection_type != 'ATPATH':
-                            wall_v1_distance = eucledian_distance(
-                                wall.start_vertex, intersection
-                            )
-                            wall_v2_distance = eucledian_distance(wall.end_vertex, intersection)
-                            if wall_v1_distance < wall_v2_distance:
-                                wall.start_vertex = intersection
-                            else:
-                                wall.end_vertex = intersection
-
-    return building_elements
+    return out_elements
 
 
 def convert_disconnected_walls_into_barricades(elements: List[BuildingElement]):

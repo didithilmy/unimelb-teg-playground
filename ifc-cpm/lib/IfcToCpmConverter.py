@@ -9,7 +9,7 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
-from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, join_connected_walls, infer_wall_connections
+from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
@@ -45,7 +45,7 @@ class IfcToCpmConverterBuilder:
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
         round_function=None,
-        close_wall_gap_metre=None
+        close_wall_gap_metre=0
     ):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
@@ -66,7 +66,7 @@ class IfcToCpmConverter:
         dimension: Tuple[int, int] = None,
         origin: Tuple[int, int] = None,
         round_function=None,
-        close_wall_gap_metre=None
+        close_wall_gap_metre=0
     ):
         if origin is None:
             origin = (0, 0)
@@ -115,7 +115,7 @@ class IfcToCpmConverter:
 
     def _get_storey_elements(self, storey_id, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
-        walls = [x for x in elements if x.is_a("IfcWall")]
+        walls = [x for x in elements if x.is_a("IfcWall") or x.is_a("IfcCurtainWall")]
         building_elements = []
         for wall in walls:
             try:
@@ -125,12 +125,18 @@ class IfcToCpmConverter:
                 logger.warning(f"Skipped wall parsing: error parsing wall {wall.Name}: {exc}")
                 logger.error(exc, exc_info=True)
 
-        if self.close_wall_gap_metre is not None:
-            tolerance = self.close_wall_gap_metre / self.unit_scale
-            building_elements = infer_wall_connections(tolerance, building_elements)
+        tolerance = self.close_wall_gap_metre / self.unit_scale
+        print("Glueing wall connections...")
+        building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
 
-        building_elements = join_connected_walls(building_elements)
+        import json
+        with open(f'building_elements_{storey_id}.json', 'w') as f:
+            f.write(json.dumps([x.__dict__ for x in building_elements], indent=4))
+
+        print("Decomposing wall openings...")
         building_elements = decompose_wall_with_openings(building_elements)
+
+        print("Splitting intersections...")
         building_elements = split_intersecting_elements(building_elements)
         building_elements = convert_disconnected_walls_into_barricades(building_elements)
         # building_elements += self._get_storey_void_barricade_elements(storey)
@@ -192,9 +198,12 @@ class IfcToCpmConverter:
             v2 = self._transform_vertex(v2, transformation_matrix)
             opening_vertices.append((v1, v2))
 
-        start_vertex, end_vertex = WallVertices.infer(ifc_wall.Representation.Representations)
-        start_vertex = self._transform_vertex(start_vertex, transformation_matrix)
-        end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
+        # FIXME TODO use world coordinate for inferring wall vertices
+        print("Inferring wall vertices for wall " + ifc_wall.Name)
+        start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
+        # start_vertex = self._transform_vertex(start_vertex, transformation_matrix)
+        # end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
+        print("Finished inferring wall " + ifc_wall.Name)
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
