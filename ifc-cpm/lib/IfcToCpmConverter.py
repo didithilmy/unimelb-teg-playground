@@ -9,7 +9,7 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
-from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements
+from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
@@ -126,8 +126,10 @@ class IfcToCpmConverter:
                 logger.error(exc, exc_info=True)
 
         tolerance = self.close_wall_gap_metre / self.unit_scale
-        print("Glueing wall connections...")
-        building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
+
+        if tolerance > 0:
+            print("Glueing wall connections...")
+            building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
 
         # import json
         # with open(f'building_elements_{storey_id}.json', 'w') as f:
@@ -138,7 +140,11 @@ class IfcToCpmConverter:
 
         print("Splitting intersections...")
         building_elements = split_intersecting_elements(building_elements)
-        # building_elements = convert_disconnected_walls_into_barricades(building_elements)
+
+        if tolerance > 0:
+            print("Closing wall gaps...")
+            building_elements = close_wall_gaps(building_elements, tolerance=tolerance)
+        building_elements = convert_disconnected_walls_into_barricades(building_elements)
         # building_elements += self._get_storey_void_barricade_elements(storey)
         building_elements += self._get_storey_stair_border_walls(storey_id)
         return building_elements

@@ -37,20 +37,29 @@ def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tole
 def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:
     out_elements = copy.deepcopy(elements)
     for element1, element2 in combinations(out_elements, 2):
-        glue_two_elements(element1, element2, tolerance=tolerance)
+        glue_two_elements(element1, element2)
 
-        # Handle walls with near vertices but far away intersection.
-        # This indicates that the walls are near parallel, but the vertices are close.
-        # In this case, draw a new wall that connects the two.
-        # intersection_is_nearby = min(w1_v1_distance_to_intersection, w1_v2_distance_to_intersection, w2_v1_distance_to_intersection, w2_v2_distance_to_intersection) <= tolerance
-        # if not intersection_is_nearby:
-        #     for w1_vertex in line1:
-        #         for w2_vertex in line2:
-        #             if w1_vertex != w2_vertex:
-        #                 distance = eucledian_distance(w1_vertex, w2_vertex)
-        #                 if distance <= tolerance:
-        #                     connector_wall = Wall(name=f"Connector-[{element1.name}]-[{element2.name}]", start_vertex=w1_vertex, end_vertex=w2_vertex)
-        #                     out_elements.append(connector_wall)
+    return out_elements
+
+
+def close_wall_gaps(elements: List[BuildingElement], tolerance):
+    out_elements = copy.deepcopy(elements)
+    vertices = []
+    connector_vertices = set()
+
+    # Populate vertices list
+    for element in elements:
+        vertices += [element.start_vertex, element.end_vertex]
+
+    # Find pairwise vertices with distance less than tolerance
+    for v1, v2 in combinations(vertices, 2):
+        distance = eucledian_distance(v1, v2)
+        if distance <= tolerance:
+            connector_vertices.add((v1, v2))
+
+    for v1, v2 in list(connector_vertices):
+        connector_wall = Wall(name=f"Connector-[{v1}]-[{v2}]", start_vertex=v1, end_vertex=v2)
+        out_elements.append(connector_wall)
 
     return out_elements
 

@@ -32,48 +32,16 @@ def transform_vertex_3d(transformation_matrix, vertex: Tuple[float, float, float
     return (transformed_x, transformed_y, transformed_z)
 
 
+def truncate(number, digits=4) -> float:
+    # Improve accuracy with floating point operations, to avoid truncate(16.4, 2) = 16.39 or truncate(-1.13, 2) = -1.12
+    nbDecimals = len(str(number).split('.')[1])
+    if nbDecimals <= digits:
+        return number
+    stepper = 10.0 ** digits
+    return math.trunc(stepper * number) / stepper
+
+
 def find_unbounded_lines_intersection(line1, line2):
-    line1_point1, line1_point2 = line1
-    line2_point1, line2_point2 = line2
-
-    x1, y1 = line1_point1
-    x2, y2 = line1_point2
-    x3, y3 = line2_point1
-    x4, y4 = line2_point2
-
-    # Calculate slopes and intercepts of the two lines, if the line is NOT vertical.
-    m1, b1 = None, None
-    if x1 != x2:
-        m1 = (y2 - y1) / (x2 - x1)
-        b1 = y1 - m1 * x1
-
-    m2, b2 = None, None
-    if x3 != x4:
-        m2 = (y4 - y3) / (x4 - x3)
-        b2 = y3 - m2 * x3
-
-    if m1 == m2 and m1 is not None and m2 is not None:
-        return None
-
-    if m1 is None and m2 is None:
-        if x1 == x3:
-            return None  # FIXME TODO handle lines occupying the same space.
-        return None
-
-    if m1 is None:
-        intersection_x = x1
-        intersection_y = m2 * intersection_x + b2
-    elif m2 is None:
-        intersection_x = x3
-        intersection_y = m1 * intersection_x + b1
-    else:
-        intersection_x = (b2 - b1) / (m1 - m2)
-        intersection_y = m1 * intersection_x + b1
-
-    return intersection_x, intersection_y
-
-
-def find_lines_intersection(line1, line2):
     # FIXME this function may output slightly different intersection if the input is swapped, which should NOT happen.
     # This is potentially caused by a rounding error -- more investigation is needed.
     # The consequence of this rounding error is an infinite loop in the _split_intersecting_elements function.
@@ -82,6 +50,13 @@ def find_lines_intersection(line1, line2):
 
     (x1, y1), (x2, y2) = line1
     (x3, y3), (x4, y4) = line2
+
+    # Excessive decimal places must be truncated to avoid rounding error
+    x1, y1 = truncate(x1), truncate(y1)
+    x2, y2 = truncate(x2), truncate(y2)
+    x3, y3 = truncate(x3), truncate(y3)
+    x4, y4 = truncate(x4), truncate(y4)
+
     # Calculate the slopes of the two line segments
     m1 = (y2 - y1) / (x2 - x1) if (x2 - x1) != 0 else float('inf')
     m2 = (y4 - y3) / (x4 - x3) if (x4 - x3) != 0 else float('inf')
@@ -100,6 +75,30 @@ def find_lines_intersection(line1, line2):
     else:
         x = (m1 * x1 - y1 - m2 * x3 + y3) / (m1 - m2)
         y = m1 * (x - x1) + y1
+
+    return (x, y)
+
+
+def find_lines_intersection(line1, line2):
+    # FIXME this function may output slightly different intersection if the input is swapped, which should NOT happen.
+    # This is potentially caused by a rounding error -- more investigation is needed.
+    # The consequence of this rounding error is an infinite loop in the _split_intersecting_elements function.
+    # Sort line1 and line2 to force a consistent output
+    [line1, line2] = sorted([line1, line2])
+    (x1, y1), (x2, y2) = line1
+    (x3, y3), (x4, y4) = line2
+
+    # Excessive decimal places must be truncated to avoid rounding error
+    x1, y1 = truncate(x1), truncate(y1)
+    x2, y2 = truncate(x2), truncate(y2)
+    x3, y3 = truncate(x3), truncate(y3)
+    x4, y4 = truncate(x4), truncate(y4)
+
+    res = find_unbounded_lines_intersection(line1, line2)
+    if res is None:
+        return None
+
+    x, y = res
 
     # Check if the intersection point is within both line segments
     if (
