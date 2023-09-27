@@ -76,6 +76,7 @@ def find_unbounded_lines_intersection(line1, line2):
         x = (m1 * x1 - y1 - m2 * x3 + y3) / (m1 - m2)
         y = m1 * (x - x1) + y1
 
+    x, y = truncate(x), truncate(y)
     return (x, y)
 
 
