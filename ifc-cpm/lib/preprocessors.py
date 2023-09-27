@@ -37,7 +37,7 @@ def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tole
 def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:
     out_elements = copy.deepcopy(elements)
     for element1, element2 in combinations(out_elements, 2):
-        glue_two_elements(element1, element2)
+        glue_two_elements(element1, element2, tolerance=tolerance)
 
     return out_elements
 
