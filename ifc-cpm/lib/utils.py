@@ -46,7 +46,7 @@ def find_unbounded_lines_intersection(line1, line2):
     # This is potentially caused by a rounding error -- more investigation is needed.
     # The consequence of this rounding error is an infinite loop in the _split_intersecting_elements function.
     # Sort line1 and line2 to force a consistent output
-    [line1, line2] = sorted([line1, line2])
+    [line1, line2] = sorted([tuple(line1), tuple(line2)])
 
     (x1, y1), (x2, y2) = line1
     (x3, y3), (x4, y4) = line2
@@ -84,7 +84,7 @@ def find_lines_intersection(line1, line2):
     # This is potentially caused by a rounding error -- more investigation is needed.
     # The consequence of this rounding error is an infinite loop in the _split_intersecting_elements function.
     # Sort line1 and line2 to force a consistent output
-    [line1, line2] = sorted([line1, line2])
+    [line1, line2] = sorted([tuple(line1), tuple(line2)])
     (x1, y1), (x2, y2) = line1
     (x3, y3), (x4, y4) = line2
 
