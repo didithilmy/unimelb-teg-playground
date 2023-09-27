@@ -3,7 +3,7 @@ from typing import List, Tuple
 from collections import defaultdict
 from itertools import combinations
 from .ifctypes import BuildingElement, Barricade, Wall, Gate
-from .utils import find_lines_intersection, find_unbounded_lines_intersection, find, eucledian_distance, shortest_distance_between_two_lines
+from .utils import find_lines_intersection, find_unbounded_lines_intersection, eucledian_distance, shortest_distance_between_two_lines, filter
 
 
 def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tolerance: float):
@@ -43,23 +43,28 @@ def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -
 
 
 def close_wall_gaps(elements: List[BuildingElement], tolerance):
+    # Should only close disconnected vertices (i.e., nearby vertex connected to another vertex does not count)
+    vertices_count = defaultdict(lambda: 0)
+    for el in elements:
+        vertices_count[el.start_vertex] += 1
+        vertices_count[el.end_vertex] += 1
+
     out_elements = copy.deepcopy(elements)
-    vertices = []
-    connector_vertices = set()
+    eligible_elements = filter(out_elements, lambda x: x.length > tolerance)
+    for element1, element2 in combinations(eligible_elements, 2):
+        line1 = element1.start_vertex, element1.end_vertex
+        line2 = element2.start_vertex, element2.end_vertex
 
-    # Populate vertices list
-    for element in elements:
-        vertices += [element.start_vertex, element.end_vertex]
-
-    # Find pairwise vertices with distance less than tolerance
-    for v1, v2 in combinations(vertices, 2):
-        distance = eucledian_distance(v1, v2)
-        if distance <= tolerance:
-            connector_vertices.add((v1, v2))
-
-    for v1, v2 in list(connector_vertices):
-        connector_wall = Wall(name=f"Connector-[{v1}]-[{v2}]", start_vertex=v1, end_vertex=v2)
-        out_elements.append(connector_wall)
+        for w1_vertex in line1:
+            for w2_vertex in line2:
+                if w1_vertex != w2_vertex:
+                    w1_vertex_disconnected = vertices_count[w1_vertex] <= 1
+                    w2_vertex_disconnected = vertices_count[w2_vertex] <= 1
+                    if w1_vertex_disconnected and w2_vertex_disconnected:
+                        distance = eucledian_distance(w1_vertex, w2_vertex)
+                        if distance <= tolerance:
+                            connector_wall = Wall(name=f"Connector-[{element1.name}]-[{element2.name}]", start_vertex=w1_vertex, end_vertex=w2_vertex)
+                            out_elements.append(connector_wall)
 
     return out_elements
 
