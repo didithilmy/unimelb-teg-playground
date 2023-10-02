@@ -33,7 +33,8 @@ def transform_vertex_3d(transformation_matrix, vertex: Tuple[float, float, float
     return (transformed_x, transformed_y, transformed_z)
 
 
-def truncate(number, digits=2) -> float:
+# TODO find permanent solution for rounding error
+def truncate(number, digits=4) -> float:
     # Improve accuracy with floating point operations, to avoid truncate(16.4, 2) = 16.39 or truncate(-1.13, 2) = -1.12
     nbDecimals = len(str(number).split('.')[1])
     if nbDecimals <= digits:
