@@ -7,6 +7,10 @@ import ifcopenshell.util.placement
 import ifcopenshell.geom
 from compas.geometry import oriented_bounding_box_xy_numpy
 
+settings = ifcopenshell.geom.settings()
+settings.set(settings.USE_WORLD_COORDS, False)
+settings.set(settings.CONVERT_BACK_UNITS, True)
+
 
 def get_sorted_building_storeys(ifc_building):
     building_elements = ifcopenshell.util.element.get_decomposition(ifc_building)
@@ -189,7 +193,6 @@ def rotate_point_around_point(origin, vertex, angle_degrees):
 
 def get_composite_verts(ifc_product):
     if ifc_product.Representation is not None:
-        settings = ifcopenshell.geom.settings()
         shape = ifcopenshell.geom.create_shape(settings, ifc_product)
         vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
         matrix = ifcopenshell.util.placement.get_local_placement(ifc_product.ObjectPlacement)
