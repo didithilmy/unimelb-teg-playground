@@ -7,16 +7,18 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
+from skspatial.objects import Line
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
-from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate
+from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 
 settings = ifcopenshell.geom.settings()
-settings.set(settings.USE_WORLD_COORDS, True)
+settings.set(settings.USE_WORLD_COORDS, False)
+settings.set(settings.CONVERT_BACK_UNITS, True)
 
 logger = logging.getLogger("IfcToCpmConverter")
 
@@ -168,73 +170,45 @@ class IfcToCpmConverter:
                 walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
 
         return walls
-
+    
     def _get_wall_with_opening(self, ifc_wall) -> WallWithOpening:
-        gates_vertices = []
+        print("Inferring wall vertices for wall " + ifc_wall.Name)
+        start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
+
+        opening_vertices = []
         openings = ifc_wall.HasOpenings
         for opening in openings:
             opening_element = opening.RelatedOpeningElement
-            opening_size = self._get_opening_width(opening_element)
-            if opening_size is not None:
-                offset_x, opening_length = opening_size
-                opening_location_relative_to_wall = (
-                    opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
-                )
+            if opening_element.PredefinedType is None or opening_element.PredefinedType.upper() != 'RECESS':
+                shape = ifcopenshell.geom.create_shape(settings, opening_element)
 
-                x, y, z = opening_location_relative_to_wall
+                opening_location_relative_to_wall = opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
+                _, _, z = opening_location_relative_to_wall
+                if z > 0:
+                    continue
 
-                # Opening local placement starts from the middle. See https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcproductextension/lexical/ifcopeningelement.htm
-                # "NOTE: Rectangles are now defined centric, the placement location has to be set: IfcCartesianPoint(XDim/2,YDim/2)"
-                # Only set the coordinate to be centric IF and only IF the x coordinate is NOT zero. Zero means the coordinate is not used. TODO find out if this always holds true.
-                if x != 0:
-                    x = x - opening_length / 2
-                x += offset_x
-                y = 0  # FIXME investigate other representations where the y is NOT zero.
-                if z == 0:
-                    gates_vertices.append(
-                        ((x, y), (x + opening_length, y))
-                    )
+                vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
 
-        transformation_matrix = ifcopenshell.util.placement.get_local_placement(
-            ifc_wall.ObjectPlacement
-        )
+                bbox = get_oriented_xy_bounding_box(vertices)
+                v1, v2 = get_edge_from_bounding_box(bbox)
 
-        opening_vertices = []
-        for (v1, v2) in gates_vertices:
-            v1 = self._transform_vertex(v1, transformation_matrix)
-            v2 = self._transform_vertex(v2, transformation_matrix)
-            opening_vertices.append((v1, v2))
+                matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
+                v1 = self._transform_vertex(v1, matrix)
+                v2 = self._transform_vertex(v2, matrix)
 
-        # FIXME TODO use world coordinate for inferring wall vertices
-        print("Inferring wall vertices for wall " + ifc_wall.Name)
-        start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
+                wall_line = Line.from_points(start_vertex, end_vertex)
+                x1, y1 = wall_line.project_point(v1)
+                x2, y2 = wall_line.project_point(v2)
+
+                x1, y1 = truncate(x1), truncate(y1)
+                x2, y2 = truncate(x2), truncate(y2)
+                opening_vertices.append(((x1, y1), (x2, y2)))
+
         print("Finished inferring wall " + ifc_wall.Name)
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
 
-    def _get_opening_width(self, opening_element):
-        fillings = opening_element.HasFillings
-        if len(fillings) == 0:
-            # This is just an opening without attached door.
-            # Get the width from the shape representations.
-            representations = opening_element.Representation.Representations
-            try:
-                (offset_x, _), (opening_length, _) = XYBoundingBox.infer(representations)
-                return offset_x, opening_length
-            except Exception as e:
-                logger.warning(f"Skipping opening parsing: cannot infer length of opening {opening_element.Name}")
-                logger.error(e, exc_info=True)
-                return None
-
-        door_filling = None
-        for filling in fillings:
-            if filling.RelatedBuildingElement.is_a("IfcDoor"):
-                door_filling = filling.RelatedBuildingElement
-                break
-
-        if door_filling is not None:
-            return 0, door_filling.OverallWidth
 
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
@@ -271,9 +245,7 @@ class IfcToCpmConverter:
 
     def _transform_vertex(self, vertex, transformation_matrix):
         # Building location correction
-        total_transformation_matrix = np.dot(
-            self.base_transformation_matrix, transformation_matrix
-        )
+        total_transformation_matrix = np.dot(self.base_transformation_matrix, transformation_matrix)
         transformed_x, transformed_y = transform_vertex(total_transformation_matrix, vertex)
         transformed_x = self.round(transformed_x)
         transformed_y = self.round(transformed_y)
