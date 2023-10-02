@@ -213,26 +213,6 @@
 					</Wall>
 					<Wall>
 						<id>10</id>
-						<name>Wand-Int-ERDG-5-2</name>
-						<length>3.8</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>5.0</X>
-								<Y>9.25</Y>
-								<id>16</id>
-							</Vertex>
-							<Vertex>
-								<X>8.8</X>
-								<Y>9.25</Y>
-								<id>17</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>11</id>
 						<name>Wand-Ext-ERDG-1-1</name>
 						<length>4.25</length>
 						<isLow>false</isLow>
@@ -252,7 +232,7 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>12</id>
+						<id>11</id>
 						<name>Wand-Ext-ERDG-1-2</name>
 						<length>0.25</length>
 						<isLow>false</isLow>
@@ -267,12 +247,12 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>9.5</Y>
-								<id>18</id>
+								<id>17</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>13</id>
+						<id>12</id>
 						<name>Wand-Ext-ERDG-1-1</name>
 						<length>0.25</length>
 						<isLow>false</isLow>
@@ -282,7 +262,7 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>10.5</Y>
-								<id>19</id>
+								<id>18</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
@@ -292,7 +272,7 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>14</id>
+						<id>13</id>
 						<name>Wand-Ext-ERDG-1-2</name>
 						<length>4.25</length>
 						<isLow>false</isLow>
@@ -307,12 +287,12 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>15.0</Y>
-								<id>20</id>
+								<id>19</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>15</id>
+						<id>14</id>
 						<name>Wand-Ext-ERDG-3-1</name>
 						<length>5.75</length>
 						<isLow>false</isLow>
@@ -322,7 +302,7 @@
 							<Vertex>
 								<X>17.0</X>
 								<Y>15.0</Y>
-								<id>21</id>
+								<id>20</id>
 							</Vertex>
 							<Vertex>
 								<X>17.0</X>
@@ -332,7 +312,7 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>16</id>
+						<id>15</id>
 						<name>Wand-Ext-ERDG-3-2</name>
 						<length>4.25</length>
 						<isLow>false</isLow>
@@ -352,7 +332,7 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>17</id>
+						<id>16</id>
 						<name>Wand-Ext-ERDG-2-2</name>
 						<length>4.59</length>
 						<isLow>false</isLow>
@@ -367,12 +347,12 @@
 							<Vertex>
 								<X>17.0</X>
 								<Y>15.0</Y>
-								<id>21</id>
+								<id>20</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>18</id>
+						<id>17</id>
 						<name>Wand-Int-ERDG-1-1-2</name>
 						<length>4.25</length>
 						<isLow>false</isLow>
@@ -382,7 +362,7 @@
 							<Vertex>
 								<X>8.8</X>
 								<Y>15.0</Y>
-								<id>22</id>
+								<id>21</id>
 							</Vertex>
 							<Vertex>
 								<X>8.8</X>
@@ -392,7 +372,7 @@
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>19</id>
+						<id>18</id>
 						<name>Wand-Ext-ERDG-2-1-1</name>
 						<length>3.8</length>
 						<isLow>false</isLow>
@@ -402,17 +382,17 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>15.0</Y>
-								<id>20</id>
+								<id>19</id>
 							</Vertex>
 							<Vertex>
 								<X>8.8</X>
 								<Y>15.0</Y>
-								<id>22</id>
+								<id>21</id>
 							</Vertex>
 						</vertices>
 					</Wall>
 					<Wall>
-						<id>20</id>
+						<id>19</id>
 						<name>Wand-Ext-ERDG-2-1-2</name>
 						<length>3.61</length>
 						<isLow>false</isLow>
@@ -422,7 +402,7 @@
 							<Vertex>
 								<X>8.8</X>
 								<Y>15.0</Y>
-								<id>22</id>
+								<id>21</id>
 							</Vertex>
 							<Vertex>
 								<X>12.41</X>
@@ -435,12 +415,31 @@
 			</wall_pkg>
 			<barricade_pkg>
 				<barricade_walls>
+					<Wall>
+						<id>25</id>
+						<length>3.8</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>5.0</X>
+								<Y>9.25</Y>
+								<id>16</id>
+							</Vertex>
+							<Vertex>
+								<X>8.8</X>
+								<Y>9.25</Y>
+								<id>22</id>
+							</Vertex>
+						</vertices>
+					</Wall>
 				</barricade_walls>
 			</barricade_pkg>
 			<gate_pkg>
 				<gates>
 					<Gate>
-						<id>21</id>
+						<id>20</id>
 						<length>0.88</length>
 						<angle>0</angle>
 						<destination>false</destination>
@@ -461,7 +460,7 @@
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>22</id>
+						<id>21</id>
 						<length>0.88</length>
 						<angle>0</angle>
 						<destination>false</destination>
@@ -482,7 +481,7 @@
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>23</id>
+						<id>22</id>
 						<length>0.88</length>
 						<angle>0</angle>
 						<destination>false</destination>
@@ -503,7 +502,7 @@
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>24</id>
+						<id>23</id>
 						<length>1.0</length>
 						<angle>0</angle>
 						<destination>false</destination>
@@ -514,17 +513,17 @@
 							<Vertex>
 								<X>5.0</X>
 								<Y>9.5</Y>
-								<id>18</id>
+								<id>17</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
 								<Y>10.5</Y>
-								<id>19</id>
+								<id>18</id>
 							</Vertex>
 						</vertices>
 					</Gate>
 					<Gate>
-						<id>25</id>
+						<id>24</id>
 						<length>2.0</length>
 						<angle>0</angle>
 						<destination>false</destination>
@@ -544,103 +543,6 @@
 							</Vertex>
 						</vertices>
 					</Gate>
-				</gates>
-			</gate_pkg>
-		</Level>
-		<Level>
-			<id>1</id>
-			<width>22</width>
-			<height>20</height>
-			<wall_pkg>
-				<walls>
-					<Wall>
-						<id>26</id>
-						<name>Wand-Ext-OG-1</name>
-						<length>10.0</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>5.0</X>
-								<Y>5.0</Y>
-								<id>7</id>
-							</Vertex>
-							<Vertex>
-								<X>5.0</X>
-								<Y>15.0</Y>
-								<id>20</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>27</id>
-						<name>Wand-Ext-OG-2</name>
-						<length>12.0</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>5.0</X>
-								<Y>15.0</Y>
-								<id>20</id>
-							</Vertex>
-							<Vertex>
-								<X>17.0</X>
-								<Y>15.0</Y>
-								<id>21</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>28</id>
-						<name>Wand-Ext-OG-3</name>
-						<length>10.0</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>17.0</X>
-								<Y>15.0</Y>
-								<id>21</id>
-							</Vertex>
-							<Vertex>
-								<X>17.0</X>
-								<Y>5.0</Y>
-								<id>4</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-					<Wall>
-						<id>29</id>
-						<name>Wand-Ext-OG-4</name>
-						<length>12.0</length>
-						<isLow>false</isLow>
-						<isTransparent>false</isTransparent>
-						<iWlWG>false</iWlWG>
-						<vertices>
-							<Vertex>
-								<X>17.0</X>
-								<Y>5.0</Y>
-								<id>4</id>
-							</Vertex>
-							<Vertex>
-								<X>5.0</X>
-								<Y>5.0</Y>
-								<id>7</id>
-							</Vertex>
-						</vertices>
-					</Wall>
-				</walls>
-			</wall_pkg>
-			<barricade_pkg>
-				<barricade_walls>
-				</barricade_walls>
-			</barricade_pkg>
-			<gate_pkg>
-				<gates>
 				</gates>
 			</gate_pkg>
 		</Level>

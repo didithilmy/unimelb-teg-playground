@@ -13,7 +13,7 @@ from .preprocessors import convert_disconnected_walls_into_barricades, split_int
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .stairs import StraightSingleRunStairBuilder
-from .utils import transform_vertex, filter, get_sorted_building_storeys
+from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -73,7 +73,7 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 100) / 100)
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: truncate(round(self.unit_scale * x * 100) / 100, digits=3))
 
         building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
         self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
@@ -112,6 +112,7 @@ class IfcToCpmConverter:
             elements = self._get_storey_elements(storey_id, storey)
             level = Level(index=storey_id, elements=elements)
             self.crowd_environment.add_level(level)
+            # return
 
     def _get_storey_elements(self, storey_id, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
@@ -131,9 +132,9 @@ class IfcToCpmConverter:
             print("Glueing wall connections...")
             building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
 
-        # import json
-        # with open(f'building_elements_{storey_id}.json', 'w') as f:
-        #     f.write(json.dumps([x.__dict__ for x in building_elements], indent=4))
+        import json
+        with open(f'building_elements_{storey_id}.json', 'w') as f:
+            f.write(json.dumps([x.__dict__ for x in building_elements], indent=4))
 
         print("Decomposing wall openings...")
         building_elements = decompose_wall_with_openings(building_elements)
@@ -207,8 +208,6 @@ class IfcToCpmConverter:
         # FIXME TODO use world coordinate for inferring wall vertices
         print("Inferring wall vertices for wall " + ifc_wall.Name)
         start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
-        # start_vertex = self._transform_vertex(start_vertex, transformation_matrix)
-        # end_vertex = self._transform_vertex(end_vertex, transformation_matrix)
         print("Finished inferring wall " + ifc_wall.Name)
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
@@ -279,13 +278,3 @@ class IfcToCpmConverter:
         transformed_x = self.round(transformed_x)
         transformed_y = self.round(transformed_y)
         return (transformed_x, transformed_y)
-
-    def _scale_to_metric(self, length):
-        if isinstance(length, tuple):
-            new_list = [self.unit_scale * x for x in length]
-            return tuple(new_list)
-        elif isinstance(length, list):
-            new_list = [self.unit_scale * x for x in length]
-            return new_list
-
-        return self.unit_scale * length

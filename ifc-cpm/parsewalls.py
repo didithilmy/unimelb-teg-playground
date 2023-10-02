@@ -9,82 +9,43 @@ import ifcopenshell.util.shape
 import ifcopenshell.util.unit
 from compas.geometry import oriented_bounding_box_xy_numpy
 from lib.ifctypes import Wall, Gate, BuildingElement
-from lib.representation_helpers import WallVertices
-from lib.utils import transform_vertex_3d, eucledian_distance, filter, find_unbounded_lines_intersection
+from lib.representation_helpers import WallVertices, XYBoundingBox
+from lib.utils import transform_vertex_3d, eucledian_distance, find, find_unbounded_lines_intersection, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box, transform_vertex
+
+from skspatial.objects import Line
 
 settings = ifcopenshell.geom.settings()
-settings.set(settings.USE_WORLD_COORDS, False)
 
 model = ifcopenshell.open("ifc/rac_advanced_sample_project.ifc")
 unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 
-
-def get_composite_verts(ifc_product):
-    if ifc_product.Representation is not None:
-        settings = ifcopenshell.geom.settings()
-        shape = ifcopenshell.geom.create_shape(settings, ifc_product)
-        vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
-        return list(vertices)
-
-    vertices = []
-    for decomposition in ifc_product.IsDecomposedBy:
-        relobjects = decomposition.RelatedObjects
-        for relobj in relobjects:
-            rel_vertices = get_composite_verts(relobj)
-            placement = relobj.ObjectPlacement
-            matrix = ifcopenshell.util.placement.get_local_placement(placement)
-            rel_vertices = [transform_vertex_3d(matrix, x) for x in rel_vertices]
-            vertices += rel_vertices
-
-    return vertices
-
-
-def get_edge_from_bbox(bbox):
-    v1, v2, v3, v4 = bbox
-    e1 = (v1, v2)
-    e2 = (v2, v3)
-
-    e1_dist = eucledian_distance(v1, v2)
-    e2_dist = eucledian_distance(v2, v3)
-
-    if e1_dist < e2_dist:
-        midpoint_vertex = e1
-        run_vertex = e2
-    else:
-        midpoint_vertex = e2
-        run_vertex = e1
-
-    midpoint_x = (midpoint_vertex[0][0] + midpoint_vertex[1][0]) / 2
-    midpoint_y = (midpoint_vertex[0][1] + midpoint_vertex[1][1]) / 2
-
-    delta_x = run_vertex[0][0] - run_vertex[1][0]
-    delta_y = run_vertex[0][1] - run_vertex[1][1]
-
-    x2 = midpoint_x + delta_x
-    y2 = midpoint_y + delta_y
-
-    return (midpoint_x, midpoint_y), (x2, y2)
-
-
 for storey in model.by_type("IfcBuildingStorey"):
     elements = ifcopenshell.util.element.get_decomposition(storey)
-    def matcher(x):
-        return "145547" in x.Name or "144837" in x.Name
-    walls = filter(elements, matcher)
-    # walls = [x for x in elements if x.is_a("IfcCurtainWall") or x.is_a("IfcWall") and "145547" in x.Name]
+    ifc_wall = find(elements, lambda x: '182328' in x.Name)
+    if not ifc_wall:
+        continue
 
-    print(storey.Name)
-    for wall in walls:
-        vertices = get_composite_verts(wall)
-        flat_vertices = np.array(vertices).flatten()
-        if len(vertices) > 0:
-            verts_x, verts_y, verts_z = flat_vertices[::3], flat_vertices[1::3], flat_vertices[2::3]
-            bbox = oriented_bounding_box_xy_numpy(vertices)
-            edge = get_edge_from_bbox(bbox)
+    wall_vertices = WallVertices.from_product(ifc_wall)
+    print("Wall edge", wall_vertices)
 
-            print(wall.Name, edge)
+    gates_vertices = []
+    openings = ifc_wall.HasOpenings
+    for opening in openings:
+        opening_element = opening.RelatedOpeningElement
+        print(opening_element.PredefinedType)
+        if opening_element.PredefinedType.upper() != 'RECESS':
+            shape = ifcopenshell.geom.create_shape(settings, opening_element)
+            vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
 
-line1 = (0.0, -5.551115123125783e-17), (-8.249999999999986, -5.551115123125783e-17)
-line2 = (-4073.4244393429453, 6218.938619937839), (-4073.424439342919, 22180.290756191764)
-intr = find_unbounded_lines_intersection(line1, line2)
-print(intr)
+            bbox = get_oriented_xy_bounding_box(vertices)
+            v1, v2 = get_edge_from_bounding_box(bbox)
+
+            matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
+            v1 = transform_vertex(matrix, v1)
+            v2 = transform_vertex(matrix, v2)
+
+            wall_line = Line.from_points(wall_vertices[0], wall_vertices[1])
+            v1_projected = wall_line.project_point(v1)
+            v2_projected = wall_line.project_point(v2)
+
+            print("Opening edge", (v1_projected, v2_projected))

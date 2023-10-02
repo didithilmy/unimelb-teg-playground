@@ -1,43 +1,55 @@
-from lib.utils import find_lines_intersection
+from lib.ifctypes import WallWithOpening, Wall, Gate
+from lib.utils import eucledian_distance
+
+wwo = WallWithOpening(
+    start_vertex=(56521.078114, -23332.661381),
+    end_vertex=(56521.07811400084, -14931.161381517002),
+    opening_vertices=[
+        ((56521.08, -30556.46), (56521.08, -20956.46)),
+        ((56521.08, -16572.91), (56521.08, -15657.91))
+    ])
 
 
-def find_intersection(line1, line2):
-    (x1, y1), (x2, y2) = line1
-    (x3, y3), (x4, y4) = line2
-    # Calculate the slopes of the two line segments
-    m1 = (y2 - y1) / (x2 - x1) if (x2 - x1) != 0 else float('inf')
-    m2 = (y4 - y3) / (x4 - x3) if (x4 - x3) != 0 else float('inf')
+def decompose_wall_with_opening(wall: WallWithOpening):
+    out_elements = []
+    edges = set()
+    vertices = [wall.start_vertex, wall.end_vertex]
 
-    # Check if the segments are parallel (the slopes are the same)
-    if m1 == m2:
-        return None  # No intersection, the lines are parallel
+    for i, (opening_v1, opening_v2) in enumerate(wall.opening_vertices):
+        gate = Gate(name=f"{wall.name}:gate-{i}", start_vertex=opening_v1, end_vertex=opening_v2)
+        out_elements.append(gate)
+        edges.add((opening_v1, opening_v2))
+        edges.add((opening_v2, opening_v1))
+        vertices += [opening_v1, opening_v2]
 
-    # Calculate the intersection point
-    if m1 == float('inf'):  # First line is vertical
-        x = x1
-        y = m2 * (x - x3) + y3
-    elif m2 == float('inf'):  # Second line is vertical
-        x = x3
-        y = m1 * (x - x1) + y1
-    else:
-        x = (m1 * x1 - y1 - m2 * x3 + y3) / (m1 - m2)
-        y = m1 * (x - x1) + y1
+    vertex = vertices[0]
+    while True:
+        nearest_vertex = min(vertices, key=lambda v: eucledian_distance(vertex, v))
+        if vertex != nearest_vertex:
+            if (vertex, nearest_vertex) not in edges:
+                connector = Wall(name=wall.name, start_vertex=vertex, end_vertex=nearest_vertex)
+                edges.add((vertex, nearest_vertex))
+                edges.add((nearest_vertex, vertex))
+                out_elements.append(connector)
 
-    # Check if the intersection point is within both line segments
-    if (
-        min(x1, x2) <= x <= max(x1, x2) and
-        min(y1, y2) <= y <= max(y1, y2) and
-        min(x3, x4) <= x <= max(x3, x4) and
-        min(y3, y4) <= y <= max(y3, y4)
-    ):
-        return (x, y)  # Intersection point is within both line segments
-    else:
-        return None  # Intersection point is outside one or both line segments
+        vertex = nearest_vertex
+        vertices.remove(vertex)
+
+        if len(vertices) == 0:
+            break
+
+    return out_elements
 
 
-line1 = (-4073.424439342946, 6067.438619937829), (-4073.424439342919, 22180.290756191764)
-line2 = (-1504.1744393429449, 6067.438619937829), (-9848.79943934293, 6067.438619937829)
-intr = find_intersection(line1, line2)
+el = decompose_wall_with_opening(wwo)
+print(el)
 
-intr = find_intersection(((0, 0), (5, 0)), ((0, 1), (0, 5)))
-print(intr)
+"""
+[
+    Gate(None:gate-0, (56521.08, -30556.46), (56521.08, -20956.46)), 
+    Gate(None:gate-1, (56521.08, -16572.91), (56521.08, -15657.91)), 
+    Wall(None, (56521.078114, -23332.661381), (56521.08, -20956.46)), 
+    Wall(None, (56521.08, -20956.46), (56521.08, -16572.91)), 
+    Wall(None, (56521.08, -15657.91), (56521.07811400084, -14931.161381517002)), 
+    Wall(None, (56521.07811400084, -14931.161381517002), (56521.08, -30556.46))]
+"""

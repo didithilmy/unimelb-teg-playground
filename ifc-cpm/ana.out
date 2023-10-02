@@ -323,3 +323,137 @@ Debug element is encountered.
             -9848.79943934293,
             6067.438619937829
         ],
+
+
+Debug: Glueing failed: T connection between 6 and 63
+[06] Curtain Wall:Exterior Curtain Wall:145547
+[63] Basic Wall:Exterior - Insulation on Masonry:169770-1
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Basic Wall:Exterior - Insulation on Masonry:144837, Element2: Curtain Wall:Exterior Curtain Wall:145547
+    Line1 vertex, old: ((-1447.2994393429449, 6067.438619937829), (-9697.299439342945, 6067.438619937829))
+        w1_v1_dist: 2626.125000000001
+        w1_v2_dist: 5623.875
+    Line1 vertex, new: ((-1447.2994393429449, 6067.438619937829), (-9697.299439342945, 6067.438619937829))
+    Line2 vertex, old: ((-4073.4244393429453, 6218.938619937839), (-4073.424439342919, 22180.290756191764))
+        w2_v1_dist: 151.50000000001
+        w2_v2_dist: 16112.852136253936
+    Line2 vertex, new: ((-4073.424439342946, 6067.438619937829), (-4073.424439342919, 22180.290756191764))
+    Intersection: (-4073.424439342946, 6067.438619937829)
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Curtain Wall:Exterior Curtain Wall:145547, Element2: Basic Wall:Exterior - Insulation on Masonry:169770
+    [06] [VERT] Line1 vertex, old: ((-4073.424439342946, 6067.438619937829), (-4073.424439342919, 22180.290756191764))
+        w1_v1_dist: 16460.561380062172
+        w1_v2_dist: 347.70924380823635
+    Line1 vertex, new: ((-4073.424439342946, 6067.438619937829), (-4073.424439342919, 22180.290756191764))
+    
+    [63] [HORZ] Line2 vertex, old: ((-1378.0494393429256, 22331.790756191756), (-9772.401534749852, 22331.790756106377))
+        w2_v1_dist: 2702.507068997372
+        w2_v2_dist: 5702.353724679148
+    Line2 vertex, new: ((-1378.0494393429256, 22331.790756191756), (-9772.401534749852, 22331.790756106377))
+    Intersection: (-4073.4244393429185, 22528.0)
+
+
+
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Basic Wall:Exterior - Insulation on Masonry:144837, Element2: Curtain Wall:Exterior Curtain Wall:145547
+    Line1 vertex, old: ((-1447.2994393429449, 6067.438619937829), (-9697.299439342945, 6067.438619937829))
+        w1_v1_dist: 2626.124999657055
+        w1_v2_dist: 5623.875000342945
+    Line1 vertex, new: ((-1447.2994393429449, 6067.438619937829), (-9697.299439342945, 6067.438619937829))
+    Line2 vertex, old: ((-4073.4244393429453, 6218.938619937839), (-4073.424439342919, 22180.290756191764))
+        w2_v1_dist: 151.5000009378391
+        w2_v2_dist: 16112.852137191763
+    Line2 vertex, new: ((-4073.424439, 6067.438619), (-4073.424439342919, 22180.290756191764))
+    Intersection: (-4073.424439, 6067.438619)
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Curtain Wall:Exterior Curtain Wall:145547, Element2: Basic Wall:Exterior - Insulation on Masonry:169770
+    Line1 vertex, old: ((-4073.424439, 6067.438619), (-4073.424439342919, 22180.290756191764))
+        w1_v1_dist: 16264.352136678906
+        w1_v2_dist: 151.4999994871432
+    Line1 vertex, new: ((-4073.424439, 6067.438619), (-4073.424439, 22331.790755678907))
+    Line2 vertex, old: ((-1378.0494393429256, 22331.790756191756), (-9772.4015338001, 22331.790755959893))
+        w2_v1_dist: 2695.374999657074
+        w2_v2_dist: 5698.9770948001005
+    Line2 vertex, new: ((-1378.0494393429256, 22331.790756191756), (-9772.4015338001, 22331.790755959893))
+    Intersection: (-4073.424439, 22331.790755678907)
+
+
+--------
+
+if '139856' in element1.name or '139856' in element2.name:
+        print("Debug element: Glue two elements")
+        print(f"    Gap small enough: {is_gap_small_enough}")
+        print(f"    Element1: {element1.name}")
+        print(f"    Element2: {element2.name}")
+        print(f"    Line1 vertex, old: {line1}")
+        print(f"        w1_v1_dist: {w1_v1_distance_to_intersection}")
+        print(f"        w1_v2_dist: {w1_v2_distance_to_intersection}")
+        print(f"    Line1 vertex, new: {element1.start_vertex, element1.end_vertex}")
+        print(f"    Line2 vertex, old: {line2}")
+        print(f"        w2_v1_dist: {w2_v1_distance_to_intersection}")
+        print(f"        w2_v2_dist: {w2_v2_distance_to_intersection}")
+        print(f"    Line1 vertex, new: {element2.start_vertex, element2.end_vertex}")
+        print(f"    Intersection: {intersection}")
+
+
+Debugging:
+[017] Curtain Wall:Exterior Curtain Wall:139856-2
+[149] Basic Wall:Exterior - Insulation on Masonry:169770-2-2-2-2-1
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Curtain Wall:Exterior Curtain Wall:139856
+    Element2: Curtain Wall:Exterior Curtain Wall:148422
+    Line1 vertex, old: ((-9772.325131568407, 30589.115526497888), (-9772.400132956334, 22483.290525110104))
+        w1_v1_dist: 24.937326498458255
+        w1_v2_dist: 8080.887675236389
+    Line1 vertex, new: ((-9772.3253, 30564.1782), (-9772.400132956334, 22483.290525110104))
+    Line2 vertex, old: ((6647.600558404765, 30564.178256191663), (-9797.374439342932, 30564.178256191663))
+        w2_v1_dist: 16419.925858404764
+        w2_v2_dist: 25.049139342994113
+    Line1 vertex, new: ((6647.600558404765, 30564.178256191663), (-9772.3253, 30564.1782))
+    Intersection: (-9772.3253, 30564.1782)
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Curtain Wall:Exterior Curtain Wall:139856
+    Element2: Basic Wall:Exterior - Insulation on Masonry:148769
+    Line1 vertex, old: ((-9772.3253, 30564.1782), (-9772.400132956334, 22483.290525110104))
+        w1_v1_dist: 8261746.177553938
+        w1_v2_dist: 8253665.289878702
+    Line1 vertex, new: ((-9772.3253, 30564.1782), (-9772.400132956334, 22483.290525110104))
+    Line2 vertex, old: ((-9848.79943934293, 22483.290756191782), (-9848.79943934293, 2260.4886199378598))
+        w2_v1_dist: 8253665.289756192
+        w2_v2_dist: 8233442.487619937
+    Line1 vertex, new: ((-9848.79943934293, 22483.290756191782), (-9848.79943934293, 2260.4886199378598))
+    Intersection: (-9848.7994, -8231181.999)
+
+Debug element: Glue two elements
+    Gap small enough: True
+    Element1: Curtain Wall:Exterior Curtain Wall:139856
+    Element2: Basic Wall:Exterior - Insulation on Masonry:169770
+    Line1 vertex, old: ((-9772.3253, 30564.1782), (-9772.400132956334, 22483.290525110104))
+        w1_v1_dist: 8232.387600352657
+        w1_v2_dist: 151.49992511627119
+    Line1 vertex, new: ((-9772.3253, 30564.1782), (-9772.4015, 22331.7906))
+    Line2 vertex, old: ((-1378.0494393429256, 22331.790756191756), (-9697.299439342929, 22331.790756191756))
+        w2_v1_dist: 8394.352060657076
+        w2_v2_dist: 75.1020606572334
+    Line1 vertex, new: ((-1378.0494393429256, 22331.790756191756), (-9772.4015, 22331.7906))
+    Intersection: (-9772.4015, 22331.7906)
+
+
+Curtain Wall:Exterior Curtain Wall:156316 
+     [[7244.426072374865, 10023.039205898694], [7244.426072374865, 17561.039205898716], [7194.851072374865, 17561.039205898716], [7194.851072374865, 10023.039205898694]] 
+     ((7219.638572374864, 17561.039205898716), (7219.638572374864, 10023.039205898694))
+
+Curtain Wall:Exterior Curtain Wall:156408 
+     [[7294.001072374865, 17786.039205898713], [7244.426072374865, 17786.039205898713], [7244.426072374865, 15954.164205898742], [7294.001072374865, 15954.164205898742]] 
+     ((7269.213572374865, 17786.039205898713), (7269.213572374865, 15954.164205898742))

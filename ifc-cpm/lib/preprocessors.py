@@ -3,7 +3,7 @@ from typing import List, Tuple
 from collections import defaultdict
 from itertools import combinations
 from .ifctypes import BuildingElement, Barricade, Wall, Gate, WallWithOpening
-from .utils import find_lines_intersection, find_unbounded_lines_intersection, eucledian_distance, shortest_distance_between_two_lines, filter, point_in_segment
+from .utils import find_lines_intersection, find_unbounded_lines_intersection, eucledian_distance, shortest_distance_between_two_lines, filter
 
 
 def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:

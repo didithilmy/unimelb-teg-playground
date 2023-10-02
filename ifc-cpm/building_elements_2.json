@@ -1,891 +1,687 @@
 [
     {
-        "object_id": "3EYxooj415QgvrtcQsy2Kh",
-        "name": "Wand-002",
+        "object_id": "2UMN_OQKrAshZl3dHPuj5Y",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157778",
         "start_vertex": [
-            0.0,
-            14.0
+            24368.89990965513,
+            22255.29075619169
         ],
         "end_vertex": [
-            18.0,
-            14.0
+            -1516.5494,
+            22255.2907
         ],
         "__type__": "WallWithOpening",
         "opening_vertices": [],
         "connected_to": [
             [
-                "2PEohQWxr83Q$dJApWgZz7",
-                "ATPATH"
-            ],
-            [
-                "0f4gVmdAr50OHIxcdU7ZHw",
-                "ATPATH"
-            ],
-            [
-                "10upAxJXj11PJZmCgdwBQv",
-                "ATPATH"
-            ],
-            [
-                "2Zd2aBx0TC58gDRfGak1gB",
-                "ATPATH"
-            ],
-            [
-                "1ame9iIALAvw$79YOmjYpD",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "1zxqAr$Mf44Qt0StYZlpmU",
-        "name": "Wand-004",
-        "start_vertex": [
-            18.0,
-            16.0
-        ],
-        "end_vertex": [
-            24.0,
-            16.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "3BIJVubgnERQcs0rJzA8XO",
-        "name": "Wand-006",
-        "start_vertex": [
-            24.0,
-            14.0
-        ],
-        "end_vertex": [
-            42.0,
-            14.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": [
-            [
-                "2PRVpojvP8fPtR7ZH8qagD",
-                "ATPATH"
-            ],
-            [
-                "15DaMtku1EowtkGqYps1Sn",
-                "ATPATH"
-            ],
-            [
-                "3ts3ZsbjXDlv2btICYqqvu",
-                "ATPATH"
-            ],
-            [
-                "3VEwjtZZHA4P7U0POkvM8h",
-                "ATPATH"
-            ],
-            [
-                "3wYiknQvv0EvKo$0bWGoQ0",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "3qMdsXfXrAvuL60mUR_8Vj",
-        "name": "Wand-007",
-        "start_vertex": [
-            42.0,
-            14.0
-        ],
-        "end_vertex": [
-            42.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": [
-            [
-                "3BIJVubgnERQcs0rJzA8XO",
-                "ATSTART"
-            ],
-            [
-                "1XFei80jz5HuhRQ3nkwKNk",
-                "ATPATH"
-            ],
-            [
-                "3Tizqrq5LBwRkVzeahshML",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "3QrI2pmPL8WPedMr4WdGPA",
-        "name": "Wand-001",
-        "start_vertex": [
-            0.0,
-            2.0
-        ],
-        "end_vertex": [
-            0.0,
-            14.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": [
-            [
-                "3EYxooj415QgvrtcQsy2Kh",
+                "2UMN_OQKrAshZl3dHPuj5V",
                 "ATEND"
             ],
             [
-                "3e8jVE_ETEZugvuYOVjgPL",
+                "2UMN_OQKrAshZl3dHPuj5a",
                 "ATPATH"
             ],
             [
-                "3Tizqrq5LBwRkVzeahshML",
+                "2UMN_OQKrAshZl3dHPuj5c",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZny",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZn5",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZn7",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZpU",
                 "ATPATH"
             ]
         ]
     },
     {
-        "object_id": "2udBPbKibCZ8zbfpJmtDTM",
-        "name": "Wand-010",
+        "object_id": "2UMN_OQKrAshZl3dHPuj5Z",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157779",
         "start_vertex": [
-            42.0,
-            2.0
+            1454.200560657017,
+            -15000.411381517028
         ],
         "end_vertex": [
-            0.0,
-            2.0
+            7244.501,
+            -15000.4113
         ],
         "__type__": "WallWithOpening",
         "opening_vertices": [],
         "connected_to": [
             [
-                "3qMdsXfXrAvuL60mUR_8Vj",
-                "ATSTART"
-            ],
-            [
-                "3QrI2pmPL8WPedMr4WdGPA",
+                "2UMN_OQKrAshZl3dHPuj6t",
                 "ATEND"
             ],
             [
-                "1uJooYa2n4hffNW04AKDA2",
-                "ATPATH"
-            ],
-            [
-                "33jlsNXXLCaQ28opnwDi77",
-                "ATPATH"
-            ],
-            [
-                "1y52BJ9iLBoAyZV5YvNxz0",
-                "ATPATH"
-            ],
-            [
-                "36O0Kh7cH6TQcDT6_PZUT$",
-                "ATPATH"
-            ],
-            [
-                "3hlocwRv9E28ldFEZcrJKR",
-                "ATPATH"
-            ],
-            [
-                "3s$opTy0vANQ_jzKgb0VhR",
+                "2UMN_OQKrAshZl3dHPuj6s",
                 "ATPATH"
             ]
         ]
     },
     {
-        "object_id": "3e8jVE_ETEZugvuYOVjgPL",
-        "name": "Wand-015",
+        "object_id": "2UMN_OQKrAshZl3dHPuj5a",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157780",
         "start_vertex": [
-            18.0,
-            9.0
+            21212.60055840476,
+            24677.540756191684
         ],
         "end_vertex": [
-            0.0,
-            9.0
+            21212.6005,
+            22255.2907
         ],
         "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    16.2,
-                    9.0
-                ],
-                [
-                    15.2,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    14.8,
-                    9.0
-                ],
-                [
-                    13.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    5.800000000000001,
-                    9.0
-                ],
-                [
-                    4.800000000000001,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    8.8,
-                    9.0
-                ],
-                [
-                    7.800000000000001,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    11.8,
-                    9.0
-                ],
-                [
-                    10.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    2.8000000000000007,
-                    9.0
-                ],
-                [
-                    1.8000000000000007,
-                    9.0
-                ]
-            ]
-        ],
+        "opening_vertices": [],
         "connected_to": [
             [
-                "2PEohQWxr83Q$dJApWgZz7",
-                "ATPATH"
-            ],
-            [
-                "0f4gVmdAr50OHIxcdU7ZHw",
-                "ATPATH"
-            ],
-            [
-                "10upAxJXj11PJZmCgdwBQv",
-                "ATPATH"
-            ],
-            [
-                "2Zd2aBx0TC58gDRfGak1gB",
-                "ATPATH"
-            ],
-            [
-                "1ame9iIALAvw$79YOmjYpD",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "1XFei80jz5HuhRQ3nkwKNk",
-        "name": "Wand-016",
-        "start_vertex": [
-            42.0,
-            9.0
-        ],
-        "end_vertex": [
-            24.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    41.6,
-                    9.0
-                ],
-                [
-                    40.6,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    38.8,
-                    9.0
-                ],
-                [
-                    37.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    35.8,
-                    9.0
-                ],
-                [
-                    34.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    32.8,
-                    9.0
-                ],
-                [
-                    31.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    29.8,
-                    9.0
-                ],
-                [
-                    28.8,
-                    9.0
-                ]
-            ],
-            [
-                [
-                    26.8,
-                    9.0
-                ],
-                [
-                    25.8,
-                    9.0
-                ]
-            ]
-        ],
-        "connected_to": [
-            [
-                "2PRVpojvP8fPtR7ZH8qagD",
-                "ATPATH"
-            ],
-            [
-                "15DaMtku1EowtkGqYps1Sn",
-                "ATPATH"
-            ],
-            [
-                "3ts3ZsbjXDlv2btICYqqvu",
-                "ATPATH"
-            ],
-            [
-                "3VEwjtZZHA4P7U0POkvM8h",
-                "ATPATH"
-            ],
-            [
-                "3wYiknQvv0EvKo$0bWGoQ0",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "3Tizqrq5LBwRkVzeahshML",
-        "name": "Wand-014",
-        "start_vertex": [
-            0.0,
-            7.0
-        ],
-        "end_vertex": [
-            42.0,
-            7.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    0.4,
-                    7.0
-                ],
-                [
-                    1.4,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    6.2,
-                    7.0
-                ],
-                [
-                    7.2,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    12.2,
-                    7.0
-                ],
-                [
-                    13.2,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    21.0,
-                    7.0
-                ],
-                [
-                    22.0,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    27.2,
-                    7.0
-                ],
-                [
-                    28.2,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    36.1,
-                    7.0
-                ],
-                [
-                    37.1,
-                    7.0
-                ]
-            ],
-            [
-                [
-                    25.8,
-                    7.0
-                ],
-                [
-                    26.8,
-                    7.0
-                ]
-            ]
-        ],
-        "connected_to": [
-            [
-                "1uJooYa2n4hffNW04AKDA2",
-                "ATPATH"
-            ],
-            [
-                "33jlsNXXLCaQ28opnwDi77",
-                "ATPATH"
-            ],
-            [
-                "1y52BJ9iLBoAyZV5YvNxz0",
-                "ATPATH"
-            ],
-            [
-                "36O0Kh7cH6TQcDT6_PZUT$",
-                "ATPATH"
-            ],
-            [
-                "3hlocwRv9E28ldFEZcrJKR",
-                "ATPATH"
-            ],
-            [
-                "3s$opTy0vANQ_jzKgb0VhR",
-                "ATPATH"
-            ],
-            [
-                "1mSLMfkcfCPRJKG_3bRRxE",
-                "ATPATH"
-            ],
-            [
-                "2bI$bwQXP6BhqrBObsVIg2",
-                "ATPATH"
-            ]
-        ]
-    },
-    {
-        "object_id": "2PEohQWxr83Q$dJApWgZz7",
-        "name": "Wand-021",
-        "start_vertex": [
-            15.0,
-            14.0
-        ],
-        "end_vertex": [
-            15.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "0f4gVmdAr50OHIxcdU7ZHw",
-        "name": "Wand-023",
-        "start_vertex": [
-            6.0,
-            14.0
-        ],
-        "end_vertex": [
-            6.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "1uJooYa2n4hffNW04AKDA2",
-        "name": "Wand-020",
-        "start_vertex": [
-            18.0,
-            7.0
-        ],
-        "end_vertex": [
-            18.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "10upAxJXj11PJZmCgdwBQv",
-        "name": "Wand-023",
-        "start_vertex": [
-            3.0,
-            14.0
-        ],
-        "end_vertex": [
-            3.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "2Zd2aBx0TC58gDRfGak1gB",
-        "name": "Wand-023",
-        "start_vertex": [
-            9.0,
-            14.0
-        ],
-        "end_vertex": [
-            9.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "1ame9iIALAvw$79YOmjYpD",
-        "name": "Wand-023",
-        "start_vertex": [
-            12.0,
-            14.0
-        ],
-        "end_vertex": [
-            12.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "33jlsNXXLCaQ28opnwDi77",
-        "name": "Wand-018",
-        "start_vertex": [
-            6.0,
-            7.0
-        ],
-        "end_vertex": [
-            6.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "1y52BJ9iLBoAyZV5YvNxz0",
-        "name": "Wand-019",
-        "start_vertex": [
-            12.0,
-            7.0
-        ],
-        "end_vertex": [
-            12.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "36O0Kh7cH6TQcDT6_PZUT$",
-        "name": "Wand-020",
-        "start_vertex": [
-            24.0,
-            7.0
-        ],
-        "end_vertex": [
-            24.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "2PRVpojvP8fPtR7ZH8qagD",
-        "name": "Wand-022",
-        "start_vertex": [
-            27.0,
-            14.0
-        ],
-        "end_vertex": [
-            27.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "15DaMtku1EowtkGqYps1Sn",
-        "name": "Wand-024",
-        "start_vertex": [
-            30.0,
-            14.0
-        ],
-        "end_vertex": [
-            30.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "3ts3ZsbjXDlv2btICYqqvu",
-        "name": "Wand-025",
-        "start_vertex": [
-            33.0,
-            14.0
-        ],
-        "end_vertex": [
-            33.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "3VEwjtZZHA4P7U0POkvM8h",
-        "name": "Wand-026",
-        "start_vertex": [
-            36.0,
-            14.0
-        ],
-        "end_vertex": [
-            36.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "3wYiknQvv0EvKo$0bWGoQ0",
-        "name": "Wand-027",
-        "start_vertex": [
-            39.0,
-            14.0
-        ],
-        "end_vertex": [
-            39.0,
-            9.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "3hlocwRv9E28ldFEZcrJKR",
-        "name": "Wand-028",
-        "start_vertex": [
-            33.0,
-            7.0
-        ],
-        "end_vertex": [
-            33.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    33.0,
-                    5.7
-                ],
-                [
-                    33.0,
-                    4.7
-                ]
-            ]
-        ],
-        "connected_to": []
-    },
-    {
-        "object_id": "3s$opTy0vANQ_jzKgb0VhR",
-        "name": "Wand-020",
-        "start_vertex": [
-            27.0,
-            7.0
-        ],
-        "end_vertex": [
-            27.0,
-            2.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [],
-        "connected_to": []
-    },
-    {
-        "object_id": "1mSLMfkcfCPRJKG_3bRRxE",
-        "name": "Wand-003",
-        "start_vertex": [
-            18.0,
-            7.0
-        ],
-        "end_vertex": [
-            18.0,
-            14.0
-        ],
-        "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    18.0,
-                    7.09960014048
-                ],
-                [
-                    18.0,
-                    8.89960014048
-                ]
-            ]
-        ],
-        "connected_to": [
-            [
-                "1uJooYa2n4hffNW04AKDA2",
+                "2UMN_OQKrAshZl3dHPuj5b",
                 "ATSTART"
-            ],
-            [
-                "3EYxooj415QgvrtcQsy2Kh",
-                "ATEND"
-            ],
-            [
-                "3e8jVE_ETEZugvuYOVjgPL",
-                "ATPATH"
             ]
         ]
     },
     {
-        "object_id": "0_SIhNEQD0EBlBOnMVz61A",
-        "name": "Wand-034",
+        "object_id": "2UMN_OQKrAshZl3dHPuj5b",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157781",
         "start_vertex": [
-            18.0,
-            14.0
+            21212.6005,
+            24608.2907
         ],
         "end_vertex": [
-            18.0,
-            16.0
+            24368.899909655134,
+            24608.29075619168
         ],
         "__type__": "WallWithOpening",
         "opening_vertices": [],
         "connected_to": [
             [
-                "3EYxooj415QgvrtcQsy2Kh",
-                "ATSTART"
-            ],
+                "2UMN_OQKrAshZl3dHPuj5c",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj5c",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157782",
+        "start_vertex": [
+            23868.8999,
+            24608.2907
+        ],
+        "end_vertex": [
+            23868.8999,
+            22255.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj5i",
+        "name": "Curtain Wall:Storefront:157788",
+        "start_vertex": [
+            24568.899909655127,
+            23298.59165619167
+        ],
+        "end_vertex": [
+            27208.899909655138,
+            23298.591656191664
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
             [
-                "1mSLMfkcfCPRJKG_3bRRxE",
-                "ATSTART"
-            ],
-            [
-                "1zxqAr$Mf44Qt0StYZlpmU",
+                "2UbFLyEvP7xerhn6sJH67p",
                 "ATEND"
             ]
         ]
     },
     {
-        "object_id": "2$oqR_D2H8qOOk0Dye6UwH",
-        "name": "Wand-035",
+        "object_id": "2UMN_OQKrAshZl3dHPuj5V",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157807",
         "start_vertex": [
-            24.0,
-            16.0
+            -1516.5494,
+            22255.2907
         ],
         "end_vertex": [
-            24.0,
-            14.0
+            -1516.549439342919,
+            -14931.16138151701
         ],
         "__type__": "WallWithOpening",
         "opening_vertices": [],
         "connected_to": [
             [
-                "1zxqAr$Mf44Qt0StYZlpmU",
-                "ATSTART"
+                "2UMN_OQKrAshZl3dHPuiDz",
+                "ATEND"
             ],
             [
-                "3BIJVubgnERQcs0rJzA8XO",
+                "2UMN_OQKrAshZl3dHPuZW0",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZYN",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZZ_",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZZ9",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZij",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuZjn",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj53",
+        "name": "Curtain Wall:Storefront:157811",
+        "start_vertex": [
+            1254.2002508397052,
+            -15890.68834868286
+        ],
+        "end_vertex": [
+            -1385.799750628628,
+            -15890.72153257643
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6s",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157830",
+        "start_vertex": [
+            3854.2005,
+            -17315.4113
+        ],
+        "end_vertex": [
+            3854.2005,
+            -15000.4113
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuj6v",
+                "ATSTART"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6t",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157831",
+        "start_vertex": [
+            7244.501072374865,
+            -23181.161381517002
+        ],
+        "end_vertex": [
+            7244.501,
+            -15000.4113
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6u",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157832",
+        "start_vertex": [
+            12646.800558404593,
+            -23181.161381517002
+        ],
+        "end_vertex": [
+            12646.800558404593,
+            -14931.161381517002
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuj6a",
+                "ATEND"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuj6v",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6v",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157833",
+        "start_vertex": [
+            12646.8005,
+            -17315.4113
+        ],
+        "end_vertex": [
+            3854.2005,
+            -17315.4113
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuj6$",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuj6W",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuj6X",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuj6Y",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6$",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157839",
+        "start_vertex": [
+            8944.501,
+            -17315.4113
+        ],
+        "end_vertex": [
+            8944.501072374876,
+            -14931.16138151705
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuj6Z",
                 "ATEND"
             ]
         ]
     },
     {
-        "object_id": "2bI$bwQXP6BhqrBObsVIg2",
-        "name": "Wand-005",
+        "object_id": "2UMN_OQKrAshZl3dHPuj6W",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157840",
         "start_vertex": [
-            24.0,
-            14.0
+            10946.8005,
+            -17315.4113
         ],
         "end_vertex": [
-            24.0,
-            7.0
+            10946.800558404604,
+            -14931.161381517057
         ],
         "__type__": "WallWithOpening",
-        "opening_vertices": [
-            [
-                [
-                    24.0,
-                    8.9
-                ],
-                [
-                    24.0,
-                    7.1000000000000005
-                ]
-            ]
-        ],
+        "opening_vertices": [],
         "connected_to": [
             [
-                "3BIJVubgnERQcs0rJzA8XO",
-                "ATSTART"
-            ],
-            [
-                "2$oqR_D2H8qOOk0Dye6UwH",
-                "ATSTART"
-            ],
-            [
-                "36O0Kh7cH6TQcDT6_PZUT$",
+                "2UMN_OQKrAshZl3dHPuj6Z",
                 "ATEND"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6X",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157841",
+        "start_vertex": [
+            9744.501,
+            -17315.4113
+        ],
+        "end_vertex": [
+            9744.501072374876,
+            -23181.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6Y",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157842",
+        "start_vertex": [
+            10244.501,
+            -17315.4113
+        ],
+        "end_vertex": [
+            10244.501072374878,
+            -23181.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6Z",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157843",
+        "start_vertex": [
+            8944.501,
+            -15000.4113
+        ],
+        "end_vertex": [
+            10946.8005,
+            -15000.4113
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6a",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):157844",
+        "start_vertex": [
+            12646.8005,
+            -15000.4113
+        ],
+        "end_vertex": [
+            53529.57811400088,
+            -15000.411381517064
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuj2u",
+                "ATPATH"
             ],
             [
-                "1XFei80jz5HuhRQ3nkwKNk",
+                "2UMN_OQKrAshZl3dHPuiUy",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuiUL",
+                "ATPATH"
+            ],
+            [
+                "2UMN_OQKrAshZl3dHPuiVr",
                 "ATPATH"
             ]
         ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj6k",
+        "name": "Curtain Wall:Storefront:157854",
+        "start_vertex": [
+            56369.57811400084,
+            -15903.199781517204
+        ],
+        "end_vertex": [
+            53729.57811400086,
+            -15903.199781517193
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuj2u",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):158088",
+        "start_vertex": [
+            43716.0505,
+            -15000.4113
+        ],
+        "end_vertex": [
+            43716.050558404604,
+            -23206.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuiUy",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):163468",
+        "start_vertex": [
+            35716.0505,
+            -15000.4113
+        ],
+        "end_vertex": [
+            35716.05055840461,
+            -23206.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuiUL",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):163493",
+        "start_vertex": [
+            29716.0505,
+            -15000.4113
+        ],
+        "end_vertex": [
+            29716.050558404608,
+            -23206.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuiVr",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):163525",
+        "start_vertex": [
+            21716.0505,
+            -15000.4113
+        ],
+        "end_vertex": [
+            21716.050558404604,
+            -23206.161381517
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZW0",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164144",
+        "start_vertex": [
+            -1516.5494,
+            -13739.5113
+        ],
+        "end_vertex": [
+            -9722.29943934293,
+            -13739.511380062168
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZYN",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164263",
+        "start_vertex": [
+            -1516.5494,
+            -3739.5113
+        ],
+        "end_vertex": [
+            -9722.29943934293,
+            -3739.5113800621675
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZZ_",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164302",
+        "start_vertex": [
+            -1516.5494,
+            2329.7386
+        ],
+        "end_vertex": [
+            -9697.299439342933,
+            2329.7386199378343
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuZsd",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZZ9",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164345",
+        "start_vertex": [
+            -1516.5494,
+            5329.7386
+        ],
+        "end_vertex": [
+            -9697.299439342933,
+            5329.738619937833
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuZsd",
+                "ATPATH"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZij",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164381",
+        "start_vertex": [
+            -1516.5494,
+            10929.7386
+        ],
+        "end_vertex": [
+            -9697.29943934293,
+            10929.738619937834
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZjn",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):164417",
+        "start_vertex": [
+            -1516.5494,
+            17561.0392
+        ],
+        "end_vertex": [
+            -9697.299439342933,
+            17561.039205898738
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZsd",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165015",
+        "start_vertex": [
+            -7216.5494,
+            5329.7386
+        ],
+        "end_vertex": [
+            -7216.5494,
+            2329.7386
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZny",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165196",
+        "start_vertex": [
+            1647.600558404767,
+            30514.040756191665
+        ],
+        "end_vertex": [
+            1647.6005,
+            22255.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZn5",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165237",
+        "start_vertex": [
+            7044.501072374868,
+            24677.540756191727
+        ],
+        "end_vertex": [
+            7044.501,
+            22255.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuZn6",
+                "ATSTART"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZn6",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165238",
+        "start_vertex": [
+            7044.501,
+            24608.2907
+        ],
+        "end_vertex": [
+            9712.6005,
+            24608.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": [
+            [
+                "2UMN_OQKrAshZl3dHPuZn7",
+                "ATEND"
+            ]
+        ]
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZn7",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165239",
+        "start_vertex": [
+            9712.600558404769,
+            30489.040756191665
+        ],
+        "end_vertex": [
+            9712.6005,
+            22255.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
+    },
+    {
+        "object_id": "2UMN_OQKrAshZl3dHPuZpU",
+        "name": "Basic Wall:Interior - 138mm Partition (1-hr):165358",
+        "start_vertex": [
+            16012.600558404773,
+            30489.040756191665
+        ],
+        "end_vertex": [
+            16012.6005,
+            22255.2907
+        ],
+        "__type__": "WallWithOpening",
+        "opening_vertices": [],
+        "connected_to": []
     }
 ]

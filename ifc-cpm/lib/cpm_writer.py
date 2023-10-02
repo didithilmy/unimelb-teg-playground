@@ -64,7 +64,7 @@ class CrowdSimulationEnvironment:
     def _get_level(self, level: Level):
         level_id = self._get_id(Level)
 
-        walls = [self._create_wall_json(x) for x in level.walls]
+        walls = [x for x in [self._create_wall_json(x) for x in level.walls] if x is not None]
         gates = [self._create_gate_json(x) for x in level.gates]
         barricades = [self._create_barricade_json(x) for x in level.barricades]
 
@@ -86,10 +86,14 @@ class CrowdSimulationEnvironment:
         wall_id = self._get_id()
         (x1, y1), (x2, y2) = self._normalize_vertex(wall.start_vertex), self._normalize_vertex(wall.end_vertex)
 
+        length = self.unit_scaler(wall.length)
+        if length == 0:
+            return None
+
         return {
             "id": wall_id,
             "name": wall.name,
-            "length": self.unit_scaler(wall.length),
+            "length": length,
             "isLow": False,
             "isTransparent": False,
             "iWlWG": False,

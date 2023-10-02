@@ -3,3 +3,4 @@ xmltodict
 svg.path
 svgelements
 svgpathtools
+scikit-spatial
