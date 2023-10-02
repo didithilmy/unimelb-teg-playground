@@ -2,40 +2,78 @@ import copy
 from typing import List, Tuple
 from collections import defaultdict
 from itertools import combinations
-from .ifctypes import BuildingElement, Barricade, Wall, Gate
-from .utils import find_lines_intersection, find_unbounded_lines_intersection, eucledian_distance, shortest_distance_between_two_lines, filter
-
-
-def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tolerance: float):
-    line1 = element1.start_vertex, element1.end_vertex
-    line2 = element2.start_vertex, element2.end_vertex
-
-    # Glue walls when the gap between walls is less than tolerance.
-    is_gap_small_enough = shortest_distance_between_two_lines(line1, line2) <= tolerance
-    if not is_gap_small_enough:
-        return
-
-    intersection = find_unbounded_lines_intersection(line1, line2)
-    if intersection is None:
-        return
-
-    w1_v1_distance_to_intersection = eucledian_distance(element1.start_vertex, intersection)
-    w1_v2_distance_to_intersection = eucledian_distance(element1.end_vertex, intersection)
-    w2_v1_distance_to_intersection = eucledian_distance(element2.start_vertex, intersection)
-    w2_v2_distance_to_intersection = eucledian_distance(element2.end_vertex, intersection)
-
-    if w1_v1_distance_to_intersection <= tolerance:
-        element1.start_vertex = intersection
-    if w1_v2_distance_to_intersection <= tolerance:
-        element1.end_vertex = intersection
-    if w2_v1_distance_to_intersection <= tolerance:
-        element2.start_vertex = intersection
-    if w2_v2_distance_to_intersection <= tolerance:
-        element2.end_vertex = intersection
+from .ifctypes import BuildingElement, Barricade, Wall, Gate, WallWithOpening
+from .utils import find_lines_intersection, find_unbounded_lines_intersection, eucledian_distance, shortest_distance_between_two_lines, filter, point_in_segment
 
 
 def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -> List[BuildingElement]:
     out_elements = copy.deepcopy(elements)
+
+    def intersections_within_tolerance(element1: BuildingElement, point: Tuple[float, float]):
+        intersections = []
+        for element2 in out_elements:
+            line1 = element1.start_vertex, element1.end_vertex
+            line2 = element2.start_vertex, element2.end_vertex
+            intersection = find_unbounded_lines_intersection(line1, line2)
+            if intersection is not None:
+                if eucledian_distance(point, intersection) <= tolerance:
+                    intersections.append(intersection)
+        return intersections
+
+    def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tolerance: float):
+        line1 = element1.start_vertex, element1.end_vertex
+        line2 = element2.start_vertex, element2.end_vertex
+
+        # Glue walls when the gap between walls is less than tolerance.
+        is_gap_small_enough = shortest_distance_between_two_lines(line1, line2) <= tolerance
+        if not is_gap_small_enough:
+            return
+
+        intersection = find_unbounded_lines_intersection(line1, line2)
+        if intersection is None:
+            return
+
+        w1_v1_distance_to_intersection = eucledian_distance(element1.start_vertex, intersection)
+        w1_v2_distance_to_intersection = eucledian_distance(element1.end_vertex, intersection)
+        w2_v1_distance_to_intersection = eucledian_distance(element2.start_vertex, intersection)
+        w2_v2_distance_to_intersection = eucledian_distance(element2.end_vertex, intersection)
+
+        if w1_v1_distance_to_intersection <= tolerance:
+            w1_v1_intersection_within_tolerance = len(intersections_within_tolerance(element1, element1.start_vertex))
+            if w1_v1_intersection_within_tolerance <= 1:
+                element1.start_vertex = intersection
+            else:
+                distance_after_attachment = eucledian_distance(element1.end_vertex, intersection)
+                if distance_after_attachment > element1.length:
+                    element1.start_vertex = intersection
+
+        if w1_v2_distance_to_intersection <= tolerance:
+            w1_v2_intersection_within_tolerance = len(intersections_within_tolerance(element1, element1.end_vertex))
+            if w1_v2_intersection_within_tolerance <= 1:
+                element1.end_vertex = intersection
+            else:
+                distance_after_attachment = eucledian_distance(element1.start_vertex, intersection)
+                if distance_after_attachment > element1.length:
+                    element1.end_vertex = intersection
+
+        if w2_v1_distance_to_intersection <= tolerance:
+            w2_v1_distance_to_intersection = len(intersections_within_tolerance(element2, element2.start_vertex))
+            if w2_v1_distance_to_intersection <= 1:
+                element2.start_vertex = intersection
+            else:
+                distance_after_attachment = eucledian_distance(element2.end_vertex, intersection)
+                if distance_after_attachment > element2.length:
+                    element2.start_vertex = intersection
+
+        if w2_v2_distance_to_intersection <= tolerance:
+            w2_v2_distance_to_intersection = len(intersections_within_tolerance(element2, element2.end_vertex))
+            if w2_v2_distance_to_intersection <= 1:
+                element2.end_vertex = intersection
+            else:
+                distance_after_attachment = eucledian_distance(element2.start_vertex, intersection)
+                if distance_after_attachment > element2.length:
+                    element2.end_vertex = intersection
+
     for element1, element2 in combinations(out_elements, 2):
         glue_two_elements(element1, element2, tolerance=tolerance)
 
@@ -114,34 +152,50 @@ def split_intersecting_elements(elements: List[BuildingElement]) -> List[Buildin
     return output_elements
 
 
+def decompose_wall_with_opening(wall: WallWithOpening):
+    out_elements = []
+    edges = set()
+    vertices = [wall.start_vertex, wall.end_vertex]
+
+    def opening_within_wall_bounds(v1, v2):
+        min_x = min(wall.start_vertex[0], wall.end_vertex[0])
+        max_x = max(wall.start_vertex[0], wall.end_vertex[0])
+        min_y = min(wall.start_vertex[1], wall.end_vertex[1])
+        max_y = max(wall.start_vertex[1], wall.end_vertex[1])
+
+        (x1, y1), (x2, y2) = v1, v2
+        return (min_x <= x1 <= max_x and min_x <= x2 <= max_x) and (min_y <= y1 <= max_y and min_y <= y2 <= max_y)
+
+    for i, (opening_v1, opening_v2) in enumerate(wall.opening_vertices):
+        if opening_within_wall_bounds(opening_v1, opening_v2):
+            gate = Gate(name=f"{wall.name}:gate-{i}", start_vertex=opening_v1, end_vertex=opening_v2)
+            out_elements.append(gate)
+            edges.add((opening_v1, opening_v2))
+            edges.add((opening_v2, opening_v1))
+            vertices += [opening_v1, opening_v2]
+
+    vertex = vertices[0]
+    while True:
+        nearest_vertex = min(vertices, key=lambda v: eucledian_distance(vertex, v))
+        if vertex != nearest_vertex:
+            if (vertex, nearest_vertex) not in edges:
+                connector = Wall(name=wall.name, start_vertex=vertex, end_vertex=nearest_vertex)
+                out_elements.append(connector)
+
+        vertex = nearest_vertex
+        vertices.remove(vertex)
+
+        if len(vertices) == 0:
+            break
+
+    return out_elements
+
+
 def decompose_wall_with_openings(elements: List[BuildingElement]) -> List[BuildingElement]:
     out_elements = []
     for element in elements:
         if element.__type__ == 'WallWithOpening':
-            gates_vertices = element.opening_vertices
-
-            def get_first_contained_gate(p1, p2):
-                p1_x, p1_y = min(p1[0], p2[0]), min(p1[1], p2[1])
-                p2_x, p2_y = max(p1[0], p2[0]), max(p1[1], p2[1])
-                for gate_vertices in gates_vertices:
-                    (g1_x, g1_y), (g2_x, g2_y) = gate_vertices
-                    if g1_x >= p1_x and g2_x <= p2_x and g1_y >= p1_y and g2_y <= p2_y:
-                        return gate_vertices
-
-            elements_queue = [Wall(name=element.name, start_vertex=element.start_vertex, end_vertex=element.end_vertex)]
-            while len(elements_queue) > 0:
-                el = elements_queue.pop(0)
-                gate_vertices = get_first_contained_gate(el.start_vertex, el.end_vertex)
-                if gate_vertices is None:
-                    out_elements.append(el)
-                else:
-                    gate_vert1, gate_vert2 = gate_vertices
-                    wall1 = Wall(name=element.name, start_vertex=el.start_vertex, end_vertex=gate_vert1)
-                    wall2 = Wall(name=element.name, start_vertex=gate_vert2, end_vertex=el.end_vertex)
-                    gate = Gate(name=element.name, start_vertex=gate_vert1, end_vertex=gate_vert2)
-                    elements_queue += [wall1, gate, wall2]
-                    gates_vertices.remove(gate_vertices)
-
+            out_elements += decompose_wall_with_opening(element)
         else:
             out_elements.append(element)
 
