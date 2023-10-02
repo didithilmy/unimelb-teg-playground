@@ -175,6 +175,7 @@ class IfcToCpmConverter:
         print("Inferring wall vertices for wall " + ifc_wall.Name)
         start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
 
+        # TODO parse doors WITHOUT opening
         opening_vertices = []
         openings = ifc_wall.HasOpenings
         for opening in openings:
