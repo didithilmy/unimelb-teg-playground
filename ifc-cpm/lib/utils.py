@@ -5,6 +5,7 @@ import ifcopenshell.util.element
 import ifcopenshell.util.shape
 import ifcopenshell.util.placement
 import ifcopenshell.geom
+from compas.geometry import oriented_bounding_box_xy_numpy
 
 
 def get_sorted_building_storeys(ifc_building):
@@ -32,7 +33,7 @@ def transform_vertex_3d(transformation_matrix, vertex: Tuple[float, float, float
     return (transformed_x, transformed_y, transformed_z)
 
 
-def truncate(number, digits=4) -> float:
+def truncate(number, digits=2) -> float:
     # Improve accuracy with floating point operations, to avoid truncate(16.4, 2) = 16.39 or truncate(-1.13, 2) = -1.12
     nbDecimals = len(str(number).split('.')[1])
     if nbDecimals <= digits:
@@ -259,3 +260,15 @@ def shortest_distance_between_two_lines(segment1, segment2):
     distance = np.linalg.norm(closest_point_segment1_to_segment2 - closest_point_segment2_to_segment1)
 
     return distance
+
+
+def get_oriented_xy_bounding_box(vertices):
+    # Vertices must be non-negative, because there is a bug in the Compas library which causes bbox to be improperly calculated.
+    flat_vertices = np.array(vertices).flatten()
+    verts_x, verts_y, verts_z = flat_vertices[::3], flat_vertices[1::3], flat_vertices[2::3]
+    min_x, min_y = min(verts_x), min(verts_y)
+    offset_vertices = [(x - min_x, y - min_y, z) for (x, y, z) in vertices]
+
+    bbox = oriented_bounding_box_xy_numpy(offset_vertices)
+    deoffset_bbox = [(x + min_x, y + min_y) for (x, y) in bbox]
+    return deoffset_bbox

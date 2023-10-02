@@ -1,7 +1,6 @@
 import numpy as np
-from compas.geometry import oriented_bounding_box_xy_numpy
 import ifcopenshell.util.placement
-from .utils import get_composite_verts, get_edge_from_bounding_box, transform_vertex
+from .utils import get_composite_verts, get_edge_from_bounding_box, transform_vertex, get_oriented_xy_bounding_box
 
 
 def get_representation(representations, identifier):
@@ -201,8 +200,9 @@ class WallVertices:
     @staticmethod
     def from_point_cloud(ifc_product):
         vertices = get_composite_verts(ifc_product)
+
         if len(vertices) > 0:
-            bbox = oriented_bounding_box_xy_numpy(vertices)
+            bbox = get_oriented_xy_bounding_box(vertices)
             edge = get_edge_from_bounding_box(bbox)
             return edge
 
