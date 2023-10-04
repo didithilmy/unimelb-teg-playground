@@ -88,11 +88,12 @@ def close_wall_gaps(elements: List[BuildingElement], tolerance):
         vertices_count[el.end_vertex] += 1
 
     out_elements = copy.deepcopy(elements)
-    eligible_elements = filter(out_elements, lambda x: x.length > tolerance)
+    eligible_elements = filter(out_elements, lambda x: x.length > 0)
     for element1, element2 in combinations(eligible_elements, 2):
         line1 = element1.start_vertex, element1.end_vertex
         line2 = element2.start_vertex, element2.end_vertex
 
+        candidate_edges = []
         for w1_vertex in line1:
             for w2_vertex in line2:
                 if w1_vertex != w2_vertex:
@@ -101,8 +102,12 @@ def close_wall_gaps(elements: List[BuildingElement], tolerance):
                     if w1_vertex_disconnected and w2_vertex_disconnected:
                         distance = eucledian_distance(w1_vertex, w2_vertex)
                         if distance <= tolerance:
-                            connector_wall = Wall(name=f"Connector-[{element1.name}]-[{element2.name}]", start_vertex=w1_vertex, end_vertex=w2_vertex)
-                            out_elements.append(connector_wall)
+                            candidate_edges.append((w1_vertex, w2_vertex))
+
+        if len(candidate_edges) > 0:
+            edge_v1, edge_v2 = min(candidate_edges, key=lambda e: eucledian_distance(e[0], e[1]))
+            connector_wall = Wall(name=f"Connector-[{element1.name}]-[{element2.name}]", start_vertex=edge_v1, end_vertex=edge_v2)
+            out_elements.append(connector_wall)
 
     return out_elements
 
