@@ -22,7 +22,7 @@ settings.set(settings.USE_WORLD_COORDS, False)
 settings.set(settings.CONVERT_BACK_UNITS, True)
 
 
-def get_walls_by_storey(ifc_building):
+def get_walls_by_storey(ifc_building, unit_scale=1):
     walls_map = dict()
     ifc_walls = get_all_walls(ifc_building)
 
@@ -31,7 +31,7 @@ def get_walls_by_storey(ifc_building):
         elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
         walls_in_storey = []
         for (ifc_wall, z_min, z_max) in ifc_walls:
-            tolerance = 100  # FIXME scale relative to unit
+            tolerance = 0.1 / unit_scale  # Tolerance is 0.1m
             wall_contained_within_boundary = (z_min <= elevation + tolerance and z_max >= elevation + 1000 - tolerance)
             if wall_contained_within_boundary:
                 walls_in_storey.append(ifc_wall)

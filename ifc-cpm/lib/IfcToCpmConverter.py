@@ -73,7 +73,7 @@ class IfcToCpmConverter:
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
-        self.walls_map = get_walls_by_storey(ifc_building)
+        self.walls_map = get_walls_by_storey(ifc_building, unit_scale=self.unit_scale)
 
         self._parse_stairs()
         self._parse_storeys()
