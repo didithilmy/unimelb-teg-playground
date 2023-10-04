@@ -13,6 +13,7 @@ from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVert
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
 
 from .ifctypes import Barricade, WallWithOpening, Wall
+from .walls import get_walls_by_storey
 from .stairs import StraightSingleRunStairBuilder
 from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 
@@ -41,14 +42,7 @@ class IfcToCpmConverterBuilder:
             if name == ifc_building.Name:
                 return ifc_building
 
-    def build(
-        self,
-        building_name: str = None,
-        dimension: Tuple[int, int] = None,
-        origin: Tuple[int, int] = None,
-        round_function=None,
-        close_wall_gap_metre=0
-    ):
+    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
             ifc_building=ifc_building,
@@ -61,15 +55,7 @@ class IfcToCpmConverterBuilder:
 
 
 class IfcToCpmConverter:
-    def __init__(
-        self,
-        ifc_building,
-        unit_scale,
-        dimension: Tuple[int, int] = None,
-        origin: Tuple[int, int] = None,
-        round_function=None,
-        close_wall_gap_metre=0
-    ):
+    def __init__(self, ifc_building, unit_scale, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0):
         if origin is None:
             origin = (0, 0)
 
@@ -87,6 +73,7 @@ class IfcToCpmConverter:
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
+        self.walls_map = get_walls_by_storey(ifc_building)
 
         self._parse_stairs()
         self._parse_storeys()
@@ -117,15 +104,15 @@ class IfcToCpmConverter:
             # return
 
     def _get_storey_elements(self, storey_id, storey):
-        elements = ifcopenshell.util.element.get_decomposition(storey)
-        walls = [x for x in elements if x.is_a("IfcWall") or x.is_a("IfcCurtainWall")]
+        print(f"Processing storey: {storey_id} {storey.Name}")
+        ifc_walls = self.walls_map[storey]
         building_elements = []
-        for wall in walls:
+        for ifc_wall in ifc_walls:
             try:
-                wall_with_opening = self._get_wall_with_opening(wall)
+                wall_with_opening = self._get_wall_with_opening(ifc_wall=ifc_wall, ifc_building_storey=storey)
                 building_elements.append(wall_with_opening)
             except Exception as exc:
-                logger.warning(f"Skipped wall parsing: error parsing wall {wall.Name}: {exc}")
+                logger.warning(f"Skipped wall parsing: error parsing wall {ifc_wall.Name}: {exc}")
                 logger.error(exc, exc_info=True)
 
         tolerance = self.close_wall_gap_metre / self.unit_scale
@@ -170,10 +157,12 @@ class IfcToCpmConverter:
                 walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
 
         return walls
-    
-    def _get_wall_with_opening(self, ifc_wall) -> WallWithOpening:
+
+    def _get_wall_with_opening(self, ifc_wall, ifc_building_storey) -> WallWithOpening:
         print("Inferring wall vertices for wall " + ifc_wall.Name)
         start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
+        start_vertex = truncate(start_vertex[0]), truncate(start_vertex[1])
+        end_vertex = truncate(end_vertex[0]), truncate(end_vertex[1])
 
         # TODO parse doors WITHOUT opening
         opening_vertices = []
@@ -182,20 +171,28 @@ class IfcToCpmConverter:
             opening_element = opening.RelatedOpeningElement
             if opening_element.PredefinedType is None or opening_element.PredefinedType.upper() != 'RECESS':
                 shape = ifcopenshell.geom.create_shape(settings, opening_element)
+                matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
 
                 opening_location_relative_to_wall = opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
                 _, _, z = opening_location_relative_to_wall
-                if z > 0:
-                    continue
+                opening_z = matrix[2][3]
 
                 vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
+
+                min_z = min(shape.geometry.verts[2::3]) + opening_z
+                max_z = max(shape.geometry.verts[2::3]) + opening_z
+                elevation = ifc_building_storey.Elevation
+                tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
+
+                opening_is_likely_a_door = min_z <= elevation + tolerance
+                if not opening_is_likely_a_door or max_z < elevation:
+                    continue
 
                 bbox = get_oriented_xy_bounding_box(vertices)
                 v1, v2 = get_edge_from_bounding_box(bbox)
 
-                matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
-                v1 = self._transform_vertex(v1, matrix)
-                v2 = self._transform_vertex(v2, matrix)
+                v1 = self._transform_vertex(matrix, v1)
+                v2 = self._transform_vertex(matrix, v2)
 
                 wall_line = Line.from_points(start_vertex, end_vertex)
                 x1, y1 = wall_line.project_point(v1)
@@ -209,7 +206,6 @@ class IfcToCpmConverter:
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
-
 
     def _get_storey_void_barricade_elements(self, storey):
         elements = ifcopenshell.util.element.get_decomposition(storey)
@@ -232,8 +228,8 @@ class IfcToCpmConverter:
 
                 for i in range(len(edges)):
                     v1, v2 = edges[i]
-                    v1_transform = self._transform_vertex(v1, transformation_matrix)
-                    v2_transform = self._transform_vertex(v2, transformation_matrix)
+                    v1_transform = self._transform_vertex(transformation_matrix, v1)
+                    v2_transform = self._transform_vertex(transformation_matrix, v2)
                     elements.append(
                         Barricade(
                             name=f"{opening_element.Name}-{i}",
@@ -244,7 +240,7 @@ class IfcToCpmConverter:
 
         return elements
 
-    def _transform_vertex(self, vertex, transformation_matrix):
+    def _transform_vertex(self, transformation_matrix, vertex):
         # Building location correction
         total_transformation_matrix = np.dot(self.base_transformation_matrix, transformation_matrix)
         transformed_x, transformed_y = transform_vertex(total_transformation_matrix, vertex)
