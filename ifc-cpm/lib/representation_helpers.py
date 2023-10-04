@@ -1,4 +1,4 @@
-import numpy as np
+from functools import cache
 import ifcopenshell.util.placement
 from .utils import get_composite_verts, get_edge_from_bounding_box, transform_vertex, get_oriented_xy_bounding_box
 
@@ -188,6 +188,7 @@ class Extrusion2DVertices:
 
 class WallVertices:
     @staticmethod
+    @cache
     def from_product(ifc_product):
         try:
             if ifc_product.Representation is not None:
