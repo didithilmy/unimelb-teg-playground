@@ -42,7 +42,7 @@ class CrowdSimulationEnvironment:
 
     def write(self):
         self.map_bounds = self._get_map_bounds()
-        levels = [self._get_level(x) for x in self.levels]
+        levels = [self._get_level(x) for x in self.levels if len(x.elements) > 0]
         stairs = [self._create_straight_single_run_stair_json(s) for s in self.stairs]
         data = {
             "Model": {
