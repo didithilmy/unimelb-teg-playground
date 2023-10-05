@@ -57,8 +57,8 @@ def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -
                     element1.end_vertex = intersection
 
         if w2_v1_distance_to_intersection <= tolerance:
-            w2_v1_distance_to_intersection = len(intersections_within_tolerance(element2, element2.start_vertex))
-            if w2_v1_distance_to_intersection <= 1:
+            w2_v1_intersection_within_tolerance = len(intersections_within_tolerance(element2, element2.start_vertex))
+            if w2_v1_intersection_within_tolerance <= 1:
                 element2.start_vertex = intersection
             else:
                 distance_after_attachment = eucledian_distance(element2.end_vertex, intersection)
@@ -66,8 +66,8 @@ def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -
                     element2.start_vertex = intersection
 
         if w2_v2_distance_to_intersection <= tolerance:
-            w2_v2_distance_to_intersection = len(intersections_within_tolerance(element2, element2.end_vertex))
-            if w2_v2_distance_to_intersection <= 1:
+            w2_v2_intersection_within_tolerance = len(intersections_within_tolerance(element2, element2.end_vertex))
+            if w2_v2_intersection_within_tolerance <= 1:
                 element2.end_vertex = intersection
             else:
                 distance_after_attachment = eucledian_distance(element2.start_vertex, intersection)
@@ -179,10 +179,11 @@ def decompose_wall_with_opening(wall: WallWithOpening):
     for i, (opening_v1, opening_v2) in enumerate(wall.opening_vertices):
         if opening_within_wall_bounds(opening_v1, opening_v2):
             gate = Gate(name=f"{wall.name}:gate-{i}", start_vertex=opening_v1, end_vertex=opening_v2)
-            out_elements.append(gate)
-            edges.add((opening_v1, opening_v2))
-            edges.add((opening_v2, opening_v1))
-            vertices += [opening_v1, opening_v2]
+            if gate.length > 0:
+                out_elements.append(gate)
+                edges.add((opening_v1, opening_v2))
+                edges.add((opening_v2, opening_v1))
+                vertices += [opening_v1, opening_v2]
 
     vertex = vertices[0]
     while True:
@@ -190,7 +191,8 @@ def decompose_wall_with_opening(wall: WallWithOpening):
         if vertex != nearest_vertex:
             if (vertex, nearest_vertex) not in edges:
                 connector = Wall(name=wall.name, start_vertex=vertex, end_vertex=nearest_vertex)
-                out_elements.append(connector)
+                if connector.length > 0:
+                    out_elements.append(connector)
 
         vertex = nearest_vertex
         vertices.remove(vertex)
