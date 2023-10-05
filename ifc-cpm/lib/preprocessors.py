@@ -10,15 +10,23 @@ def glue_connected_elements(elements: List[BuildingElement], tolerance: float) -
     out_elements = copy.deepcopy(elements)
 
     def intersections_within_tolerance(element1: BuildingElement, point: Tuple[float, float]):
-        intersections = []
+        intersections = set()
         for element2 in out_elements:
+            if element2 == element1:
+                continue
             line1 = element1.start_vertex, element1.end_vertex
             line2 = element2.start_vertex, element2.end_vertex
+
+            # Ensure wall gap is small enough
+            is_gap_small_enough = shortest_distance_between_two_lines(line1, line2) <= tolerance
+            if not is_gap_small_enough:
+                continue
+
             intersection = find_unbounded_lines_intersection(line1, line2)
             if intersection is not None:
                 if eucledian_distance(point, intersection) <= tolerance:
-                    intersections.append(intersection)
-        return intersections
+                    intersections.add(intersection)
+        return list(intersections)
 
     def glue_two_elements(element1: BuildingElement, element2: BuildingElement, tolerance: float):
         line1 = element1.start_vertex, element1.end_vertex
