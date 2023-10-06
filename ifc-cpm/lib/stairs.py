@@ -1,25 +1,48 @@
+from enum import Enum
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 import ifcopenshell.util.shape
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex, get_oriented_xy_bounding_box, get_composite_verts
 from .ifctypes import StraightSingleRunStair
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.CONVERT_BACK_UNITS, True)
+settings.set(settings.USE_WORLD_COORDS, True)
 settings.set(settings.INCLUDE_CURVES, True)
+
+
+class StairType(Enum):
+    STRAIGHT_SINGLE_RUN = 1
+    U_WITH_LANDING = 2
 
 
 class StairParser:
     @staticmethod
     def from_ifc_stair(ifc_building, start_level_index, ifc_stair):
-        stair_type = ifc_stair.PredefinedType
-        if stair_type == "STRAIGHT_RUN_STAIR":
+        stair_type = StairParser.infer_stair_type(ifc_stair)
+        if stair_type == StairType.STRAIGHT_SINGLE_RUN:
             return StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
 
-        raise NotImplementedError(f"Stair type {stair_type} is not yet implemented.")
+        if not stair_type:
+            raise NotImplementedError(f"Cannot infer stair type from IfcProduct")
+
+        raise NotImplementedError(f"Cannot parse stair {ifc_stair.Name}")
+
+    @staticmethod
+    def infer_stair_type(ifc_stair) -> StairType:
+        stair_type = ifc_stair.PredefinedType
+        if stair_type == "STRAIGHT_RUN_STAIR":
+            return StairType.STRAIGHT_SINGLE_RUN
+
+        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+
+        if len(stair_flights) == 1:
+            # TODO differentiate between U and straight
+            return StairType.STRAIGHT_SINGLE_RUN
 
 
 class StraightSingleRunStairBuilder:
@@ -31,39 +54,19 @@ class StraightSingleRunStairBuilder:
     def build(self):
         elements = ifcopenshell.util.element.get_decomposition(self.ifc_stair)
         stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
-        assert len(stair_flights) == 1, "There should be exactly one stair flight"
+        # assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
-        stair_flight = stair_flights[0]
+        verts = get_composite_verts(self.ifc_stair)
+        bbox = get_oriented_xy_bounding_box(verts)
+        footprint_v1, footprint_v2, footprint_v3, footprint_v4 = bbox
+        edges = [
+            (footprint_v1, footprint_v2),
+            (footprint_v2, footprint_v3),
+            (footprint_v3, footprint_v4),
+            (footprint_v4, footprint_v1),
+        ]
 
-        transformation_matrix = ifcopenshell.util.placement.get_local_placement(stair_flight.ObjectPlacement)
-
-        psets = ifcopenshell.util.element.get_psets(stair_flight)
-        footprint_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "FootPrint")
-        assert footprint_repr is not None, "There should be a FootPrint representation"
-
-        footprint_shape = ifcopenshell.geom.create_shape(settings, footprint_repr)
-        footprint_verts = ifcopenshell.util.shape.get_vertices(footprint_shape)
-        vertices = [(x[0], x[1]) for x in footprint_verts[:4]]
-
-        edges = []
-        for i in range(len(vertices)):
-            v1 = vertices[i]
-            v2 = vertices[(i + 1) % len(vertices)]
-            if v1 != v2:
-                # Transform vertices
-                v1 = transform_vertex(transformation_matrix, v1)
-                v2 = transform_vertex(transformation_matrix, v2)
-                edges.append((v1, v2))
-
-        axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
-        assert axis_repr is not None, "There should be a Axis representation"
-
-        shape = ifcopenshell.geom.create_shape(settings, axis_repr)
-        run_edge = ifcopenshell.util.shape.get_vertices(shape)
-        run_edge = [(x[0], x[1]) for x in run_edge]
-
-        # Transform vertices
-        run_edge = [transform_vertex(transformation_matrix, x) for x in run_edge]
+        run_edge = self._calculate_resultant_run_line(stair_flights)
         run_start_vertex, run_end_vertex = run_edge
 
         edge1, edge2, edge3, edge4 = edges
@@ -98,13 +101,16 @@ class StraightSingleRunStairBuilder:
         # Staircase origin must be to the LEFT of the run axis.
         staircase_origin = self._determine_origin_vertex(lower_gate, run_rotation)
 
+        psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
+        no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
+
         return StraightSingleRunStair(
             object_id=self.ifc_stair.GlobalId,
             rotation=run_rotation,
             vertex=staircase_origin,
             staircase_width=staircase_width,
             run_length=run_length,
-            no_of_treads=psets['Pset_StairFlightCommon'].get("NumberOfTreads"),
+            no_of_treads=no_of_treads,
             start_level_index=self.start_level_index,
             end_level_index=self.start_level_index + floor_span,
         )
@@ -113,14 +119,9 @@ class StraightSingleRunStairBuilder:
         storey = ifcopenshell.util.element.get_container(ifc_stair)
         building_storeys = get_sorted_building_storeys(self.ifc_building)
 
-        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
-        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
-        assert len(stair_flights) == 1, "There should be exactly one stair flight"
-
-        stair_flight = stair_flights[0]
-        psets = ifcopenshell.util.element.get_psets(stair_flight)
-        pset_stairflight = psets['Pset_StairFlightCommon']
-        run_height = pset_stairflight.get("NumberOfRiser", 1) * pset_stairflight.get("RiserHeight", 1)
+        psets = ifcopenshell.util.element.get_psets(ifc_stair)
+        pset_stair = psets['Pset_StairCommon']
+        run_height = pset_stair.get("NumberOfRiser", 1) * pset_stair.get("RiserHeight", 1)
 
         starting_elevation = storey.Elevation
         ending_elevation = starting_elevation + run_height
@@ -146,3 +147,22 @@ class StraightSingleRunStairBuilder:
             return lv1
 
         return lv2
+
+    def _calculate_resultant_run_line(self, stair_flights):
+        run_edges = []
+
+        # TODO Need to ensure stair flights are sorted by elevation
+        for stair_flight in stair_flights:
+            axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
+            assert axis_repr is not None, "There should be a Axis representation"
+
+            shape = ifcopenshell.geom.create_shape(settings, axis_repr)
+            run_edge = ifcopenshell.util.shape.get_vertices(shape)
+            run_edge = [(x[0], x[1]) for x in run_edge]
+            run_edges.append(run_edge)
+
+        first_edge = run_edges[0]
+        last_edge = run_edges[-1]
+        v1 = first_edge[0]
+        v2 = last_edge[1]
+        return v1, v2
