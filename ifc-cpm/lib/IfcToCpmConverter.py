@@ -42,7 +42,7 @@ class IfcToCpmConverterBuilder:
             if name == ifc_building.Name:
                 return ifc_building
 
-    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0):
+    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
             ifc_building=ifc_building,
@@ -50,12 +50,14 @@ class IfcToCpmConverterBuilder:
             dimension=dimension,
             origin=origin,
             round_function=round_function,
-            close_wall_gap_metre=close_wall_gap_metre
+            close_wall_gap_metre=close_wall_gap_metre,
+            min_wall_height_metre=min_wall_height_metre,
+            wall_offset_tolerance_metre=wall_offset_tolerance_metre
         )
 
 
 class IfcToCpmConverter:
-    def __init__(self, ifc_building, unit_scale, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0):
+    def __init__(self, ifc_building, unit_scale, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
         if origin is None:
             origin = (0, 0)
 
@@ -73,7 +75,10 @@ class IfcToCpmConverter:
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
-        self.walls_map = get_walls_by_storey(ifc_building, unit_scale=self.unit_scale)
+
+        min_wall_height = min_wall_height_metre / self.unit_scale  # Minimum wall height to be considered as a wall
+        wall_offset_tolerance = wall_offset_tolerance_metre / self.unit_scale  # Maximum gap between the wall and level to be considered as a wall
+        self.walls_map = get_walls_by_storey(ifc_building, min_wall_height=min_wall_height, wall_offset_tolerance=wall_offset_tolerance)
 
         self._parse_stairs()
         self._parse_storeys()
@@ -120,10 +125,6 @@ class IfcToCpmConverter:
         if tolerance > 0:
             print("Glueing wall connections...")
             building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
-
-        import json
-        with open(f'building_elements_{storey_id}.json', 'w') as f:
-            f.write(json.dumps([x.__dict__ for x in building_elements], indent=4))
 
         print("Decomposing wall openings...")
         building_elements = decompose_wall_with_openings(building_elements)

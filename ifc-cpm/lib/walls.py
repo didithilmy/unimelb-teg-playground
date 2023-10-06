@@ -3,16 +3,8 @@ import logging
 import ifcopenshell.util.element
 import ifcopenshell.util.placement
 import numpy as np
-import copy
-from typing import List, Tuple
-from collections import defaultdict
-from itertools import combinations
-from skspatial.objects import Line
-from .ifctypes import BuildingElement, Barricade, Wall, Gate
-from .utils import transform_vertex, find, filter, find_unbounded_lines_intersection, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box, eucledian_distance
+from typing import Tuple
 from .utils import filter, get_composite_verts, get_sorted_building_storeys
-from .ifctypes import BuildingElement, WallWithOpening
-from .representation_helpers import WallVertices
 
 
 logger = logging.getLogger("Walls")
@@ -22,7 +14,7 @@ settings.set(settings.USE_WORLD_COORDS, False)
 settings.set(settings.CONVERT_BACK_UNITS, True)
 
 
-def get_walls_by_storey(ifc_building, unit_scale=1):
+def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance):
     walls_map = dict()
     ifc_walls = get_all_walls(ifc_building)
 
@@ -31,8 +23,7 @@ def get_walls_by_storey(ifc_building, unit_scale=1):
         elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
         walls_in_storey = []
         for (ifc_wall, z_min, z_max) in ifc_walls:
-            tolerance = 0.1 / unit_scale  # Tolerance is 0.1m
-            min_wall_height = 1 / unit_scale # Min wall height is 1m
+            tolerance = wall_offset_tolerance
             wall_contained_within_boundary = (z_min <= elevation + tolerance and z_max >= elevation + min_wall_height - tolerance)
             if wall_contained_within_boundary:
                 walls_in_storey.append(ifc_wall)
