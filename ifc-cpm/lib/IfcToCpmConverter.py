@@ -164,43 +164,77 @@ class IfcToCpmConverter:
         start_vertex = truncate(start_vertex[0]), truncate(start_vertex[1])
         end_vertex = truncate(end_vertex[0]), truncate(end_vertex[1])
 
-        # TODO parse doors WITHOUT opening
-        opening_vertices = []
+        opening_geometries = []
+
+        # Parse openings
         openings = ifc_wall.HasOpenings
         for opening in openings:
             opening_element = opening.RelatedOpeningElement
             if opening_element.PredefinedType is None or opening_element.PredefinedType.upper() != 'RECESS':
-                shape = ifcopenshell.geom.create_shape(settings, opening_element)
-                matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
+                try:
+                    shape = ifcopenshell.geom.create_shape(settings, opening_element)
+                    matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
 
-                opening_location_relative_to_wall = opening_element.ObjectPlacement.RelativePlacement.Location.Coordinates
-                _, _, z = opening_location_relative_to_wall
-                opening_z = matrix[2][3]
+                    opening_z = matrix[2][3]
 
-                vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
+                    min_z = min(shape.geometry.verts[2::3]) + opening_z
+                    max_z = max(shape.geometry.verts[2::3]) + opening_z
+                    elevation = ifc_building_storey.Elevation
+                    tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
 
-                min_z = min(shape.geometry.verts[2::3]) + opening_z
-                max_z = max(shape.geometry.verts[2::3]) + opening_z
+                    opening_is_likely_a_door = min_z <= elevation + tolerance
+                    if not opening_is_likely_a_door or max_z < elevation:
+                        continue
+
+                    opening_geometries.append((matrix, shape))
+                except Exception as e:
+                    logger.warning(f"Skipping opening parsing: error parsing opening {opening_element.Name}: {e}")
+                    logger.error(e, exc_info=True)
+
+        # Parse doors without opening
+        ifc_doors = [x for x in ifcopenshell.util.element.get_decomposition(ifc_wall) if x.is_a("IfcDoor")]
+        for ifc_door in ifc_doors:
+            opening_container = ifcopenshell.util.element.get_container(ifc_door, "IfcOpeningElement")
+            if opening_container:
+                continue
+
+            try:
+                shape = ifcopenshell.geom.create_shape(settings, ifc_door)
+                matrix = ifcopenshell.util.placement.get_local_placement(ifc_door.ObjectPlacement)
+
+                door_z = matrix[2][3]
+
+                min_z = min(shape.geometry.verts[2::3]) + door_z
+                max_z = max(shape.geometry.verts[2::3]) + door_z
                 elevation = ifc_building_storey.Elevation
                 tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
 
-                opening_is_likely_a_door = min_z <= elevation + tolerance
-                if not opening_is_likely_a_door or max_z < elevation:
+                door_in_storey = min_z <= elevation + tolerance
+                if not door_in_storey or max_z < elevation:
                     continue
 
-                bbox = get_oriented_xy_bounding_box(vertices)
-                v1, v2 = get_edge_from_bounding_box(bbox)
+                opening_geometries.append((matrix, shape))
+            except Exception as e:
+                logger.warning(f"Skipping door parsing: error parsing door {ifc_door.Name}: {e}")
+                logger.error(e, exc_info=True)
 
-                v1 = self._transform_vertex(matrix, v1)
-                v2 = self._transform_vertex(matrix, v2)
+        # Project vertices into wall for alignment
+        opening_vertices = []
+        for matrix, shape in opening_geometries:
+            vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
+            bbox = get_oriented_xy_bounding_box(vertices)
+            v1, v2 = get_edge_from_bounding_box(bbox)
 
-                wall_line = Line.from_points(start_vertex, end_vertex)
-                x1, y1 = wall_line.project_point(v1)
-                x2, y2 = wall_line.project_point(v2)
+            v1 = self._transform_vertex(matrix, v1)
+            v2 = self._transform_vertex(matrix, v2)
 
-                x1, y1 = truncate(x1), truncate(y1)
-                x2, y2 = truncate(x2), truncate(y2)
-                opening_vertices.append(((x1, y1), (x2, y2)))
+            wall_line = Line.from_points(start_vertex, end_vertex)
+            x1, y1 = wall_line.project_point(v1)
+            x2, y2 = wall_line.project_point(v2)
+
+            x1, y1 = truncate(x1), truncate(y1)
+            x2, y2 = truncate(x2), truncate(y2)
+            opening_vertices.append(((x1, y1), (x2, y2)))
 
         print("Finished inferring wall " + ifc_wall.Name)
 
