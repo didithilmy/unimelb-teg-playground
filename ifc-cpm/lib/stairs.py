@@ -7,6 +7,16 @@ from .utils import find, filter, find_unbounded_lines_intersection, eucledian_di
 from .ifctypes import StraightSingleRunStair
 
 
+class StairParser:
+    @staticmethod
+    def from_ifc_stair(ifc_building, start_level_index, ifc_stair):
+        stair_type = ifc_stair.PredefinedType
+        if stair_type == "STRAIGHT_RUN_STAIR":
+            return StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
+
+        raise NotImplementedError(f"Stair type {stair_type} is not yet implemented.")
+
+
 class StraightSingleRunStairBuilder:
     def __init__(self, ifc_building, start_level_index, ifc_stair):
         self.ifc_building = ifc_building
@@ -14,14 +24,7 @@ class StraightSingleRunStairBuilder:
         self.ifc_stair = ifc_stair
 
     def build(self):
-        stair_type = self.ifc_stair.PredefinedType
-        if stair_type == "STRAIGHT_RUN_STAIR":
-            return self._build_straight_run_stair(self.ifc_stair)
-
-        raise NotImplementedError(f"Stair type {stair_type} is not yet implemented.")
-
-    def _build_straight_run_stair(self, ifc_stair):
-        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+        elements = ifcopenshell.util.element.get_decomposition(self.ifc_stair)
         stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
         assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
@@ -82,12 +85,9 @@ class StraightSingleRunStairBuilder:
         closest_to_run_end['designation'] = "TOP_GATE"
 
         lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')
-        upper_gate = find(edges_map.values(), lambda x: x['designation'] == 'TOP_GATE')
         side_walls = filter(edges_map.values(), lambda x: x['designation'] == 'WALL')
-        first_wall = side_walls[0]
-        second_wall = side_walls[1]
 
-        floor_span = self._determine_straight_run_stair_floor_span(ifc_stair)
+        floor_span = self._determine_straight_run_stair_floor_span(self.ifc_stair)
 
         run_length = eucledian_distance(run_start_vertex, run_end_vertex)
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
@@ -97,7 +97,7 @@ class StraightSingleRunStairBuilder:
         staircase_origin = self._determine_origin_vertex(lower_gate, run_rotation)
 
         return StraightSingleRunStair(
-            object_id=ifc_stair.GlobalId,
+            object_id=self.ifc_stair.GlobalId,
             rotation=run_rotation,
             vertex=staircase_origin,
             staircase_width=staircase_width,
@@ -122,8 +122,8 @@ class StraightSingleRunStairBuilder:
 
         starting_elevation = storey.Elevation
         ending_elevation = starting_elevation + run_height
-        
-        # Sometimes the staircase and floor elevation is slightly different due to rounding error. 
+
+        # Sometimes the staircase and floor elevation is slightly different due to rounding error.
         tolerance = 0.005 * (ending_elevation - starting_elevation)
 
         # The containing storey is purposefully excluded.

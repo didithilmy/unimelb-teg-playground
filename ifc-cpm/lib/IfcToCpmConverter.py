@@ -14,7 +14,7 @@ from .preprocessors import convert_disconnected_walls_into_barricades, split_int
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .walls import get_walls_by_storey
-from .stairs import StraightSingleRunStairBuilder
+from .stairs import StairParser
 from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 
 settings = ifcopenshell.geom.settings()
@@ -94,7 +94,7 @@ class IfcToCpmConverter:
             stairs_in_storey = [x for x in building_elements if x.is_a("IfcStair")]
             for stair_in_storey in stairs_in_storey:
                 try:
-                    stair = StraightSingleRunStairBuilder(self.ifc_building, storey_id, stair_in_storey).build()
+                    stair = StairParser.from_ifc_stair(self.ifc_building, storey_id, stair_in_storey)
                     self.stairs.append(stair)
                     self.crowd_environment.add_stair(stair)
                 except Exception as e:
