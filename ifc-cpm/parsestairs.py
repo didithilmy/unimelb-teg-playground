@@ -1,163 +1,45 @@
-import copy
-from typing import List
 import numpy as np
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
-from lib.utils import find_unbounded_lines_intersection, eucledian_distance, find, filter
-from lib.ifctypes import Wall, Gate, BuildingElement
-from lib.representation_helpers import XYBoundingBox, get_representation, Extrusion2DVertices
+import ifcopenshell.util.shape
+import ifcopenshell.util.representation
+from lib.utils import find_unbounded_lines_intersection, eucledian_distance, find, filter, get_composite_verts, get_oriented_xy_bounding_box, calculate_line_angle_relative_to_north, rotate_point_around_point
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
+settings.set(settings.CONVERT_BACK_UNITS, True)
+settings.set(settings.INCLUDE_CURVES, True)
 
-model = ifcopenshell.open("ifc/Project1-4-Arch.ifc")
+model = ifcopenshell.open("ifc/rac_advanced_sample_project.ifc")
 unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 
 
-def create_stair_xml(start_level, lower_gate, upper_gate, first_wall, right_wall):
-    staircase_width = eucledian_distance(lower_gate[0], lower_gate[1])
-    staircase_length = eucledian_distance(first_wall[0], first_wall[1])
-    
-    data = {
-        "Stair": [
-            {
-                "id": 0,
-                "X": lower_gate[0][0],  # X coordinate of first lower vertex
-                "Y": lower_gate[0][1],  # Y coordinate of first lower vertex
-                "speed": -1,  # TODO figure out what
-                "spanFloors": 1,
-                "length": staircase_length,  # Run length
-                "width": staircase_width,  # Staircase width
-                "stands": 5,  # TODO figure out where to get
-                "rotation": 0,  # Can be inferred from rotation matrix or axis. 0 means facing north
-                "type": 1,  # Read from enum
-                "direction": 0,
-                "upper": {
-                    "level": start_level + 1, # TODO change
-                    "gate": {
-                        "id": 11,
-                        "length": staircase_width,  # should be the same as width, if stair is STRAIGHT
-                        "angle": 90,  # TODO find out what
-                        "destination": False,  # let the software figure out I suppose
-                        "counter": False,  # TODO find out what
-                        "transparent": False,
-                        "designatedOnly": False,
-                        "vertices": {
-                            "Vertex": [
-                                {"X": 17, "Y": 32, "id": 11},
-                                {"X": 19, "Y": 32, "id": 12}
-                            ]
-                        }
-                    }
-                },
-                "lower": {
-                    "level": start_level,
-                    "gate": {
-                        "id": 12,
-                        "length": 2,  # should be the same as width, if stair is STRAIGHT
-                        "angle": 90,  # TODO find out what
-                        "destination": False,  # let the software figure out I suppose
-                        "counter": False,  # TODO find out what
-                        "transparent": False,
-                        "designatedOnly": False,
-                        "vertices": {
-                            "Vertex": [
-                                {"X": 17, "Y": 27, "id": 13},
-                                {"X": 19, "Y": 27, "id": 14}
-                            ]
-                        }
-                    }
-                },
-                "walls": {
-                    "Wall": [
-                        # Left wall
-                        {
-                            "id": 13,
-                            "length": 5,
-                            "angle": 0,
-                            "isLow": False,
-                            "isTransparent": False,
-                            "isWlWG": False,
-                            "vertices": {
-                                "Vertex": [
-                                    {"X": 17, "Y": 27, "id": 13},
-                                    {"X": 17, "Y": 32, "id": 11}
-                                ]
-                            }
-                        },
-                        # Right wall
-                        {
-                            "id": 14,
-                            "length": 5,
-                            "angle": 180,
-                            "isLow": False,
-                            "isTransparent": False,
-                            "isWlWG": False,
-                            "vertices": {
-                                "Vertex": [
-                                    {"X": 19, "Y": 32, "id": 12},
-                                    {"X": 19, "Y": 27, "id": 14}
-                                ]
-                            }
-                        },
-                        # Back wall
-                        {
-                            "id": 15,
-                            "length": 2,
-                            "angle": 270,
-                            "isLow": False,
-                            "isTransparent": False,
-                            "isWlWG": False,
-                            "vertices": {
-                                "Vertex": [
-                                    {"X": 19, "Y": 32, "id": 12},
-                                    {"X": 17, "Y": 32, "id": 11}
-                                ]
-                            }
-                        }
-                    ]
-                }
-            }
-        ]
-    }
-
-
-def process_stair(ifc_stair):
+def parse_stair(ifc_stair):
     elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
-    stair_flights = [x for x in elements if x.is_a("IfcStairFlight")]
-    stair_flight = stair_flights[0]
-    print(ifc_stair.Name)
+    stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+    # assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
-    representations = stair_flight.Representation.Representations
-    footprint_repr = [x for x in representations if x.RepresentationIdentifier == 'FootPrint'][0]
+    verts = get_composite_verts(ifc_stair)
+    bbox = get_oriented_xy_bounding_box(verts)
+    footprint_v1, footprint_v2, footprint_v3, footprint_v4 = bbox
+    edges = [
+        (footprint_v1, footprint_v2),
+        (footprint_v2, footprint_v3),
+        (footprint_v3, footprint_v4),
+        (footprint_v4, footprint_v1),
+    ]
 
-    ifc_geometric_set = footprint_repr.Items[0]
-    ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
-    ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
-    vertices = ifc_cartesian_point_list_2d.CoordList
-
-    edges = []
-    for i in range(len(vertices)):
-        v1 = vertices[i]
-        v2 = vertices[(i + 1) % len(vertices)]
-        if v1 != v2:
-            edges.append((v1, v2))
-
-    axis_repr = [x for x in representations if x.RepresentationIdentifier == 'Axis'][0]
-    ifc_geometric_set = axis_repr.Items[0]
-    ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
-    ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
-    run_vertices = ifc_cartesian_point_list_2d.CoordList
-    run_start_vertex, run_end_vertex = run_vertices
+    run_edge = calculate_resultant_run_line(stair_flights)
+    run_start_vertex, run_end_vertex = run_edge
 
     edge1, edge2, edge3, edge4 = edges
-    edge1_int = find_unbounded_lines_intersection(run_vertices, edge1)
-    edge2_int = find_unbounded_lines_intersection(run_vertices, edge2)
-    edge3_int = find_unbounded_lines_intersection(run_vertices, edge3)
-    edge4_int = find_unbounded_lines_intersection(run_vertices, edge4)
+    edge1_int = find_unbounded_lines_intersection(run_edge, edge1)
+    edge2_int = find_unbounded_lines_intersection(run_edge, edge2)
+    edge3_int = find_unbounded_lines_intersection(run_edge, edge3)
+    edge4_int = find_unbounded_lines_intersection(run_edge, edge4)
 
     edges_map = {
         edge1: dict(edge=edge1, intersection=edge1_int, designation="WALL"),
@@ -166,21 +48,73 @@ def process_stair(ifc_stair):
         edge4: dict(edge=edge4, intersection=edge4_int, designation="WALL"),
     }
 
-    closest_to_run_start = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
+    edges_with_intersection = filter(edges_map.values(), matcher=lambda x: x['intersection'] is not None)
+
+    closest_to_run_start = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
     closest_to_run_start['designation'] = "BOTTOM_GATE"
-    closest_to_run_end = min(edges_map.values(), key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
+    closest_to_run_end = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
     closest_to_run_end['designation'] = "TOP_GATE"
 
     lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')
-    upper_gate = find(edges_map.values(), lambda x: x['designation'] == 'TOP_GATE')
     side_walls = filter(edges_map.values(), lambda x: x['designation'] == 'WALL')
-    first_wall = side_walls[0]
-    second_wall = side_walls[1]
 
+    floor_span = 1
+
+    run_length = eucledian_distance(run_start_vertex, run_end_vertex)
+    run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
     staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
-    staircase_length = eucledian_distance(first_wall['edge'][0], first_wall['edge'][1])
 
-    print(staircase_width, staircase_length)
+    # Staircase origin must be to the LEFT of the run axis.
+    staircase_origin = determine_origin_vertex(lower_gate, run_rotation)
+
+    psets = ifcopenshell.util.element.get_psets(ifc_stair)
+    no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
+
+    print("Parsed stair", ifc_stair.Name)
+    print("    Origin:", staircase_origin)
+    print("    Run length:", run_length)
+    print("    Run angle:", run_rotation)
+    print("    Staircase width:", staircase_width)
+
+
+def calculate_resultant_run_line(stair_flights):
+    run_edges = []
+
+    # TODO Need to ensure stair flights are sorted by elevation
+    for stair_flight in stair_flights:
+        axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
+        assert axis_repr is not None, "There should be a Axis representation"
+
+        shape = ifcopenshell.geom.create_shape(settings, axis_repr)
+        run_edge = ifcopenshell.util.shape.get_vertices(shape)
+        run_edge = [(x[0], x[1]) for x in run_edge]
+        run_edges.append(run_edge)
+
+    first_edge = run_edges[0]
+    last_edge = run_edges[-1]
+    v1 = first_edge[0]
+    v2 = last_edge[1]
+    return v1, v2
+
+def determine_origin_vertex(lower_gate, run_rotation):
+        lv1, lv2 = lower_gate['edge']
+        intersection = lower_gate['intersection']
+
+        # Counter-rotate vertex around intersection
+        lv1_rotated_x, _ = rotate_point_around_point(intersection, lv1, -run_rotation)
+        lv2_rotated_x, _ = rotate_point_around_point(intersection, lv2, -run_rotation)
+
+        # Determine which one is the left one
+        if lv1_rotated_x < lv2_rotated_x:
+            return lv1
+
+        return lv2
+
+def process_stair(ifc_stair):
+    elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+    stair_flights = [x for x in elements if x.is_a("IfcStairFlight")]
+    run_edge = calculate_resultant_run_line(stair_flights)
+    print(ifc_stair.Name, run_edge)
 
 
 for storey in model.by_type("IfcBuildingStorey"):
@@ -188,4 +122,4 @@ for storey in model.by_type("IfcBuildingStorey"):
     elements = ifcopenshell.util.element.get_decomposition(storey)
     stairs = [x for x in elements if x.is_a("IfcStair")]
     for stair in stairs:
-        process_stair(stair)
+        parse_stair(stair)

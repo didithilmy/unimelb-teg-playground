@@ -449,13 +449,13 @@
 						<vertices>
 							<Vertex>
 								<X>12.41</X>
-								<Y>10.440000000000001</Y>
-								<id>10</id>
+								<Y>9.559999999999999</Y>
+								<id>0</id>
 							</Vertex>
 							<Vertex>
 								<X>12.41</X>
-								<Y>9.559999999999999</Y>
-								<id>0</id>
+								<Y>10.440000000000001</Y>
+								<id>10</id>
 							</Vertex>
 						</vertices>
 					</Gate>
@@ -469,14 +469,14 @@
 						<designatedOnly>false</designatedOnly>
 						<vertices>
 							<Vertex>
-								<X>10.219999999999999</X>
-								<Y>10.75</Y>
-								<id>15</id>
-							</Vertex>
-							<Vertex>
 								<X>11.1</X>
 								<Y>10.75</Y>
 								<id>2</id>
+							</Vertex>
+							<Vertex>
+								<X>10.219999999999999</X>
+								<Y>10.75</Y>
+								<id>15</id>
 							</Vertex>
 						</vertices>
 					</Gate>
@@ -490,14 +490,14 @@
 						<designatedOnly>false</designatedOnly>
 						<vertices>
 							<Vertex>
-								<X>6.61</X>
-								<Y>10.75</Y>
-								<id>12</id>
-							</Vertex>
-							<Vertex>
 								<X>7.49</X>
 								<Y>10.75</Y>
 								<id>13</id>
+							</Vertex>
+							<Vertex>
+								<X>6.61</X>
+								<Y>10.75</Y>
+								<id>12</id>
 							</Vertex>
 						</vertices>
 					</Gate>
@@ -512,13 +512,13 @@
 						<vertices>
 							<Vertex>
 								<X>5.0</X>
-								<Y>9.5</Y>
-								<id>17</id>
+								<Y>10.5</Y>
+								<id>18</id>
 							</Vertex>
 							<Vertex>
 								<X>5.0</X>
-								<Y>10.5</Y>
-								<id>18</id>
+								<Y>9.5</Y>
+								<id>17</id>
 							</Vertex>
 						</vertices>
 					</Gate>
@@ -532,17 +532,114 @@
 						<designatedOnly>false</designatedOnly>
 						<vertices>
 							<Vertex>
-								<X>12.0</X>
-								<Y>5.0</Y>
-								<id>5</id>
-							</Vertex>
-							<Vertex>
 								<X>10.0</X>
 								<Y>5.0</Y>
 								<id>6</id>
 							</Vertex>
+							<Vertex>
+								<X>12.0</X>
+								<Y>5.0</Y>
+								<id>5</id>
+							</Vertex>
 						</vertices>
 					</Gate>
+				</gates>
+			</gate_pkg>
+		</Level>
+		<Level>
+			<id>1</id>
+			<width>22</width>
+			<height>20</height>
+			<wall_pkg>
+				<walls>
+					<Wall>
+						<id>26</id>
+						<name>Wand-Ext-OG-1</name>
+						<length>10.0</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>5.0</X>
+								<Y>5.0</Y>
+								<id>7</id>
+							</Vertex>
+							<Vertex>
+								<X>5.0</X>
+								<Y>15.0</Y>
+								<id>19</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+					<Wall>
+						<id>27</id>
+						<name>Wand-Ext-OG-2</name>
+						<length>12.0</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>5.0</X>
+								<Y>15.0</Y>
+								<id>19</id>
+							</Vertex>
+							<Vertex>
+								<X>17.0</X>
+								<Y>15.0</Y>
+								<id>20</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+					<Wall>
+						<id>28</id>
+						<name>Wand-Ext-OG-3</name>
+						<length>10.0</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>17.0</X>
+								<Y>15.0</Y>
+								<id>20</id>
+							</Vertex>
+							<Vertex>
+								<X>17.0</X>
+								<Y>5.0</Y>
+								<id>4</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+					<Wall>
+						<id>29</id>
+						<name>Wand-Ext-OG-4</name>
+						<length>12.0</length>
+						<isLow>false</isLow>
+						<isTransparent>false</isTransparent>
+						<iWlWG>false</iWlWG>
+						<vertices>
+							<Vertex>
+								<X>17.0</X>
+								<Y>5.0</Y>
+								<id>4</id>
+							</Vertex>
+							<Vertex>
+								<X>5.0</X>
+								<Y>5.0</Y>
+								<id>7</id>
+							</Vertex>
+						</vertices>
+					</Wall>
+				</walls>
+			</wall_pkg>
+			<barricade_pkg>
+				<barricade_walls>
+				</barricade_walls>
+			</barricade_pkg>
+			<gate_pkg>
+				<gates>
 				</gates>
 			</gate_pkg>
 		</Level>

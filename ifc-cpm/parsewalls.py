@@ -19,33 +19,23 @@ settings = ifcopenshell.geom.settings()
 model = ifcopenshell.open("ifc/rac_advanced_sample_project.ifc")
 unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 
+target_wall_id = '162023'
+
 for storey in model.by_type("IfcBuildingStorey"):
     elements = ifcopenshell.util.element.get_decomposition(storey)
-    ifc_wall = find(elements, lambda x: '182328' in x.Name)
+    ifc_wall = find(elements, lambda x: target_wall_id in x.Name)
     if not ifc_wall:
         continue
 
-    wall_vertices = WallVertices.from_product(ifc_wall)
-    print("Wall edge", wall_vertices)
+    ifc_doors = [x for x in ifcopenshell.util.element.get_decomposition(ifc_wall) if x.is_a("IfcDoor")]
+    for ifc_door in ifc_doors:
+        opening_container = ifcopenshell.util.element.get_container(ifc_door, "IfcOpeningElement")
+        if opening_container:
+            continue
+        print(ifc_door)
+        shape = ifcopenshell.geom.create_shape(settings, ifc_door)
+        matrix = ifcopenshell.util.placement.get_local_placement(ifc_door.ObjectPlacement)
+        vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
 
-    gates_vertices = []
-    openings = ifc_wall.HasOpenings
-    for opening in openings:
-        opening_element = opening.RelatedOpeningElement
-        print(opening_element.PredefinedType)
-        if opening_element.PredefinedType.upper() != 'RECESS':
-            shape = ifcopenshell.geom.create_shape(settings, opening_element)
-            vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
-
-            bbox = get_oriented_xy_bounding_box(vertices)
-            v1, v2 = get_edge_from_bounding_box(bbox)
-
-            matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
-            v1 = transform_vertex(matrix, v1)
-            v2 = transform_vertex(matrix, v2)
-
-            wall_line = Line.from_points(wall_vertices[0], wall_vertices[1])
-            v1_projected = wall_line.project_point(v1)
-            v2_projected = wall_line.project_point(v2)
-
-            print("Opening edge", (v1_projected, v2_projected))
+        print(matrix)
+        print(vertices)
