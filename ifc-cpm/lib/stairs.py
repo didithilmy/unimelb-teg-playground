@@ -3,8 +3,13 @@ import ifcopenshell.geom
 import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
+import ifcopenshell.util.shape
 from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex
 from .ifctypes import StraightSingleRunStair
+
+settings = ifcopenshell.geom.settings()
+settings.set(settings.CONVERT_BACK_UNITS, True)
+settings.set(settings.INCLUDE_CURVES, True)
 
 
 class StairParser:
@@ -37,10 +42,9 @@ class StraightSingleRunStairBuilder:
         footprint_repr = find(representations, lambda x: x.RepresentationIdentifier == 'FootPrint')
         assert footprint_repr is not None, "There should be a FootPrint representation"
 
-        ifc_geometric_set = footprint_repr.Items[0]
-        ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
-        ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
-        vertices = ifc_cartesian_point_list_2d.CoordList
+        footprint_shape = ifcopenshell.geom.create_shape(settings, footprint_repr)
+        footprint_verts = ifcopenshell.util.shape.get_vertices(footprint_shape)
+        vertices = [(x[0], x[1]) for x in footprint_verts[:4]]
 
         edges = []
         for i in range(len(vertices)):
@@ -55,20 +59,19 @@ class StraightSingleRunStairBuilder:
         axis_repr = find(representations, lambda x: x.RepresentationIdentifier == 'Axis')
         assert axis_repr is not None, "There should be a Axis representation"
 
-        ifc_geometric_set = axis_repr.Items[0]
-        ifc_indexed_poly_curve = ifc_geometric_set.Elements[0]
-        ifc_cartesian_point_list_2d = ifc_indexed_poly_curve.Points
-        run_vertices = ifc_cartesian_point_list_2d.CoordList
+        shape = ifcopenshell.geom.create_shape(settings, axis_repr)
+        run_edge = ifcopenshell.util.shape.get_vertices(shape)
+        run_edge = [(x[0], x[1]) for x in run_edge]
 
         # Transform vertices
-        run_vertices = [transform_vertex(transformation_matrix, x) for x in run_vertices]
-        run_start_vertex, run_end_vertex = run_vertices
+        run_edge = [transform_vertex(transformation_matrix, x) for x in run_edge]
+        run_start_vertex, run_end_vertex = run_edge
 
         edge1, edge2, edge3, edge4 = edges
-        edge1_int = find_unbounded_lines_intersection(run_vertices, edge1)
-        edge2_int = find_unbounded_lines_intersection(run_vertices, edge2)
-        edge3_int = find_unbounded_lines_intersection(run_vertices, edge3)
-        edge4_int = find_unbounded_lines_intersection(run_vertices, edge4)
+        edge1_int = find_unbounded_lines_intersection(run_edge, edge1)
+        edge2_int = find_unbounded_lines_intersection(run_edge, edge2)
+        edge3_int = find_unbounded_lines_intersection(run_edge, edge3)
+        edge4_int = find_unbounded_lines_intersection(run_edge, edge4)
 
         edges_map = {
             edge1: dict(edge=edge1, intersection=edge1_int, designation="WALL"),
