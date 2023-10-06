@@ -38,8 +38,7 @@ class StraightSingleRunStairBuilder:
         transformation_matrix = ifcopenshell.util.placement.get_local_placement(stair_flight.ObjectPlacement)
 
         psets = ifcopenshell.util.element.get_psets(stair_flight)
-        representations = stair_flight.Representation.Representations
-        footprint_repr = find(representations, lambda x: x.RepresentationIdentifier == 'FootPrint')
+        footprint_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "FootPrint")
         assert footprint_repr is not None, "There should be a FootPrint representation"
 
         footprint_shape = ifcopenshell.geom.create_shape(settings, footprint_repr)
@@ -56,7 +55,7 @@ class StraightSingleRunStairBuilder:
                 v2 = transform_vertex(transformation_matrix, v2)
                 edges.append((v1, v2))
 
-        axis_repr = find(representations, lambda x: x.RepresentationIdentifier == 'Axis')
+        axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
         assert axis_repr is not None, "There should be a Axis representation"
 
         shape = ifcopenshell.geom.create_shape(settings, axis_repr)
