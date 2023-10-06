@@ -127,7 +127,7 @@ class StraightSingleRunStairBuilder:
         ending_elevation = starting_elevation + run_height
 
         # Sometimes the staircase and floor elevation is slightly different due to rounding error.
-        tolerance = 0.005 * (ending_elevation - starting_elevation)
+        tolerance = 0.005 * run_height
 
         # The containing storey is purposefully excluded.
         storeys_in_stair = filter(building_storeys, matcher=lambda s: s.Elevation > starting_elevation + tolerance and s.Elevation <= ending_elevation + tolerance)
