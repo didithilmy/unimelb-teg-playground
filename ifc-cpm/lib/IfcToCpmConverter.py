@@ -151,9 +151,8 @@ class IfcToCpmConverter:
             stairs_edges.add(stair.upper_gate)
 
         for stair in stairs_voiding_storey:
+            # Do NOT draw if there an element that occupies the same space
             if stair.lower_gate not in stairs_edges:
-                # Draw a wall where the lower gate is
-                # But, do NOT draw if there a gate in the position of the wall that belongs to another stair
                 walls += [Wall(start_vertex=stair.lower_gate[0], end_vertex=stair.lower_gate[1])]
 
             if stair.first_wall not in stairs_edges:
@@ -163,7 +162,6 @@ class IfcToCpmConverter:
                 walls += [Wall(start_vertex=stair.second_wall[0], end_vertex=stair.second_wall[1])]
 
             if stair.upper_gate not in stairs_edges:
-                # Draw a wall where the upper gate is
                 walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
 
         return walls
