@@ -143,17 +143,31 @@ class IfcToCpmConverter:
     def _get_storey_stair_border_walls(self, storey_id):
         walls: List[Wall] = []
         stairs_voiding_storey = filter(self.stairs, lambda s: storey_id > s.start_level_index and storey_id <= s.end_level_index)
+        stairs_departing_in_storey = filter(self.stairs, lambda s: s.start_level_index == storey_id)
+        stairs_arriving_in_storey = filter(self.stairs, lambda s: s.end_level_index == storey_id)
+
+        stairs_edges = set()
+        for stair in stairs_departing_in_storey:
+            stairs_edges.add(stair.lower_gate)
+            stairs_edges.add(stair.first_wall)
+            stairs_edges.add(stair.second_wall)
+            stairs_edges.add(stair.upper_gate)
+        for stair in stairs_arriving_in_storey:
+            stairs_edges.add(stair.upper_gate)
+
         for stair in stairs_voiding_storey:
-            if storey_id > stair.start_level_index:
+            if stair.lower_gate not in stairs_edges:
                 # Draw a wall where the lower gate is
+                # But, do NOT draw if there a gate in the position of the wall that belongs to another stair
                 walls += [Wall(start_vertex=stair.lower_gate[0], end_vertex=stair.lower_gate[1])]
 
-            walls += [
-                Wall(start_vertex=stair.first_wall[0], end_vertex=stair.first_wall[1]),
-                Wall(start_vertex=stair.second_wall[0], end_vertex=stair.second_wall[1])
-            ]
+            if stair.first_wall not in stairs_edges:
+                walls += [Wall(start_vertex=stair.first_wall[0], end_vertex=stair.first_wall[1])]
 
-            if storey_id < stair.end_level_index:
+            if stair.second_wall not in stairs_edges:
+                walls += [Wall(start_vertex=stair.second_wall[0], end_vertex=stair.second_wall[1])]
+
+            if stair.upper_gate not in stairs_edges:
                 # Draw a wall where the upper gate is
                 walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
 
