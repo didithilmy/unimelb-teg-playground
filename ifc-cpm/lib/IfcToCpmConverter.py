@@ -61,7 +61,7 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: truncate(round(self.unit_scale * x * 100) / 100, digits=3))
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
 
         if round_function is not None:
             self.round = round_function

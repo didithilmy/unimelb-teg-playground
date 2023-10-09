@@ -134,15 +134,11 @@ class StraightSingleRunStairBuilder:
         floor_span = self._determine_straight_run_stair_floor_span(self.ifc_stair)
 
         run_length = eucledian_distance(run_start_vertex, run_end_vertex)
-        run_length = truncate(run_length)
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
         staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
-        staircase_width = truncate(staircase_width)
 
         # Staircase origin must be to the LEFT of the run axis.
         origin_x, origin_y = self._determine_origin_vertex(lower_gate, run_rotation)
-        origin_x = truncate(origin_x)
-        origin_y = truncate(origin_y)
 
         psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
         no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
