@@ -167,14 +167,14 @@ class StraightSingleRunStairBuilder:
         pset_stair = psets['Pset_StairCommon']
         run_height = pset_stair.get("NumberOfRiser", 1) * pset_stair.get("RiserHeight", 1)
 
-        starting_elevation = storey.Elevation
+        starting_elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
         ending_elevation = starting_elevation + run_height
 
         # Sometimes the staircase and floor elevation is slightly different due to rounding error.
         tolerance = 0.1 * run_height
 
         def is_storey_voided_by_stair(ifc_storey):
-            elevation = ifc_storey.Elevation
+            elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_storey)
             return elevation >= starting_elevation - tolerance and elevation <= ending_elevation + tolerance
 
         storeys_in_stair = filter(building_storeys, matcher=is_storey_voided_by_stair)

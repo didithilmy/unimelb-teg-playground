@@ -63,9 +63,6 @@ class IfcToCpmConverter:
         self.unit_scale = unit_scale
         self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: truncate(round(self.unit_scale * x * 100) / 100, digits=3))
 
-        building_transformation_matrix = ifcopenshell.util.placement.get_local_placement(ifc_building.ObjectPlacement)
-        self.base_transformation_matrix = np.linalg.inv(building_transformation_matrix)
-
         if round_function is not None:
             self.round = round_function
         else:
@@ -178,6 +175,8 @@ class IfcToCpmConverter:
         end_vertex = truncate(end_vertex[0]), truncate(end_vertex[1])
 
         opening_geometries = []
+        elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_building_storey)
+        tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
 
         # Parse openings
         openings = ifc_wall.HasOpenings
@@ -186,20 +185,14 @@ class IfcToCpmConverter:
             if opening_element.PredefinedType is None or opening_element.PredefinedType.upper() != 'RECESS':
                 try:
                     shape = ifcopenshell.geom.create_shape(settings, opening_element)
-                    matrix = ifcopenshell.util.placement.get_local_placement(opening_element.ObjectPlacement)
-
-                    opening_z = matrix[2][3]
-
-                    min_z = min(shape.geometry.verts[2::3]) + opening_z
-                    max_z = max(shape.geometry.verts[2::3]) + opening_z
-                    elevation = ifc_building_storey.Elevation
-                    tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
+                    min_z = min(shape.geometry.verts[2::3])
+                    max_z = max(shape.geometry.verts[2::3])
 
                     opening_is_likely_a_door = min_z <= elevation + tolerance
                     if not opening_is_likely_a_door or max_z < elevation:
                         continue
 
-                    opening_geometries.append((matrix, shape))
+                    opening_geometries.append((shape))
                 except Exception as e:
                     logger.warning(f"Skipping opening parsing: error parsing opening {opening_element.Name}: {e}")
                     logger.error(e, exc_info=True)
@@ -213,33 +206,24 @@ class IfcToCpmConverter:
 
             try:
                 shape = ifcopenshell.geom.create_shape(settings, ifc_door)
-                matrix = ifcopenshell.util.placement.get_local_placement(ifc_door.ObjectPlacement)
-
-                door_z = matrix[2][3]
-
-                min_z = min(shape.geometry.verts[2::3]) + door_z
-                max_z = max(shape.geometry.verts[2::3]) + door_z
-                elevation = ifc_building_storey.Elevation
-                tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
+                min_z = min(shape.geometry.verts[2::3])
+                max_z = max(shape.geometry.verts[2::3])
 
                 door_in_storey = min_z <= elevation + tolerance
                 if not door_in_storey or max_z < elevation:
                     continue
 
-                opening_geometries.append((matrix, shape))
+                opening_geometries.append((shape))
             except Exception as e:
                 logger.warning(f"Skipping door parsing: error parsing door {ifc_door.Name}: {e}")
                 logger.error(e, exc_info=True)
 
         # Project vertices into wall for alignment
         opening_vertices = []
-        for matrix, shape in opening_geometries:
+        for shape in opening_geometries:
             vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
             bbox = get_oriented_xy_bounding_box(vertices)
             v1, v2 = get_edge_from_bounding_box(bbox)
-
-            # v1 = self._transform_vertex(matrix, v1)
-            # v2 = self._transform_vertex(matrix, v2)
 
             wall_line = Line.from_points(start_vertex, end_vertex)
             x1, y1 = wall_line.project_point(v1)

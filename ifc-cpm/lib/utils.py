@@ -12,7 +12,7 @@ from .geom_settings import settings
 def get_sorted_building_storeys(ifc_building):
     building_elements = ifcopenshell.util.element.get_decomposition(ifc_building)
     storeys = [x for x in building_elements if x.is_a("IfcBuildingStorey")]
-    sorted_storeys = sorted(storeys, key=lambda s: s.Elevation)
+    sorted_storeys = sorted(storeys, key=lambda s: ifcopenshell.util.placement.get_storey_elevation(s))
     return sorted_storeys
 
 
