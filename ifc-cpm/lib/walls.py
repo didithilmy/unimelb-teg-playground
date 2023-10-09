@@ -9,10 +9,6 @@ from .utils import filter, get_composite_verts, get_sorted_building_storeys
 
 logger = logging.getLogger("Walls")
 
-settings = ifcopenshell.geom.settings()
-settings.set(settings.USE_WORLD_COORDS, False)
-settings.set(settings.CONVERT_BACK_UNITS, True)
-
 
 def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance):
     walls_map = dict()

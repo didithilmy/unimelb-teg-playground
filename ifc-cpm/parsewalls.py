@@ -9,8 +9,8 @@ import ifcopenshell.util.shape
 import ifcopenshell.util.unit
 from compas.geometry import oriented_bounding_box_xy_numpy
 from lib.ifctypes import Wall, Gate, BuildingElement
-from lib.representation_helpers import WallVertices, XYBoundingBox
-from lib.utils import transform_vertex_3d, eucledian_distance, find, find_unbounded_lines_intersection, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box, transform_vertex
+from lib.representation_helpers import WallVertices
+from lib.utils import eucledian_distance, find, find_unbounded_lines_intersection, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 
 from skspatial.objects import Line
 

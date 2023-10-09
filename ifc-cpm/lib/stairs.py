@@ -5,7 +5,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 import ifcopenshell.util.shape
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex, get_oriented_xy_bounding_box, get_composite_verts, truncate
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, get_oriented_xy_bounding_box, get_composite_verts, truncate
 from .ifctypes import StraightSingleRunStair
 
 settings = ifcopenshell.geom.settings()

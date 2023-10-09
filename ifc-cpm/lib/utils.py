@@ -6,10 +6,7 @@ import ifcopenshell.util.shape
 import ifcopenshell.util.placement
 import ifcopenshell.geom
 from compas.geometry import oriented_bounding_box_xy_numpy
-
-settings = ifcopenshell.geom.settings()
-settings.set(settings.USE_WORLD_COORDS, False)
-settings.set(settings.CONVERT_BACK_UNITS, True)
+from .geom_settings import settings
 
 
 def get_sorted_building_storeys(ifc_building):
@@ -28,15 +25,6 @@ def transform_vertex(transformation_matrix, vertex: Tuple[float, float]) -> Tupl
     return (transformed_x, transformed_y)
 
 
-def transform_vertex_3d(transformation_matrix, vertex: Tuple[float, float, float]) -> Tuple[float, float, float]:
-    x, y, z = vertex
-
-    vertex_matrix = np.array([[x], [y], [z], [1]])
-    transformed_matrix = np.dot(transformation_matrix, vertex_matrix)
-    transformed_x, transformed_y, transformed_z, _ = np.transpose(transformed_matrix)[0]
-    return (transformed_x, transformed_y, transformed_z)
-
-
 # TODO find permanent solution for rounding error
 def truncate(number, digits=4) -> float:
     # Improve accuracy with floating point operations, to avoid truncate(16.4, 2) = 16.39 or truncate(-1.13, 2) = -1.12
@@ -44,7 +32,7 @@ def truncate(number, digits=4) -> float:
     if nbDecimals <= digits:
         return number
     stepper = 10.0 ** digits
-    return round(stepper * number) / stepper
+    return math.trunc(stepper * number) / stepper
 
 
 def find_unbounded_lines_intersection(line1, line2):
@@ -195,9 +183,7 @@ def get_composite_verts(ifc_product):
     if ifc_product.Representation is not None:
         shape = ifcopenshell.geom.create_shape(settings, ifc_product)
         vertices = ifcopenshell.util.shape.get_vertices(shape.geometry)
-        matrix = ifcopenshell.util.placement.get_local_placement(ifc_product.ObjectPlacement)
-        rel_vertices = [transform_vertex_3d(matrix, x) for x in vertices]
-        return list(rel_vertices)
+        return list(vertices)
 
     vertices = []
     products = ifcopenshell.util.element.get_decomposition(ifc_product)

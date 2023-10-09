@@ -9,17 +9,15 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from skspatial.objects import Line
 from .cpm_writer import CrowdSimulationEnvironment, Level
-from .representation_helpers import XYBoundingBox, Extrusion2DVertices, WallVertices
+from .representation_helpers import WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
 
 from .ifctypes import Barricade, WallWithOpening, Wall
 from .walls import get_walls_by_storey
 from .stairs import StairParser
-from .utils import transform_vertex, filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
+from .utils import filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
+from .geom_settings import settings
 
-settings = ifcopenshell.geom.settings()
-settings.set(settings.USE_WORLD_COORDS, False)
-settings.set(settings.CONVERT_BACK_UNITS, True)
 
 logger = logging.getLogger("IfcToCpmConverter")
 
@@ -240,8 +238,8 @@ class IfcToCpmConverter:
             bbox = get_oriented_xy_bounding_box(vertices)
             v1, v2 = get_edge_from_bounding_box(bbox)
 
-            v1 = self._transform_vertex(matrix, v1)
-            v2 = self._transform_vertex(matrix, v2)
+            # v1 = self._transform_vertex(matrix, v1)
+            # v2 = self._transform_vertex(matrix, v2)
 
             wall_line = Line.from_points(start_vertex, end_vertex)
             x1, y1 = wall_line.project_point(v1)
@@ -255,44 +253,3 @@ class IfcToCpmConverter:
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
-
-    def _get_storey_void_barricade_elements(self, storey):
-        elements = ifcopenshell.util.element.get_decomposition(storey)
-        slabs = [x for x in elements if x.is_a("IfcSlab")]
-        floor_slabs = [x for x in slabs if x.PredefinedType == "FLOOR"]
-
-        elements = []
-        if len(floor_slabs) > 0:
-            floor_slab = floor_slabs[0]
-            floor_openings = floor_slab.HasOpenings
-            for floor_opening in floor_openings:
-                opening_element = floor_opening.RelatedOpeningElement
-                representations = opening_element.Representation.Representations
-
-                transformation_matrix = ifcopenshell.util.placement.get_local_placement(
-                    opening_element.ObjectPlacement
-                )
-
-                edges = Extrusion2DVertices.infer(representations)
-
-                for i in range(len(edges)):
-                    v1, v2 = edges[i]
-                    v1_transform = self._transform_vertex(transformation_matrix, v1)
-                    v2_transform = self._transform_vertex(transformation_matrix, v2)
-                    elements.append(
-                        Barricade(
-                            name=f"{opening_element.Name}-{i}",
-                            start_vertex=v1_transform,
-                            end_vertex=v2_transform,
-                        )
-                    )
-
-        return elements
-
-    def _transform_vertex(self, transformation_matrix, vertex):
-        # Building location correction
-        total_transformation_matrix = np.dot(self.base_transformation_matrix, transformation_matrix)
-        transformed_x, transformed_y = transform_vertex(total_transformation_matrix, vertex)
-        transformed_x = self.round(transformed_x)
-        transformed_y = self.round(transformed_y)
-        return (transformed_x, transformed_y)

@@ -7,7 +7,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from lib.ifctypes import Wall, Gate, BuildingElement
-from lib.representation_helpers import XYBoundingBox, get_representation, Extrusion2DVertices
+from lib.representation_helpers import Extrusion2DVertices
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)

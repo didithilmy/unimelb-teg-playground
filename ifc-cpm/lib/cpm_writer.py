@@ -3,7 +3,7 @@ import math
 from collections import defaultdict
 import xmltodict
 from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair
-from .utils import filter
+from .utils import filter, truncate
 
 
 class Level:
@@ -219,6 +219,9 @@ class CrowdSimulationEnvironment:
         x1, y1 = vertex
         x1, y1 = self._scale_to_metric((x1, y1))
         (x_min, y_min), _ = self.map_bounds
+
+        x1, y1 = truncate(x1), truncate(y1)
+        x_min, y_min = truncate(x_min), truncate(y_min)
 
         x1, y1 = x1 + self.x_offset - x_min, y1 + self.y_offset - y_min
 
