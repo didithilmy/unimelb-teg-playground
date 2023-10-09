@@ -5,13 +5,37 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 import ifcopenshell.util.shape
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex, get_oriented_xy_bounding_box, get_composite_verts
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, transform_vertex, get_oriented_xy_bounding_box, get_composite_verts, truncate
 from .ifctypes import StraightSingleRunStair
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.CONVERT_BACK_UNITS, True)
 settings.set(settings.USE_WORLD_COORDS, True)
 settings.set(settings.INCLUDE_CURVES, True)
+
+
+def _calculate_resultant_run_line(run_edges):
+    first_edge = run_edges[0]
+    last_edge = run_edges[-1]
+    v1 = first_edge[0]
+    v2 = last_edge[1]
+    return v1, v2
+
+
+def _get_flights_run_edges(stair_flights):
+    run_edges = []
+
+    # TODO Need to ensure stair flights are sorted by elevation
+    for stair_flight in stair_flights:
+        axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
+        assert axis_repr is not None, "There should be a Axis representation"
+
+        shape = ifcopenshell.geom.create_shape(settings, axis_repr)
+        run_edge = ifcopenshell.util.shape.get_vertices(shape)
+        run_edge = [(x[0], x[1]) for x in run_edge]
+        run_edges.append(run_edge)
+
+    return run_edges
 
 
 class StairType(Enum):
@@ -24,7 +48,9 @@ class StairParser:
     def from_ifc_stair(ifc_building, start_level_index, ifc_stair):
         stair_type = StairParser.infer_stair_type(ifc_stair)
         if stair_type == StairType.STRAIGHT_SINGLE_RUN:
-            return StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
+            stair = StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
+            if stair:
+                return stair
 
         if not stair_type:
             raise NotImplementedError(f"Cannot infer stair type from IfcProduct")
@@ -40,9 +66,21 @@ class StairParser:
         elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
         stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
 
-        if len(stair_flights) == 1:
+        if len(stair_flights) >= 1:
             # TODO differentiate between U and straight
-            return StairType.STRAIGHT_SINGLE_RUN
+            if StairParser._is_stair_straight(ifc_stair):
+                return StairType.STRAIGHT_SINGLE_RUN
+
+    @staticmethod
+    def _is_stair_straight(ifc_stair) -> bool:
+        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+        run_edges = _get_flights_run_edges(stair_flights)
+        resultant = _calculate_resultant_run_line(run_edges=run_edges)
+        angle1 = calculate_line_angle_relative_to_north(*(run_edges[0]))
+        angle2 = calculate_line_angle_relative_to_north(*resultant)
+
+        return abs(angle1 - angle2) < 10  # Maximum to be considered straight is 10 degrees. TODO configure
 
 
 class StraightSingleRunStairBuilder:
@@ -54,7 +92,6 @@ class StraightSingleRunStairBuilder:
     def build(self):
         elements = ifcopenshell.util.element.get_decomposition(self.ifc_stair)
         stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
-        # assert len(stair_flights) == 1, "There should be exactly one stair flight"
 
         verts = get_composite_verts(self.ifc_stair)
         bbox = get_oriented_xy_bounding_box(verts)
@@ -66,7 +103,9 @@ class StraightSingleRunStairBuilder:
             (footprint_v4, footprint_v1),
         ]
 
-        run_edge = self._calculate_resultant_run_line(stair_flights)
+        run_edges = _get_flights_run_edges(stair_flights)
+        run_edge = _calculate_resultant_run_line(run_edges)
+
         run_start_vertex, run_end_vertex = run_edge
 
         edge1, edge2, edge3, edge4 = edges
@@ -95,11 +134,15 @@ class StraightSingleRunStairBuilder:
         floor_span = self._determine_straight_run_stair_floor_span(self.ifc_stair)
 
         run_length = eucledian_distance(run_start_vertex, run_end_vertex)
+        run_length = truncate(run_length)
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
         staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
+        staircase_width = truncate(staircase_width)
 
         # Staircase origin must be to the LEFT of the run axis.
-        staircase_origin = self._determine_origin_vertex(lower_gate, run_rotation)
+        origin_x, origin_y = self._determine_origin_vertex(lower_gate, run_rotation)
+        origin_x = truncate(origin_x)
+        origin_y = truncate(origin_y)
 
         psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
         no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
@@ -107,7 +150,7 @@ class StraightSingleRunStairBuilder:
         return StraightSingleRunStair(
             object_id=self.ifc_stair.GlobalId,
             rotation=run_rotation,
-            vertex=staircase_origin,
+            vertex=(origin_x, origin_y),
             staircase_width=staircase_width,
             run_length=run_length,
             no_of_treads=no_of_treads,
@@ -116,7 +159,8 @@ class StraightSingleRunStairBuilder:
         )
 
     def _determine_straight_run_stair_floor_span(self, ifc_stair) -> int:
-        storey = ifcopenshell.util.element.get_container(ifc_stair)
+        # return 1 # FIXME remove
+        storey = ifcopenshell.util.element.get_container(ifc_stair, "IfcBuildingStorey")
         building_storeys = get_sorted_building_storeys(self.ifc_building)
 
         psets = ifcopenshell.util.element.get_psets(ifc_stair)
@@ -127,12 +171,15 @@ class StraightSingleRunStairBuilder:
         ending_elevation = starting_elevation + run_height
 
         # Sometimes the staircase and floor elevation is slightly different due to rounding error.
-        tolerance = 0.005 * run_height
+        tolerance = 0.1 * run_height
 
-        # The containing storey is purposefully excluded.
-        storeys_in_stair = filter(building_storeys, matcher=lambda s: s.Elevation > starting_elevation + tolerance and s.Elevation <= ending_elevation + tolerance)
+        def is_storey_voided_by_stair(ifc_storey):
+            elevation = ifc_storey.Elevation
+            return elevation >= starting_elevation - tolerance and elevation <= ending_elevation + tolerance
 
-        return len(storeys_in_stair)
+        storeys_in_stair = filter(building_storeys, matcher=is_storey_voided_by_stair)
+
+        return len(storeys_in_stair) - 1
 
     def _determine_origin_vertex(self, lower_gate, run_rotation):
         lv1, lv2 = lower_gate['edge']
@@ -147,22 +194,3 @@ class StraightSingleRunStairBuilder:
             return lv1
 
         return lv2
-
-    def _calculate_resultant_run_line(self, stair_flights):
-        run_edges = []
-
-        # TODO Need to ensure stair flights are sorted by elevation
-        for stair_flight in stair_flights:
-            axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
-            assert axis_repr is not None, "There should be a Axis representation"
-
-            shape = ifcopenshell.geom.create_shape(settings, axis_repr)
-            run_edge = ifcopenshell.util.shape.get_vertices(shape)
-            run_edge = [(x[0], x[1]) for x in run_edge]
-            run_edges.append(run_edge)
-
-        first_edge = run_edges[0]
-        last_edge = run_edges[-1]
-        v1 = first_edge[0]
-        v2 = last_edge[1]
-        return v1, v2
