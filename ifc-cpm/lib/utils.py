@@ -44,7 +44,7 @@ def truncate(number, digits=4) -> float:
     if nbDecimals <= digits:
         return number
     stepper = 10.0 ** digits
-    return math.trunc(stepper * number) / stepper
+    return round(stepper * number) / stepper
 
 
 def find_unbounded_lines_intersection(line1, line2):
