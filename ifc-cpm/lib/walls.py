@@ -1,13 +1,10 @@
 from typing import Tuple, Any
-import logging
 import ifcopenshell.util.element
 import ifcopenshell.util.placement
 import numpy as np
 from typing import Tuple
 from .utils import filter, get_composite_verts, get_sorted_building_storeys
-
-
-logger = logging.getLogger("Walls")
+from .logger import logger
 
 
 def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance):
@@ -28,6 +25,7 @@ def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance):
 
 
 def get_all_walls(ifc_building) -> Tuple[Any, float, float]:
+    logger.debug("Retrieving walls...")
     building_elements = ifcopenshell.util.element.get_decomposition(ifc_building)
     walls = filter(building_elements, matcher=lambda x: x.is_a("IfcWall") or x.is_a("IfcCurtainWall"))
     out = []

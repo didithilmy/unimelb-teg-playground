@@ -1,7 +1,4 @@
-import logging
-import traceback
 from typing import Tuple, List
-import numpy as np
 import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.placement
@@ -11,15 +8,12 @@ from skspatial.objects import Line
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
-
-from .ifctypes import Barricade, WallWithOpening, Wall
+from .ifctypes import WallWithOpening, Wall
 from .walls import get_walls_by_storey
 from .stairs import StairParser
 from .utils import filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 from .geom_settings import settings
-
-
-logger = logging.getLogger("IfcToCpmConverter")
+from .logger import logger
 
 
 class IfcToCpmConverterBuilder:
@@ -40,14 +34,13 @@ class IfcToCpmConverterBuilder:
             if name == ifc_building.Name:
                 return ifc_building
 
-    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
+    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
             ifc_building=ifc_building,
             unit_scale=self.unit_scale,
             dimension=dimension,
             origin=origin,
-            round_function=round_function,
             close_wall_gap_metre=close_wall_gap_metre,
             min_wall_height_metre=min_wall_height_metre,
             wall_offset_tolerance_metre=wall_offset_tolerance_metre
@@ -55,18 +48,16 @@ class IfcToCpmConverterBuilder:
 
 
 class IfcToCpmConverter:
-    def __init__(self, ifc_building, unit_scale, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, round_function=None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
+    def __init__(self, ifc_building, unit_scale, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
+        # A list to store things that could not be parsed
+        self.unparsable_objects = []
+
         if origin is None:
             origin = (0, 0)
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
         self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
-
-        if round_function is not None:
-            self.round = round_function
-        else:
-            self.round = lambda x: round(x * 100) / 100
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
@@ -79,8 +70,12 @@ class IfcToCpmConverter:
         self._parse_storeys()
 
     def write(self, cpm_out_filepath):
+        logger.debug("Writing to file...")
         with open(cpm_out_filepath, "w") as f:
             f.write(self.crowd_environment.write())
+
+    def get_unparsable_objects(self) -> Tuple[any, str]:
+        return self.unparsable_objects
 
     def _parse_stairs(self):
         self.stairs = []
@@ -95,16 +90,16 @@ class IfcToCpmConverter:
                 except Exception as e:
                     logger.warning(f"Skipping stair parsing: error parsing stair {stair_in_storey.Name}: {e}")
                     logger.error(e, exc_info=True)
+                    self.unparsable_objects.append((stair_in_storey, str(e)))
 
     def _parse_storeys(self):
         for storey_id, storey in enumerate(self.storeys):
             elements = self._get_storey_elements(storey_id, storey)
             level = Level(index=storey_id, elements=elements)
             self.crowd_environment.add_level(level)
-            # return
 
     def _get_storey_elements(self, storey_id, storey):
-        print(f"Processing storey: {storey_id} {storey.Name}")
+        logger.debug(f"Processing storey: {storey_id} {storey.Name}")
         ifc_walls = self.walls_map[storey]
         building_elements = []
         for ifc_wall in ifc_walls:
@@ -114,21 +109,22 @@ class IfcToCpmConverter:
             except Exception as exc:
                 logger.warning(f"Skipped wall parsing: error parsing wall {ifc_wall.Name}: {exc}")
                 logger.error(exc, exc_info=True)
+                self.unparsable_objects.append((ifc_wall, str(exc)))
 
         tolerance = self.close_wall_gap_metre / self.unit_scale
 
         if tolerance > 0:
-            print("Glueing wall connections...")
+            logger.debug("Glueing wall connections...")
             building_elements = glue_connected_elements(elements=building_elements, tolerance=tolerance)
 
-        print("Decomposing wall openings...")
+        logger.debug("Decomposing wall openings...")
         building_elements = decompose_wall_with_openings(building_elements)
 
-        print("Splitting intersections...")
+        logger.debug("Splitting intersections...")
         building_elements = split_intersecting_elements(building_elements)
 
         if tolerance > 0:
-            print("Closing wall gaps...")
+            logger.debug("Closing wall gaps...")
             building_elements = close_wall_gaps(building_elements, tolerance=tolerance)
         building_elements = convert_disconnected_walls_into_barricades(building_elements)
         # building_elements += self._get_storey_void_barricade_elements(storey)
@@ -167,7 +163,7 @@ class IfcToCpmConverter:
         return walls
 
     def _get_wall_with_opening(self, ifc_wall, ifc_building_storey) -> WallWithOpening:
-        print("Inferring wall vertices for wall " + ifc_wall.Name)
+        logger.debug("Inferring wall vertices for wall " + ifc_wall.Name + "...")
         start_vertex, end_vertex = WallVertices.from_product(ifc_wall)
         start_vertex = truncate(start_vertex[0]), truncate(start_vertex[1])
         end_vertex = truncate(end_vertex[0]), truncate(end_vertex[1])
@@ -231,7 +227,7 @@ class IfcToCpmConverter:
             x2, y2 = truncate(x2), truncate(y2)
             opening_vertices.append(((x1, y1), (x2, y2)))
 
-        print("Finished inferring wall " + ifc_wall.Name)
+        logger.debug("    Finished")
 
         connected_to = [(x.RelatedElement.GlobalId, x.RelatingConnectionType) for x in ifc_wall.ConnectedTo]
         return WallWithOpening(object_id=ifc_wall.GlobalId, name=ifc_wall.Name, start_vertex=start_vertex, end_vertex=end_vertex, opening_vertices=opening_vertices, connected_to=connected_to)
