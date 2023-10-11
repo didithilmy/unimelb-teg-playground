@@ -8,6 +8,7 @@ import ifcopenshell.util.shape
 import ifcopenshell.util.representation
 from lib.utils import find_unbounded_lines_intersection, eucledian_distance, find, filter, get_composite_verts, get_oriented_xy_bounding_box, calculate_line_angle_relative_to_north, rotate_point_around_point, truncate
 from lib.ifctypes import StraightSingleRunStair
+from lib.stairs import StairsWithLandingBuilder
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.USE_WORLD_COORDS, True)
@@ -17,129 +18,15 @@ settings.set(settings.INCLUDE_CURVES, True)
 model = ifcopenshell.open("ifc/rac_advanced_sample_project.ifc")
 unit_scale = ifcopenshell.util.unit.calculate_unit_scale(model)
 
-
-def parse_stair(ifc_stair):
-    elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
-    stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
-
-    verts = get_composite_verts(ifc_stair)
-    bbox = get_oriented_xy_bounding_box(verts)
-    footprint_v1, footprint_v2, footprint_v3, footprint_v4 = bbox
-    edges = [
-        (footprint_v1, footprint_v2),
-        (footprint_v2, footprint_v3),
-        (footprint_v3, footprint_v4),
-        (footprint_v4, footprint_v1),
-    ]
-
-    run_edges = get_flights_run_edges(stair_flights)
-    run_edge = calculate_resultant_run_line(run_edges)
-
-    run_start_vertex, run_end_vertex = run_edge
-
-    edge1, edge2, edge3, edge4 = edges
-    edge1_int = find_unbounded_lines_intersection(run_edge, edge1)
-    edge2_int = find_unbounded_lines_intersection(run_edge, edge2)
-    edge3_int = find_unbounded_lines_intersection(run_edge, edge3)
-    edge4_int = find_unbounded_lines_intersection(run_edge, edge4)
-
-    edges_map = {
-        edge1: dict(edge=edge1, intersection=edge1_int, designation="WALL"),
-        edge2: dict(edge=edge2, intersection=edge2_int, designation="WALL"),
-        edge3: dict(edge=edge3, intersection=edge3_int, designation="WALL"),
-        edge4: dict(edge=edge4, intersection=edge4_int, designation="WALL"),
-    }
-
-    edges_with_intersection = filter(edges_map.values(), matcher=lambda x: x['intersection'] is not None)
-
-    closest_to_run_start = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_start_vertex))
-    closest_to_run_start['designation'] = "BOTTOM_GATE"
-    closest_to_run_end = min(edges_with_intersection, key=lambda x: eucledian_distance(x['intersection'], run_end_vertex))
-    closest_to_run_end['designation'] = "TOP_GATE"
-
-    lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')
-    side_walls = filter(edges_map.values(), lambda x: x['designation'] == 'WALL')
-
-    floor_span = 1
-
-    run_length = eucledian_distance(run_start_vertex, run_end_vertex)
-    run_length = truncate(run_length)
-    run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
-    staircase_width = eucledian_distance(lower_gate['edge'][0], lower_gate['edge'][1])
-    staircase_width = truncate(staircase_width)
-
-    # Staircase origin must be to the LEFT of the run axis.
-    origin_x, origin_y = determine_origin_vertex(lower_gate, run_rotation)
-    origin_x = truncate(origin_x)
-    origin_y = truncate(origin_y)
-
-    psets = ifcopenshell.util.element.get_psets(ifc_stair)
-    no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
-
-    print("Parsed stair", ifc_stair.Name)
-    print("    Origin:", (origin_x, origin_y))
-    print("    Run length:", run_length)
-    print("    Run angle:", run_rotation)
-    print("    Staircase width:", staircase_width)
-
-    return StraightSingleRunStair(
-        object_id=ifc_stair.GlobalId,
-        rotation=run_rotation,
-        vertex=(origin_x, origin_y),
-        staircase_width=staircase_width,
-        run_length=run_length,
-        no_of_treads=no_of_treads,
-        start_level_index=0,
-        end_level_index=1,
-    )
-
-
-def calculate_resultant_run_line(run_edges):
-    first_edge = run_edges[0]
-    last_edge = run_edges[-1]
-    v1 = first_edge[0]
-    v2 = last_edge[1]
-    return v1, v2
-
-
-def get_flights_run_edges(stair_flights):
-    run_edges = []
-
-    # TODO Need to ensure stair flights are sorted by elevation
-    for stair_flight in stair_flights:
-        axis_repr = ifcopenshell.util.representation.get_representation(stair_flight, "Model", "Axis")
-        assert axis_repr is not None, "There should be a Axis representation"
-
-        shape = ifcopenshell.geom.create_shape(settings, axis_repr)
-        run_edge = ifcopenshell.util.shape.get_vertices(shape)
-        run_edge = [(x[0], x[1]) for x in run_edge]
-        run_edges.append(run_edge)
-
-    return run_edges
-
-
-def determine_origin_vertex(lower_gate, run_rotation):
-    lv1, lv2 = lower_gate['edge']
-    intersection = lower_gate['intersection']
-
-    # Counter-rotate vertex around intersection
-    lv1_rotated_x, _ = rotate_point_around_point(intersection, lv1, -run_rotation)
-    lv2_rotated_x, _ = rotate_point_around_point(intersection, lv2, -run_rotation)
-
-    # Determine which one is the left one
-    if lv1_rotated_x < lv2_rotated_x:
-        return lv1
-
-    return lv2
-
+ifc_building = model.by_type("IfcBuilding")[0]
 
 for storey in model.by_type("IfcBuildingStorey"):
     print(storey.Name)
     elements = ifcopenshell.util.element.get_decomposition(storey)
-    stairs = [x for x in elements if x.is_a("IfcStair") and '172987' in x.Name]
-    for stair in stairs:
-        s: StraightSingleRunStair = parse_stair(stair)
-        print("    Lower gate vertex:", s.lower_gate)
-        print("    Upper gate vertex:", s.upper_gate)
-        print("    First wall vertex:", s.first_wall)
-        print("    Second wall vertex:", s.second_wall)
+    stairs = [x for x in elements if x.is_a("IfcStair") and '173290' in x.Name]
+    for ifc_stair in stairs:
+        stair = StairsWithLandingBuilder(ifc_building, start_level_index=0, ifc_stair=ifc_stair).build()
+        print("Pivot:", stair.vertex)
+        print("Run length:", stair.run_length)
+        print("Run width:", stair.staircase_width)
+        print("Run rotation:", stair.rotation)

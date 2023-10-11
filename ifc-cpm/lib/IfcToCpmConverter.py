@@ -5,6 +5,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 from skspatial.objects import Line
+import math
 from .cpm_writer import CrowdSimulationEnvironment, Level
 from .representation_helpers import WallVertices
 from .preprocessors import convert_disconnected_walls_into_barricades, split_intersecting_elements, decompose_wall_with_openings, glue_connected_elements, close_wall_gaps
@@ -57,7 +58,7 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x, ndigits=3))
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: math.floor(self.unit_scale * x * 1000) / 1000)
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
@@ -149,9 +150,14 @@ class IfcToCpmConverter:
 
         for stair in stairs_voiding_storey:
             # Do NOT draw if there an element that occupies the same space
-            for wall_edge in stair.intermediate_perimeter_walls:
-                if wall_edge not in stairs_edges:
-                    walls += [Wall(start_vertex=wall_edge[0], end_vertex=wall_edge[1])]
+            if storey_id < stair.end_level_index:
+                for wall_edge in stair.intermediate_perimeter_walls:
+                    if wall_edge not in stairs_edges:
+                        walls += [Wall(name=f"stairs-intermediate:{stair.name}", start_vertex=wall_edge[0], end_vertex=wall_edge[1])]
+            else:
+                for wall_edge in stair.upper_perimeter_walls:
+                    if wall_edge not in stairs_edges:
+                        walls += [Wall(name=f"stairs-upper:{stair.name}", start_vertex=wall_edge[0], end_vertex=wall_edge[1])]
 
         return walls
 

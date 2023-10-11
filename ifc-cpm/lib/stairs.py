@@ -75,10 +75,10 @@ class StairParser:
             stair = StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
             if stair:
                 return stair
-        # elif stair_type == StairType.U_TURN_WITH_LANDING:
-        #     stair = DoubleRunStairWithLandingBuilder(ifc_building, start_level_index, ifc_stair).build()
-        #     if stair:
-        #         return stair
+        elif stair_type == StairType.U_TURN_WITH_LANDING:
+            stair = DoubleRunStairWithLandingBuilder(ifc_building, start_level_index, ifc_stair).build()
+            if stair:
+                return stair
 
         if not stair_type:
             raise NotImplementedError(f"Cannot infer stair type from IfcProduct")

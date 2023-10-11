@@ -220,7 +220,7 @@ class CrowdSimulationEnvironment:
             "spanFloors": stair.end_level_index - stair.start_level_index,
             "length": self.unit_scaler(stair.run_length / 2),  # Run length
             "width": self.unit_scaler(stair.staircase_width / 2),  # Staircase width
-            "widthLanding": self.unit_scaler(stair.staircase_width / 2),
+            "widthLanding": self.unit_scaler(stair.run_length / 2),
             "stands": int(stair.no_of_treads),
             "rotation": stair.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
             "type": 2,  # Read from enum
