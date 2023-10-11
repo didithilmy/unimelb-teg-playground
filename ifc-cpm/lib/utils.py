@@ -151,6 +151,25 @@ def calculate_line_angle_relative_to_north(vertex1, vertex2):
     return angle_deg
 
 
+def smallest_angle_difference(ref_angle, second_angle):
+    ref_angle = ref_angle % 360
+    second_angle = second_angle % 360
+    phi = abs(ref_angle - second_angle) % 360
+    sign = 1
+    # used to calculate sign
+    if not (
+        (second_angle - ref_angle >= 0 and second_angle - ref_angle <= 180)
+        or (second_angle - ref_angle <= -180 and second_angle - ref_angle >= -360)
+    ):
+        sign = -1
+    if phi > 180:
+        result = 360 - phi
+    else:
+        result = phi
+
+    return result * sign
+
+
 def rotate_point_around_origin(x, y, angle_degrees):
     # Convert the angle from degrees to radians
     angle_radians = math.radians(angle_degrees)

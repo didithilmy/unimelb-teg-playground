@@ -5,7 +5,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.element
 import ifcopenshell.util.unit
 import ifcopenshell.util.shape
-from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, get_oriented_xy_bounding_box, get_composite_verts, truncate
+from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, get_oriented_xy_bounding_box, get_composite_verts, smallest_angle_difference
 from .ifctypes import StraightSingleRunStair, DoubleRunStairWithLanding
 
 settings = ifcopenshell.geom.settings()
@@ -110,7 +110,9 @@ class StairParser:
         angle1 = calculate_line_angle_relative_to_north(*(run_edges[0]))
         angle2 = calculate_line_angle_relative_to_north(*resultant)
 
-        return abs(angle1 - angle2) < 10  # Maximum to be considered straight is 10 degrees. TODO configure
+        angle_diff = abs(smallest_angle_difference(angle1, angle2))
+
+        return angle_diff< 10  # Maximum to be considered straight is 10 degrees. TODO configure
 
     @staticmethod
     def _is_stair_u_turns(ifc_stair) -> bool:
@@ -121,7 +123,8 @@ class StairParser:
         angle1 = calculate_line_angle_relative_to_north(*(run_edges[0]))
         angle2 = calculate_line_angle_relative_to_north(*resultant)
 
-        return 85 < abs(angle1 - angle2) < 95  # Maximum to be considered straight is 10 degrees. TODO configure
+        angle_diff = abs(smallest_angle_difference(angle1, angle2))
+        return 85 < angle_diff < 95
 
 
 class StraightSingleRunStairBuilder:
@@ -237,14 +240,10 @@ class DoubleRunStairWithLandingBuilder:
 
         angle1 = calculate_line_angle_relative_to_north(*first_run_edge)
         angle2 = calculate_line_angle_relative_to_north(*resultant_run_edge)
-        angle_between_resultant_and_first_run = angle2 - angle1
+        angle_between_resultant_and_first_run = smallest_angle_difference(angle1, angle2)
         is_clockwise = angle_between_resultant_and_first_run >= 0
         pivot, staircase_width, run_length = self._calculate_pivot_point(edges, first_run_edge, is_clockwise)
         run_angle = self._calculate_run_angle(first_run_edge, is_clockwise)
-
-        # Divide these by 2 per the requirements of the simulation software
-        # staircase_width = staircase_width / 2
-        # run_length = run_length / 2
 
         psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
         no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
