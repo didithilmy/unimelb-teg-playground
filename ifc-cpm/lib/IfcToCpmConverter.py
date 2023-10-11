@@ -57,7 +57,7 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x * 1000) / 1000)
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(self.unit_scale * x, ndigits=3))
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
@@ -139,26 +139,19 @@ class IfcToCpmConverter:
 
         stairs_edges = set()
         for stair in stairs_departing_in_storey:
+            for wall_edge in stair.lower_perimeter_walls:
+                stairs_edges.add(wall_edge)
             stairs_edges.add(stair.lower_gate)
-            stairs_edges.add(stair.first_wall)
-            stairs_edges.add(stair.second_wall)
-            stairs_edges.add(stair.upper_gate)
+
         for stair in stairs_arriving_in_storey:
+            # When stairs are arriving in the storey, the simulation software only provides the gate, not the wall.
             stairs_edges.add(stair.upper_gate)
 
         for stair in stairs_voiding_storey:
             # Do NOT draw if there an element that occupies the same space
-            if stair.lower_gate not in stairs_edges:
-                walls += [Wall(start_vertex=stair.lower_gate[0], end_vertex=stair.lower_gate[1])]
-
-            if stair.first_wall not in stairs_edges:
-                walls += [Wall(start_vertex=stair.first_wall[0], end_vertex=stair.first_wall[1])]
-
-            if stair.second_wall not in stairs_edges:
-                walls += [Wall(start_vertex=stair.second_wall[0], end_vertex=stair.second_wall[1])]
-
-            if stair.upper_gate not in stairs_edges:
-                walls += [Wall(start_vertex=stair.upper_gate[0], end_vertex=stair.upper_gate[1])]
+            for wall_edge in stair.intermediate_perimeter_walls:
+                if wall_edge not in stairs_edges:
+                    walls += [Wall(start_vertex=wall_edge[0], end_vertex=wall_edge[1])]
 
         return walls
 

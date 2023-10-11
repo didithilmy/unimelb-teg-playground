@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 import math
 import copy
 import numpy as np
@@ -103,21 +103,133 @@ class StraightSingleRunStair(BuildingElement):
         return ((x1, y1), (x2, y2))
 
     @property
-    def first_wall(self):
+    def lower_perimeter_walls(self):
         x0, y0 = self.vertex
-        x1, y1 = (x0, y0)
-        x2, y2 = (x0, y0 + self.run_length)
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0 + self.run_length), (x0 + self.staircase_width, y0 + self.run_length))  # Top perimeter wall
+        ]
 
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
+
+    @property
+    def intermediate_perimeter_walls(self):
+        x0, y0 = self.vertex
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0 + self.run_length), (x0 + self.staircase_width, y0 + self.run_length)),  # Top perimeter wall
+            ((x0, y0), (x0 + self.staircase_width, y0))  # Bottom perimeter wall
+        ]
+
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
+
+    @property
+    def upper_perimeter_walls(self):
+        x0, y0 = self.vertex
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0), (x0 + self.staircase_width, y0))  # Bottom perimeter wall
+        ]
+
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
+
+
+class DoubleRunStairWithLanding(BuildingElement):
+    __type__ = "DoubleRunStairWithLanding"
+
+    def __init__(self, *args, vertex, rotation, run_length, staircase_width, start_level_index, end_level_index, **kwargs):
+        super().__init__(*args, **kwargs, type="DoubleRunStairWithLanding")
+
+        self.vertex = vertex
+        self.start_level_index = start_level_index
+        self.end_level_index = end_level_index
+        self.rotation = rotation
+        self.run_length = run_length
+        self.staircase_width = staircase_width
+
+    @property
+    def lower_gate(self):
+        x0, y0 = self.vertex
+        x1, y1 = (x0 + self.staircase_width / 2), (y0 + self.run_length)
+        x2, y2 = (x1 + self.staircase_width / 2, y1)
         x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
         x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
 
     @property
-    def second_wall(self):
+    def upper_gate(self):
         x0, y0 = self.vertex
-        x1, y1 = (x0 + self.staircase_width, y0)
-        x2, y2 = (x0 + self.staircase_width, y0 + self.run_length)
-
+        x1, y1 = (x0), (y0 + self.run_length)
+        x2, y2 = (x1 + self.staircase_width / 2, y1)
         x1, y1 = rotate_point_around_point(self.vertex, (x1, y1), self.rotation)
         x2, y2 = rotate_point_around_point(self.vertex, (x2, y2), self.rotation)
         return ((x1, y1), (x2, y2))
+
+    @property
+    def lower_perimeter_walls(self) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+        x0, y0 = self.vertex
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0), (x0 + self.staircase_width, y0)),  # Bottom enclosing wall
+            ((x0, y0 + self.run_length), (x0 + self.staircase_width / 2, y0 + self.run_length))  # Top enclosing wall (near upper gate)
+        ]
+
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
+
+    @property
+    def intermediate_perimeter_walls(self) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+        x0, y0 = self.vertex
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0), (x0 + self.staircase_width, y0)),  # Bottom enclosing wall
+            ((x0, y0 + self.run_length), (x0 + self.staircase_width, y0 + self.run_length))  # Top enclosing wall
+        ]
+
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
+
+    @property
+    def upper_perimeter_walls(self) -> List[Tuple[Tuple[float, float], Tuple[float, float]]]:
+        x0, y0 = self.vertex
+        edges = [
+            ((x0, y0), (x0, y0 + self.run_length)),  # Left enclosing wall
+            ((x0 + self.staircase_width, y0), (x0 + self.staircase_width, y0 + self.run_length)),  # Right enclosing wall
+            ((x0, y0), (x0 + self.staircase_width, y0)),  # Bottom enclosing wall
+            ((x0 + self.staircase_width / 2, y0 + self.run_length), (x0 + self.staircase_width, y0 + self.run_length))  # Top enclosing wall (near upper gate)
+        ]
+
+        out_edges = []
+        for v1, v2 in edges:
+            v1 = rotate_point_around_point(self.vertex, v1, self.rotation)
+            v2 = rotate_point_around_point(self.vertex, v2, self.rotation)
+            out_edges.append((v1, v2))
+        return out_edges
