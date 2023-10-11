@@ -155,7 +155,7 @@ class StraightSingleRunStair(BuildingElement):
 class DoubleRunStairWithLanding(BuildingElement):
     __type__ = "DoubleRunStairWithLanding"
 
-    def __init__(self, *args, vertex, rotation, run_length, staircase_width, start_level_index, end_level_index, **kwargs):
+    def __init__(self, *args, vertex, rotation, run_length, staircase_width, no_of_treads, start_level_index, end_level_index, **kwargs):
         super().__init__(*args, **kwargs, type="DoubleRunStairWithLanding")
 
         self.vertex = vertex
@@ -164,6 +164,9 @@ class DoubleRunStairWithLanding(BuildingElement):
         self.rotation = rotation
         self.run_length = run_length
         self.staircase_width = staircase_width
+        self.no_of_treads = no_of_treads
+        if no_of_treads is None:
+            self.no_of_treads = math.ceil(run_length)
 
     @property
     def lower_gate(self):

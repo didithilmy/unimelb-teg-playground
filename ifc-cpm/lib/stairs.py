@@ -6,7 +6,7 @@ import ifcopenshell.util.element
 import ifcopenshell.util.unit
 import ifcopenshell.util.shape
 from .utils import find, filter, find_unbounded_lines_intersection, eucledian_distance, calculate_line_angle_relative_to_north, get_sorted_building_storeys, rotate_point_around_point, get_oriented_xy_bounding_box, get_composite_verts, truncate
-from .ifctypes import StraightSingleRunStair
+from .ifctypes import StraightSingleRunStair, DoubleRunStairWithLanding
 
 settings = ifcopenshell.geom.settings()
 settings.set(settings.CONVERT_BACK_UNITS, True)
@@ -64,7 +64,7 @@ def _determine_stair_floor_span(ifc_building, ifc_stair) -> int:
 
 class StairType(Enum):
     STRAIGHT_SINGLE_RUN = 1
-    U_WITH_LANDING = 2
+    U_TURN_WITH_LANDING = 2
 
 
 class StairParser:
@@ -75,6 +75,10 @@ class StairParser:
             stair = StraightSingleRunStairBuilder(ifc_building, start_level_index, ifc_stair).build()
             if stair:
                 return stair
+        # elif stair_type == StairType.U_TURN_WITH_LANDING:
+        #     stair = DoubleRunStairWithLandingBuilder(ifc_building, start_level_index, ifc_stair).build()
+        #     if stair:
+        #         return stair
 
         if not stair_type:
             raise NotImplementedError(f"Cannot infer stair type from IfcProduct")
@@ -94,6 +98,8 @@ class StairParser:
             # TODO differentiate between U and straight
             if StairParser._is_stair_straight(ifc_stair):
                 return StairType.STRAIGHT_SINGLE_RUN
+            if StairParser._is_stair_u_turns(ifc_stair):
+                return StairType.U_TURN_WITH_LANDING
 
     @staticmethod
     def _is_stair_straight(ifc_stair) -> bool:
@@ -105,6 +111,17 @@ class StairParser:
         angle2 = calculate_line_angle_relative_to_north(*resultant)
 
         return abs(angle1 - angle2) < 10  # Maximum to be considered straight is 10 degrees. TODO configure
+
+    @staticmethod
+    def _is_stair_u_turns(ifc_stair) -> bool:
+        elements = ifcopenshell.util.element.get_decomposition(ifc_stair)
+        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+        run_edges = _get_flights_run_edges(stair_flights)
+        resultant = _calculate_resultant_run_line(run_edges=run_edges)
+        angle1 = calculate_line_angle_relative_to_north(*(run_edges[0]))
+        angle2 = calculate_line_angle_relative_to_north(*resultant)
+
+        return 85 < abs(angle1 - angle2) < 95  # Maximum to be considered straight is 10 degrees. TODO configure
 
 
 class StraightSingleRunStairBuilder:
@@ -169,6 +186,7 @@ class StraightSingleRunStairBuilder:
 
         return StraightSingleRunStair(
             object_id=self.ifc_stair.GlobalId,
+            name=self.ifc_stair.Name,
             rotation=run_rotation,
             vertex=(origin_x, origin_y),
             staircase_width=staircase_width,
@@ -193,7 +211,7 @@ class StraightSingleRunStairBuilder:
         return lv2
 
 
-class StairsWithLandingBuilder:
+class DoubleRunStairWithLandingBuilder:
     def __init__(self, ifc_building, start_level_index, ifc_stair):
         self.ifc_building = ifc_building
         self.start_level_index = start_level_index
@@ -221,12 +239,38 @@ class StairsWithLandingBuilder:
         angle2 = calculate_line_angle_relative_to_north(*resultant_run_edge)
         angle_between_resultant_and_first_run = angle2 - angle1
         is_clockwise = angle_between_resultant_and_first_run >= 0
-        pivot = self._calculate_pivot_point(edges, first_run_edge, is_clockwise)
+        pivot, staircase_width, run_length = self._calculate_pivot_point(edges, first_run_edge, is_clockwise)
         run_angle = self._calculate_run_angle(first_run_edge, is_clockwise)
+
+        # Divide these by 2 per the requirements of the simulation software
+        # staircase_width = staircase_width / 2
+        # run_length = run_length / 2
+
+        psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
+        no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
+
+        floor_span = _determine_stair_floor_span(self.ifc_building, self.ifc_stair)
+
+        return DoubleRunStairWithLanding(
+            object_id=self.ifc_stair.GlobalId,
+            name=self.ifc_stair.Name,
+            rotation=run_angle,
+            vertex=pivot,
+            staircase_width=staircase_width,
+            run_length=run_length,
+            no_of_treads=no_of_treads,
+            start_level_index=self.start_level_index,
+            end_level_index=self.start_level_index + floor_span,
+        )
 
     def _calculate_pivot_point(self, footprint_edges, first_run_edge, is_clockwise):
         edges_intersections = [find_unbounded_lines_intersection(e, first_run_edge) for e in footprint_edges]
-        closest_to_run_end, closest_to_run_end_intersection = min(zip(footprint_edges, edges_intersections), key=lambda edge, intersection: eucledian_distance(intersection, first_run_edge[1]))
+
+        def calc_distance_from_run_end_to_intersection(edge_and_intersection):
+            edge, intersection = edge_and_intersection
+            return eucledian_distance(intersection, first_run_edge[1]) if intersection else float('inf')
+
+        closest_to_run_end, closest_to_run_end_intersection = min(zip(footprint_edges, edges_intersections), key=calc_distance_from_run_end_to_intersection)
         candidate_points = list(closest_to_run_end)
         if is_clockwise:
             # Farthest to the run end intersection
@@ -235,8 +279,14 @@ class StairsWithLandingBuilder:
             # Closest to the run end intersection
             pivot = min(candidate_points, key=lambda v: eucledian_distance(v, closest_to_run_end_intersection))
 
-        return pivot
+        staircase_width = eucledian_distance(*closest_to_run_end)
+
+        # If the wall is perfectly parallel, distance would be infinity. Otherwise, the wall with greatest intersection distance is likely to be the side wall
+        farthest_to_run_end, _ = max(zip(footprint_edges, edges_intersections), key=calc_distance_from_run_end_to_intersection)
+        side_wall = farthest_to_run_end
+        run_length = eucledian_distance(*side_wall)
+        return pivot, staircase_width, run_length
 
     def _calculate_run_angle(self, first_run_edge, is_clockwise):
-        run_edge_angle = calculate_line_angle_relative_to_north(*first_run_edge)
-        return (-run_edge_angle + 360) % 360
+        run_edge_angle = int(round(calculate_line_angle_relative_to_north(*first_run_edge)))
+        return (run_edge_angle + 180 + 360) % 360

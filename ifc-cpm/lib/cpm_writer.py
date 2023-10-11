@@ -2,7 +2,7 @@ from typing import List, Tuple
 import math
 from collections import defaultdict
 import xmltodict
-from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair
+from .ifctypes import BuildingElement, Wall, Gate, Barricade, StraightSingleRunStair, DoubleRunStairWithLanding
 from .utils import filter, truncate
 
 
@@ -43,7 +43,8 @@ class CrowdSimulationEnvironment:
     def write(self):
         self.map_bounds = self._get_map_bounds()
         levels = [self._get_level(x) for x in self.levels if len(x.elements) > 0]
-        stairs = [self._create_straight_single_run_stair_json(s) for s in self.stairs]
+        stairs = [self._create_stair_json(s) for s in self.stairs]
+        stairs = [s for s in stairs if s is not None]
         data = {
             "Model": {
                 "@xmlns:xsd": "http://www.w3.org/2001/XMLSchema",
@@ -142,6 +143,12 @@ class CrowdSimulationEnvironment:
             },
         }
 
+    def _create_stair_json(self, stair):
+        if stair.__type__ == 'StraightSingleRunStair':
+            return self._create_straight_single_run_stair_json(stair)
+        elif stair.__type__ == 'DoubleRunStairWithLanding':
+            return self._create_double_run_with_landing_stair_json(stair)
+
     def _create_straight_single_run_stair_json(self, stair: StraightSingleRunStair):
         stair_id = self._get_id()
         stair_vertex = self._normalize_vertex(stair.vertex)
@@ -182,6 +189,65 @@ class CrowdSimulationEnvironment:
                 "gate": {
                     "id": self._get_id(),
                     "length": self.unit_scaler(stair.staircase_width),  # should be the same as width, if stair is STRAIGHT
+                    "angle": 90,  # TODO find out what
+                    "destination": False,  # let the software figure out I suppose
+                    "counter": False,  # TODO find out what
+                    "transparent": False,
+                    "designatedOnly": False,
+                    "vertices": {
+                        "Vertex": [
+                            self._get_vertex(self._normalize_vertex(stair.lower_gate[0])),
+                            self._get_vertex(self._normalize_vertex(stair.lower_gate[1])),
+                        ]
+                    }
+                }
+            },
+            "walls": {
+                "Wall": [
+                ]
+            }
+        }
+
+    def _create_double_run_with_landing_stair_json(self, stair: DoubleRunStairWithLanding):
+        stair_id = self._get_id()
+        stair_vertex = self._normalize_vertex(stair.vertex)
+
+        return {
+            "id": stair_id,
+            "x": stair_vertex[0],  # X coordinate of first lower vertex
+            "y": stair_vertex[1],  # Y coordinate of first lower vertex
+            "speed": -1,  # TODO figure out what
+            "spanFloors": stair.end_level_index - stair.start_level_index,
+            "length": self.unit_scaler(stair.run_length / 2),  # Run length
+            "width": self.unit_scaler(stair.staircase_width / 2),  # Staircase width
+            "widthLanding": self.unit_scaler(stair.staircase_width / 2),
+            "stands": int(stair.no_of_treads),
+            "rotation": stair.rotation,  # Can be inferred from rotation matrix or axis. 0 means facing north
+            "type": 2,  # Read from enum
+            "direction": 0,
+            "upper": {
+                "level": stair.end_level_index,
+                "gate": {
+                        "id": self._get_id(),
+                        "length": self.unit_scaler(stair.staircase_width / 2),  # should be the same as width, if stair is STRAIGHT
+                        "angle": 90,  # TODO find out what
+                        "destination": False,  # let the software figure out I suppose
+                        "counter": False,  # TODO find out what
+                        "transparent": False,
+                        "designatedOnly": False,
+                        "vertices": {
+                            "Vertex": [
+                                self._get_vertex(self._normalize_vertex(stair.upper_gate[0])),
+                                self._get_vertex(self._normalize_vertex(stair.upper_gate[1])),
+                            ]
+                        }
+                }
+            },
+            "lower": {
+                "level": stair.start_level_index,
+                "gate": {
+                    "id": self._get_id(),
+                    "length": self.unit_scaler(stair.staircase_width / 2),  # should be the same as width, if stair is STRAIGHT
                     "angle": 90,  # TODO find out what
                     "destination": False,  # let the software figure out I suppose
                     "counter": False,  # TODO find out what
