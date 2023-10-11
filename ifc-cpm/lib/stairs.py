@@ -38,6 +38,30 @@ def _get_flights_run_edges(stair_flights):
     return run_edges
 
 
+def _determine_stair_floor_span(ifc_building, ifc_stair) -> int:
+    # return 1 # FIXME remove
+    storey = ifcopenshell.util.element.get_container(ifc_stair, "IfcBuildingStorey")
+    building_storeys = get_sorted_building_storeys(ifc_building)
+
+    psets = ifcopenshell.util.element.get_psets(ifc_stair)
+    pset_stair = psets['Pset_StairCommon']
+    run_height = pset_stair.get("NumberOfRiser", 1) * pset_stair.get("RiserHeight", 1)
+
+    starting_elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
+    ending_elevation = starting_elevation + run_height
+
+    # Sometimes the staircase and floor elevation is slightly different due to rounding error.
+    tolerance = 0.1 * run_height
+
+    def is_storey_voided_by_stair(ifc_storey):
+        elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_storey)
+        return elevation >= starting_elevation - tolerance and elevation <= ending_elevation + tolerance
+
+    storeys_in_stair = filter(building_storeys, matcher=is_storey_voided_by_stair)
+
+    return len(storeys_in_stair) - 1
+
+
 class StairType(Enum):
     STRAIGHT_SINGLE_RUN = 1
     U_WITH_LANDING = 2
@@ -131,7 +155,7 @@ class StraightSingleRunStairBuilder:
         lower_gate = find(edges_map.values(), lambda x: x['designation'] == 'BOTTOM_GATE')
         side_walls = filter(edges_map.values(), lambda x: x['designation'] == 'WALL')
 
-        floor_span = self._determine_straight_run_stair_floor_span(self.ifc_stair)
+        floor_span = _determine_stair_floor_span(self.ifc_building, self.ifc_stair)
 
         run_length = eucledian_distance(run_start_vertex, run_end_vertex)
         run_rotation = int(round(calculate_line_angle_relative_to_north(run_start_vertex, run_end_vertex)))
@@ -154,29 +178,6 @@ class StraightSingleRunStairBuilder:
             end_level_index=self.start_level_index + floor_span,
         )
 
-    def _determine_straight_run_stair_floor_span(self, ifc_stair) -> int:
-        # return 1 # FIXME remove
-        storey = ifcopenshell.util.element.get_container(ifc_stair, "IfcBuildingStorey")
-        building_storeys = get_sorted_building_storeys(self.ifc_building)
-
-        psets = ifcopenshell.util.element.get_psets(ifc_stair)
-        pset_stair = psets['Pset_StairCommon']
-        run_height = pset_stair.get("NumberOfRiser", 1) * pset_stair.get("RiserHeight", 1)
-
-        starting_elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
-        ending_elevation = starting_elevation + run_height
-
-        # Sometimes the staircase and floor elevation is slightly different due to rounding error.
-        tolerance = 0.1 * run_height
-
-        def is_storey_voided_by_stair(ifc_storey):
-            elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_storey)
-            return elevation >= starting_elevation - tolerance and elevation <= ending_elevation + tolerance
-
-        storeys_in_stair = filter(building_storeys, matcher=is_storey_voided_by_stair)
-
-        return len(storeys_in_stair) - 1
-
     def _determine_origin_vertex(self, lower_gate, run_rotation):
         lv1, lv2 = lower_gate['edge']
         intersection = lower_gate['intersection']
@@ -190,3 +191,52 @@ class StraightSingleRunStairBuilder:
             return lv1
 
         return lv2
+
+
+class StairsWithLandingBuilder:
+    def __init__(self, ifc_building, start_level_index, ifc_stair):
+        self.ifc_building = ifc_building
+        self.start_level_index = start_level_index
+        self.ifc_stair = ifc_stair
+
+    def build(self):
+        elements = ifcopenshell.util.element.get_decomposition(self.ifc_stair)
+        stair_flights = filter(elements, lambda x: x.is_a("IfcStairFlight"))
+
+        verts = get_composite_verts(self.ifc_stair)
+        bbox = get_oriented_xy_bounding_box(verts)
+        footprint_v1, footprint_v2, footprint_v3, footprint_v4 = bbox
+        edges = [
+            (footprint_v1, footprint_v2),
+            (footprint_v2, footprint_v3),
+            (footprint_v3, footprint_v4),
+            (footprint_v4, footprint_v1),
+        ]
+
+        run_edges = _get_flights_run_edges(stair_flights)
+        resultant_run_edge = _calculate_resultant_run_line(run_edges)
+        first_run_edge = run_edges[0]
+
+        angle1 = calculate_line_angle_relative_to_north(*first_run_edge)
+        angle2 = calculate_line_angle_relative_to_north(*resultant_run_edge)
+        angle_between_resultant_and_first_run = angle2 - angle1
+        is_clockwise = angle_between_resultant_and_first_run >= 0
+        pivot = self._calculate_pivot_point(edges, first_run_edge, is_clockwise)
+        run_angle = self._calculate_run_angle(first_run_edge, is_clockwise)
+
+    def _calculate_pivot_point(self, footprint_edges, first_run_edge, is_clockwise):
+        edges_intersections = [find_unbounded_lines_intersection(e, first_run_edge) for e in footprint_edges]
+        closest_to_run_end, closest_to_run_end_intersection = min(zip(footprint_edges, edges_intersections), key=lambda edge, intersection: eucledian_distance(intersection, first_run_edge[1]))
+        candidate_points = list(closest_to_run_end)
+        if is_clockwise:
+            # Farthest to the run end intersection
+            pivot = max(candidate_points, key=lambda v: eucledian_distance(v, closest_to_run_end_intersection))
+        else:
+            # Closest to the run end intersection
+            pivot = min(candidate_points, key=lambda v: eucledian_distance(v, closest_to_run_end_intersection))
+
+        return pivot
+
+    def _calculate_run_angle(self, first_run_edge, is_clockwise):
+        run_edge_angle = calculate_line_angle_relative_to_north(*first_run_edge)
+        return (-run_edge_angle + 360) % 360
