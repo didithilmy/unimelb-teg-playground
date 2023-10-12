@@ -224,6 +224,8 @@ def decompose_wall_with_openings(elements: List[BuildingElement]) -> List[Buildi
 
 def _find_first_intersection(target_element: BuildingElement, other_elements: List[BuildingElement]) -> Tuple[float, float]:
     for other_element in other_elements:
+        if target_element == other_element:
+            continue
         target_line = target_element.start_vertex, target_element.end_vertex
         other_line = other_element.start_vertex, other_element.end_vertex
         intersection = find_lines_intersection(target_line, other_line)

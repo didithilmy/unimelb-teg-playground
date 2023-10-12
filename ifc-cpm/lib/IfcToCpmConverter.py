@@ -58,14 +58,14 @@ class IfcToCpmConverter:
 
         self.ifc_building = ifc_building
         self.unit_scale = unit_scale
-        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: math.floor(self.unit_scale * x * 1000) / 1000)
+        self.crowd_environment = CrowdSimulationEnvironment(offset=origin, dimension=dimension, unit_scaler=lambda x: round(x * 1000) / 1000)
 
         self.close_wall_gap_metre = close_wall_gap_metre
         self.storeys = get_sorted_building_storeys(ifc_building)
 
-        min_wall_height = min_wall_height_metre / self.unit_scale  # Minimum wall height to be considered as a wall
-        wall_offset_tolerance = wall_offset_tolerance_metre / self.unit_scale  # Maximum gap between the wall and level to be considered as a wall
-        self.walls_map = get_walls_by_storey(ifc_building, min_wall_height=min_wall_height, wall_offset_tolerance=wall_offset_tolerance)
+        min_wall_height = min_wall_height_metre  # Minimum wall height to be considered as a wall
+        wall_offset_tolerance = wall_offset_tolerance_metre  # Maximum gap between the wall and level to be considered as a wall
+        self.walls_map = get_walls_by_storey(ifc_building, min_wall_height=min_wall_height, wall_offset_tolerance=wall_offset_tolerance, unit_scale=self.unit_scale)
 
         self._parse_stairs()
         self._parse_storeys()
@@ -112,7 +112,7 @@ class IfcToCpmConverter:
                 logger.error(exc, exc_info=True)
                 self.unparsable_objects.append((ifc_wall, str(exc)))
 
-        tolerance = self.close_wall_gap_metre / self.unit_scale
+        tolerance = self.close_wall_gap_metre  # / self.unit_scale
 
         if tolerance > 0:
             logger.debug("Glueing wall connections...")
@@ -168,8 +168,8 @@ class IfcToCpmConverter:
         end_vertex = truncate(end_vertex[0]), truncate(end_vertex[1])
 
         opening_geometries = []
-        elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_building_storey)
-        tolerance = 0.02 / self.unit_scale  # Tolerance is 2cm
+        elevation = ifcopenshell.util.placement.get_storey_elevation(ifc_building_storey) * self.unit_scale
+        tolerance = 0.02  # / self.unit_scale  # Tolerance is 2cm
 
         # Parse openings
         openings = ifc_wall.HasOpenings
