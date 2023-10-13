@@ -36,7 +36,7 @@ class IfcToCpmConverterBuilder:
             if name == ifc_building.Name:
                 return ifc_building
 
-    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, close_wall_gap_metre=0, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
+    def build(self, building_name: str = None, dimension: Tuple[int, int] = None, origin: Tuple[int, int] = None, close_wall_gap_metre=0.2, min_wall_height_metre=0.5, wall_offset_tolerance_metre=0.1):
         ifc_building = self.get_ifc_building(building_name)
         return IfcToCpmConverter(
             ifc_building=ifc_building,
