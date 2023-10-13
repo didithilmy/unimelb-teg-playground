@@ -30,11 +30,24 @@ class WallVertices:
     def infer(representations):
         for repr in representations:
             if repr.RepresentationIdentifier == "Axis":
+                if WallVertices.is_wall_axis_curved(repr):
+                    raise NotImplementedError("Curved walls are not yet supported")
+
                 shape = ifcopenshell.geom.create_shape(settings, repr)
-                vertex = ifcopenshell.util.shape.get_vertices(shape)
-                vertex = [(x[0], x[1]) for x in vertex]
+                vertices = ifcopenshell.util.shape.get_vertices(shape)
+                vertices = [(x[0], x[1]) for x in vertices]
+                return vertices
 
         raise Exception("Cannot infer wall vertices")
+
+    @staticmethod
+    def is_wall_axis_curved(axis_repr):
+        for item in axis_repr.Items:
+            if item.is_a("IfcTrimmedCurve"):
+                if item.BasisCurve.is_a("IfcCurve"):
+                    return True
+
+        return False
 
 
 class VoidVertices:
