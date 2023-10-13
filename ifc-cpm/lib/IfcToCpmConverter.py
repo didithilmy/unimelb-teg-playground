@@ -15,6 +15,7 @@ from .stairs import StairParser
 from .utils import filter, get_sorted_building_storeys, truncate, get_oriented_xy_bounding_box, get_edge_from_bounding_box
 from .geom_settings import settings
 from .logger import logger
+from .unparsable import get_unparsable_elements
 
 
 class IfcToCpmConverterBuilder:
@@ -69,6 +70,7 @@ class IfcToCpmConverter:
 
         self._parse_stairs()
         self._parse_storeys()
+        self.unparsable_objects += get_unparsable_elements(self.ifc_building)
 
     def write(self, cpm_out_filepath):
         logger.debug("Writing to file...")
