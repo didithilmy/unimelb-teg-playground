@@ -14,3 +14,4 @@ def get_unparsable_elements(ifc_building) -> List[Any]:
     for element in elements:
         if element.is_a("IfcTransportElement"):  # Escalators, elevators, travelators
             unparsable_elements.append((element, "Element is not yet supported"))
+    return unparsable_elements
