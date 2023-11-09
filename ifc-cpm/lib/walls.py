@@ -7,13 +7,13 @@ from .utils import filter, get_composite_verts, get_sorted_building_storeys
 from .logger import logger
 
 
-def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance):
+def get_walls_by_storey(ifc_building, min_wall_height, wall_offset_tolerance, unit_scale):
     walls_map = dict()
     ifc_walls = get_all_walls(ifc_building)
 
     sorted_storeys = get_sorted_building_storeys(ifc_building)
     for i, storey in enumerate(sorted_storeys):
-        elevation = ifcopenshell.util.placement.get_storey_elevation(storey)
+        elevation = ifcopenshell.util.placement.get_storey_elevation(storey) * unit_scale
         walls_in_storey = []
         for (ifc_wall, z_min, z_max) in ifc_walls:
             tolerance = wall_offset_tolerance

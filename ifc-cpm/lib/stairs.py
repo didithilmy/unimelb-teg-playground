@@ -9,7 +9,7 @@ from .utils import find, filter, find_unbounded_lines_intersection, eucledian_di
 from .ifctypes import StraightSingleRunStair, DoubleRunStairWithLanding
 
 settings = ifcopenshell.geom.settings()
-settings.set(settings.CONVERT_BACK_UNITS, True)
+settings.set(settings.CONVERT_BACK_UNITS, False)
 settings.set(settings.USE_WORLD_COORDS, True)
 settings.set(settings.INCLUDE_CURVES, True)
 
@@ -62,6 +62,10 @@ def _determine_stair_floor_span(ifc_building, ifc_stair) -> int:
     return len(storeys_in_stair) - 1
 
 
+def _round(num):
+    return round(num * 1000) / 1000
+
+
 class StairType(Enum):
     STRAIGHT_SINGLE_RUN = 1
     U_TURN_WITH_LANDING = 2
@@ -112,7 +116,7 @@ class StairParser:
 
         angle_diff = abs(smallest_angle_difference(angle1, angle2))
 
-        return angle_diff< 10  # Maximum to be considered straight is 10 degrees. TODO configure
+        return angle_diff < 10  # Maximum to be considered straight is 10 degrees. TODO configure
 
     @staticmethod
     def _is_stair_u_turns(ifc_stair) -> bool:
@@ -184,6 +188,12 @@ class StraightSingleRunStairBuilder:
         # Staircase origin must be to the LEFT of the run axis.
         origin_x, origin_y = self._determine_origin_vertex(lower_gate, run_rotation)
 
+        # Round quantities
+        origin_x = _round(origin_x)
+        origin_y = _round(origin_y)
+        run_length = _round(run_length)
+        staircase_width = _round(staircase_width)
+
         psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
         no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
 
@@ -244,6 +254,14 @@ class DoubleRunStairWithLandingBuilder:
         is_clockwise = angle_between_resultant_and_first_run >= 0
         pivot, staircase_width, run_length = self._calculate_pivot_point(edges, first_run_edge, is_clockwise)
         run_angle = self._calculate_run_angle(first_run_edge, is_clockwise)
+
+        # Round quantities
+        origin_x, origin_y = pivot
+        origin_x = _round(origin_x)
+        origin_y = _round(origin_y)
+        pivot = origin_x, origin_y
+        run_length = _round(run_length)
+        staircase_width = _round(staircase_width)
 
         psets = ifcopenshell.util.element.get_psets(self.ifc_stair)
         no_of_treads = psets['Pset_StairCommon'].get("NumberOfTreads")
