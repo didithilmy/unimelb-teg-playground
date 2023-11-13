@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using EasyRoads3Dv3;
 using Michsky.MUIP;
-using System; // MUIP namespace
+using System;
 
 public class RoadBuilder : MonoBehaviour
 {
@@ -38,21 +38,19 @@ public class RoadBuilder : MonoBehaviour
     void Update()
     {
         Vector3? coord = GetMouseWorldCoord();
-        if (coord == null)
+        if (coord != null)
         {
-            return;
-        }
-
-        endCoord = SnapToGrid((Vector3)coord);
-        if (dragging)
-        {
-            if (currentRoad != null)
+            endCoord = SnapToGrid((Vector3)coord);
+            if (dragging)
             {
-                UpdateRoadEndCoord(currentRoad, endCoord);
-            }
-            else if (currentCrossing != null)
-            {
-                UpdateCrossingCoord(currentCrossing, endCoord);
+                if (currentRoad != null)
+                {
+                    UpdateRoadEndCoord(currentRoad, endCoord);
+                }
+                else if (currentCrossing != null)
+                {
+                    UpdateCrossingCoord(currentCrossing, endCoord);
+                }
             }
         }
     }
@@ -82,12 +80,24 @@ public class RoadBuilder : MonoBehaviour
     void OnMouseUp()
     {
         dragging = false;
-        // HashSet<ERRoad> connectedRoads = GetConnectedRoads(currentRoad);
-        // foreach (ERRoad connectedRoad in connectedRoads)
-        // {
-        //     roadNetwork.ConnectRoads(currentRoad, connectedRoad);
-        // }
-        // Debug.Log(connectedRoads.Count);
+        if (currentRoad != null)
+        {
+            List<(int, ERConnection)> connections = GetConnectedConnections(currentRoad);
+            foreach ((int markerIndex, ERConnection connection) in connections)
+            {
+                Debug.Log("Connections at " + markerIndex);
+                if (markerIndex == 0)
+                {
+                    int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
+                    currentRoad.ConnectToStart(connection, connectionIndex);
+                }
+                else if (markerIndex == 1)
+                {
+                    int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(1));
+                    currentRoad.ConnectToEnd(connection, connectionIndex);
+                }
+            }
+        }
         currentRoad = null;
         currentCrossing = null;
     }
@@ -119,12 +129,8 @@ public class RoadBuilder : MonoBehaviour
         road.SetWidth(width);
         road.AddMarker(startCoord);
         road.AddMarker(startCoord);
-        ERSideWalk sideWalk = new ERSideWalk
-        {
-            sidewalkWidth = 3,
-            crosswalkdepth = 3
-        };
-        road.SetSidewalk(sideWalk, ERRoadSide.Both, true);
+        // ERSideWalk sideWalk = roadNetwork.GetSidewalkByName("Concrete");
+        // road.SetSidewalk(sideWalk, ERRoadSide.Both, true);
         return road;
     }
 
@@ -177,5 +183,33 @@ public class RoadBuilder : MonoBehaviour
             }
         }
         return roads;
+    }
+
+    private List<(int, ERConnection)> GetConnectedConnections(ERRoad currentRoad)
+    {
+        Dictionary<ERConnection, int> connectionsMap = new Dictionary<ERConnection, int>();
+        foreach (ERConnection connection in roadNetwork.GetConnections())
+        {
+            foreach (Vector3 position in connection.GetConnectionWorldPositions())
+            {
+                Vector3 snappedPos = SnapToGrid(position);
+                // float distThreshold = 3f;
+                if (snappedPos == currentRoad.GetMarkerPosition(0))
+                {
+                    connectionsMap[connection] = 0;
+                }
+                if (snappedPos == currentRoad.GetMarkerPosition(1))
+                {
+                    connectionsMap[connection] = 1;
+                }
+            }
+        }
+
+        List<(int, ERConnection)> list = new List<(int, ERConnection)>();
+        foreach (ERConnection connection in connectionsMap.Keys)
+        {
+            list.Add((connectionsMap[connection], connection));
+        }
+        return list;
     }
 }
