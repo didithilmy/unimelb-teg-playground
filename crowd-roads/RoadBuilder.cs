@@ -82,10 +82,9 @@ public class RoadBuilder : MonoBehaviour
         dragging = false;
         if (currentRoad != null)
         {
-            List<(int, ERConnection)> connections = GetConnectedConnections(currentRoad);
+            List<(int, ERConnection)> connections = GetConnectedConnectionsFromRoad(currentRoad);
             foreach ((int markerIndex, ERConnection connection) in connections)
             {
-                Debug.Log("Connections at " + markerIndex);
                 if (markerIndex == 0)
                 {
                     int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
@@ -97,7 +96,32 @@ public class RoadBuilder : MonoBehaviour
                     currentRoad.ConnectToEnd(connection, connectionIndex);
                 }
             }
+
+            HashSet<ERRoad> connectedRoads = GetConnectedRoads(currentRoad);
+            foreach (ERRoad connectedRoad in connectedRoads)
+            {
+                roadNetwork.ConnectRoads(currentRoad, connectedRoad);
+            }
+            Debug.Log(connectedRoads.Count);
         }
+        else if (currentCrossing != null)
+        {
+            List<(int, ERRoad)> roads = GetConnectedRoadsFromConnection(currentCrossing);
+            foreach ((int markerIndex, ERRoad road) in roads)
+            {
+                if (markerIndex == 0)
+                {
+                    int connectionIndex = currentCrossing.FindNearestConnectionIndex(road.GetMarkerPosition(0));
+                    road.ConnectToStart(currentCrossing, connectionIndex);
+                }
+                else if (markerIndex == 1)
+                {
+                    int connectionIndex = currentCrossing.FindNearestConnectionIndex(road.GetMarkerPosition(1));
+                    road.ConnectToEnd(currentCrossing, connectionIndex);
+                }
+            }
+        }
+
         currentRoad = null;
         currentCrossing = null;
     }
@@ -185,7 +209,7 @@ public class RoadBuilder : MonoBehaviour
         return roads;
     }
 
-    private List<(int, ERConnection)> GetConnectedConnections(ERRoad currentRoad)
+    private List<(int, ERConnection)> GetConnectedConnectionsFromRoad(ERRoad currentRoad)
     {
         Dictionary<ERConnection, int> connectionsMap = new Dictionary<ERConnection, int>();
         foreach (ERConnection connection in roadNetwork.GetConnections())
@@ -209,6 +233,34 @@ public class RoadBuilder : MonoBehaviour
         foreach (ERConnection connection in connectionsMap.Keys)
         {
             list.Add((connectionsMap[connection], connection));
+        }
+        return list;
+    }
+
+    private List<(int, ERRoad)> GetConnectedRoadsFromConnection(ERConnection connection)
+    {
+        Dictionary<ERRoad, int> roadsMap = new Dictionary<ERRoad, int>();
+        foreach (ERRoad road in roadNetwork.GetRoadObjects())
+        {
+            foreach (Vector3 position in connection.GetConnectionWorldPositions())
+            {
+                Vector3 snappedPos = SnapToGrid(position);
+                // float distThreshold = 3f;
+                if (snappedPos == road.GetMarkerPosition(0))
+                {
+                    roadsMap[road] = 0;
+                }
+                if (snappedPos == road.GetMarkerPosition(1))
+                {
+                    roadsMap[road] = 1;
+                }
+            }
+        }
+
+        List<(int, ERRoad)> list = new List<(int, ERRoad)>();
+        foreach (ERRoad road in roadsMap.Keys)
+        {
+            list.Add((roadsMap[road], road));
         }
         return list;
     }
