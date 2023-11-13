@@ -17,6 +17,7 @@ public class RoadBuilder : MonoBehaviour
     private bool dragging = false;
     private ERRoad currentRoad;
     private ERConnection currentCrossing;
+    private int rotationDegree = 0;
     private Collider coll;
 
     enum ConnectionType
@@ -49,9 +50,18 @@ public class RoadBuilder : MonoBehaviour
                 }
                 else if (currentCrossing != null)
                 {
-                    UpdateCrossingCoord(currentCrossing, endCoord);
+                    UpdateCrossingCoord(currentCrossing, endCoord, rotationDegree);
                 }
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            rotationDegree = (rotationDegree + 90) % 360;
+        }
+        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            rotationDegree = (rotationDegree - 90) % 360;
         }
     }
 
@@ -68,9 +78,11 @@ public class RoadBuilder : MonoBehaviour
                     currentRoad = CreateRoad("Road", roadType, coord, 5);
                     break;
                 case 2:
+                    rotationDegree = 0;
                     currentCrossing = CreateCrossing(ConnectionType.CrossingX, coord);
                     break;
                 case 3:
+                    rotationDegree = 0;
                     currentCrossing = CreateCrossing(ConnectionType.CrossingT, coord);
                     break;
             }
@@ -182,9 +194,10 @@ public class RoadBuilder : MonoBehaviour
         return connection;
     }
 
-    private void UpdateCrossingCoord(ERConnection connection, Vector3 coord)
+    private void UpdateCrossingCoord(ERConnection connection, Vector3 coord, float planeRotationDegree = 0)
     {
         connection.gameObject.transform.position = coord;
+        connection.gameObject.transform.rotation = Quaternion.identity * Quaternion.Euler(0, planeRotationDegree, 0);
     }
 
 
