@@ -36,6 +36,8 @@ public class RoadBuilder : MonoBehaviour
         coll = GetComponent<Collider>();
         roadNetwork = new ERRoadNetwork();
         roadType = roadNetwork.GetRoadTypeByName("Default Road");
+        ERModularBase modularBase = roadNetwork.roadNetwork;
+        modularBase.displayLaneData = true;
         roadNetwork.LoadConnections();
 
         tsMainManager = itsManager.GetComponent<TSMainManager>();
