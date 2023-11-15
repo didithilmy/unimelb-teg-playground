@@ -3,6 +3,9 @@ using UnityEngine;
 using EasyRoads3Dv3;
 using Michsky.MUIP;
 using System;
+using System.Linq;
+using ITS.Utils;
+using UnityEngine.EventSystems;
 
 public class RoadBuilder : MonoBehaviour
 {
@@ -11,14 +14,16 @@ public class RoadBuilder : MonoBehaviour
     public Vector3 startCoord;
     public Vector3 endCoord;
     public ERRoadNetwork roadNetwork;
-    public ERRoadType roadType;
     public Plane plane;
+    public GameObject itsManager;
 
+    private ERRoadType roadType;
     private bool dragging = false;
     private ERRoad currentRoad;
     private ERConnection currentCrossing;
     private int rotationDegree = 0;
     private Collider coll;
+    private TSMainManager tsMainManager;
 
     enum ConnectionType
     {
@@ -28,12 +33,12 @@ public class RoadBuilder : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("Please read the comments at the top of the runtime script (/Assets/EasyRoads3D/Scripts/runtimeScript) before using the runtime API!");
-
         coll = GetComponent<Collider>();
         roadNetwork = new ERRoadNetwork();
         roadType = roadNetwork.GetRoadTypeByName("Default Road");
         roadNetwork.LoadConnections();
+
+        tsMainManager = itsManager.GetComponent<TSMainManager>();
     }
 
     void Update()
@@ -67,6 +72,11 @@ public class RoadBuilder : MonoBehaviour
 
     void OnMouseDown()
     {
+        if (EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         dragging = true;
         Vector3? startCoord = GetMouseWorldCoord();
         if (startCoord != null)
@@ -75,7 +85,7 @@ public class RoadBuilder : MonoBehaviour
             switch (elementPickerDropdown.selectedItemIndex)
             {
                 case 1:
-                    currentRoad = CreateRoad("Road", roadType, coord, 5);
+                    currentRoad = CreateRoad("Road", roadType, coord);
                     break;
                 case 2:
                     rotationDegree = 0;
@@ -92,50 +102,75 @@ public class RoadBuilder : MonoBehaviour
     void OnMouseUp()
     {
         dragging = false;
+
         if (currentRoad != null)
         {
-            List<(int, ERConnection)> connections = GetConnectedConnectionsFromRoad(currentRoad);
-            foreach ((int markerIndex, ERConnection connection) in connections)
-            {
-                if (markerIndex == 0)
-                {
-                    int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
-                    currentRoad.ConnectToStart(connection, connectionIndex);
-                }
-                else if (markerIndex == 1)
-                {
-                    int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(1));
-                    currentRoad.ConnectToEnd(connection, connectionIndex);
-                }
-            }
-
-            HashSet<ERRoad> connectedRoads = GetConnectedRoads(currentRoad);
-            foreach (ERRoad connectedRoad in connectedRoads)
-            {
-                roadNetwork.ConnectRoads(currentRoad, connectedRoad);
-            }
-            Debug.Log(connectedRoads.Count);
+            ProcessNewRoad(currentRoad);
+            RecreateITSLanes();
         }
         else if (currentCrossing != null)
         {
-            List<(int, ERRoad)> roads = GetConnectedRoadsFromConnection(currentCrossing);
-            foreach ((int markerIndex, ERRoad road) in roads)
-            {
-                if (markerIndex == 0)
-                {
-                    int connectionIndex = currentCrossing.FindNearestConnectionIndex(road.GetMarkerPosition(0));
-                    road.ConnectToStart(currentCrossing, connectionIndex);
-                }
-                else if (markerIndex == 1)
-                {
-                    int connectionIndex = currentCrossing.FindNearestConnectionIndex(road.GetMarkerPosition(1));
-                    road.ConnectToEnd(currentCrossing, connectionIndex);
-                }
-            }
+            ProcessNewConnection(currentCrossing);
+            RecreateITSLanes();
         }
 
         currentRoad = null;
         currentCrossing = null;
+    }
+
+    private void ProcessNewRoad(ERRoad currentRoad)
+    {
+        List<(int, ERConnection)> connections = GetConnectedConnectionsFromRoad(currentRoad);
+        foreach ((int markerIndex, ERConnection connection) in connections)
+        {
+            if (markerIndex == 0)
+            {
+                int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
+                currentRoad.ConnectToStart(connection, connectionIndex);
+            }
+            else if (markerIndex == 1)
+            {
+                int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(1));
+                currentRoad.ConnectToEnd(connection, connectionIndex);
+            }
+            roadNetwork.Refresh();
+            connection.ResetLaneConnectors();
+        }
+
+        HashSet<ERRoad> connectedRoads = GetConnectedRoads(currentRoad);
+        foreach (ERRoad connectedRoad in connectedRoads)
+        {
+            roadNetwork.ConnectRoads(currentRoad, connectedRoad);
+        }
+    }
+
+    private void ProcessNewConnection(ERConnection connection)
+    {
+        List<(int, ERRoad)> roads = GetConnectedRoadsFromConnection(connection);
+        foreach ((int markerIndex, ERRoad road) in roads)
+        {
+            if (markerIndex == 0)
+            {
+                int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(0));
+                road.ConnectToStart(connection, connectionIndex);
+            }
+            else if (markerIndex == 1)
+            {
+                int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(1));
+                road.ConnectToEnd(connection, connectionIndex);
+            }
+        }
+
+        roadNetwork.Refresh();
+        connection.ResetLaneConnectors();
+    }
+
+    private void RecreateITSLanes()
+    {
+        tsMainManager.Clear();
+        CreateITSLanes(roadNetwork.GetRoadObjects());
+        CreateITSConnections(roadNetwork.GetRoadObjects());
+        tsMainManager.ProcessJunctions(false, 0f);
     }
 
     private Vector3? GetMouseWorldCoord()
@@ -144,7 +179,7 @@ public class RoadBuilder : MonoBehaviour
         if (coll.Raycast(ray, out RaycastHit hit, 1000.0f))
         {
             Vector3 point = ray.GetPoint(hit.distance);
-            point.y = 0.05f;
+            point.y = 0.0f;
             return point;
         }
 
@@ -159,14 +194,12 @@ public class RoadBuilder : MonoBehaviour
                              Mathf.Round(pos.z / factor) * factor);
     }
 
-    private ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, int width = 5, int noOfLanes = 1)
+    private ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f, int noOfLanes = 1, bool bidirectional = true, bool reverse = false, bool leftHandDriving = true)
     {
         ERRoad road = roadNetwork.CreateRoad(name, roadType);
         road.SetWidth(width);
         road.AddMarker(startCoord);
         road.AddMarker(startCoord);
-        // ERSideWalk sideWalk = roadNetwork.GetSidewalkByName("Concrete");
-        // road.SetSidewalk(sideWalk, ERRoadSide.Both, true);
         return road;
     }
 
@@ -276,5 +309,56 @@ public class RoadBuilder : MonoBehaviour
             list.Add((roadsMap[road], road));
         }
         return list;
+    }
+
+    private void CreateITSLanes(ERRoad[] roads, bool reverse = false, float tolerance = 0.4f, int laneWidth = 2)
+    {
+        foreach (ERRoad road in roads)
+        {
+            var laneCount = road.GetLaneCount();
+            Debug.Log(laneCount);
+            for (int laneIndex = 0; laneIndex < laneCount; laneIndex++)
+            {
+                var laneData = road.GetLaneData(laneIndex);
+                Debug.Log(road.roadScript.laneData.Count);
+                Debug.Log(laneData);
+                var points = (reverse ? laneData.points.Reverse() : laneData.points).ToArray();
+                tsMainManager.AddLane<TSLaneInfo>(points, tolerance);
+                tsMainManager.lanes.Last().laneWidth = laneWidth;
+            }
+        }
+    }
+
+    private void CreateITSConnections(ERRoad[] roads)
+    {
+        foreach (ERRoad road in roads)
+        {
+            var laneCount = road.GetLaneCount();
+            for (int laneIndex = 0; laneIndex < laneCount; laneIndex++)
+            {
+                ERConnection firstConnection = road.GetConnectionAtStart(out int firstConnectionIndex);
+                if (firstConnection != null) AddITSConnection(firstConnection, firstConnectionIndex, laneIndex);
+
+                ERConnection secondConnection = road.GetConnectionAtEnd(out int secondConnectionIndex);
+                if (secondConnection != null) AddITSConnection(secondConnection, secondConnectionIndex, laneIndex);
+            }
+        }
+    }
+
+    private void AddITSConnection(ERConnection connection, int connectionIndex, int laneIndex, bool reverse = false)
+    {
+        var data = connection.GetLaneData(connectionIndex, laneIndex);
+        if (data == null) return;
+
+        foreach (var laneConnector in data)
+        {
+            Debug.Log(laneConnector);
+            var laneFromPoint = reverse ? laneConnector.points.Last() : laneConnector.points.First();
+            var laneToPoint = reverse ? laneConnector.points.First() : laneConnector.points.Last();
+            var laneFrom = tsMainManager.lanes.FindNearestLastPoint(laneFromPoint);
+            var laneTo = tsMainManager.lanes.FindNearestFirstPoint(laneToPoint);
+            var points = (reverse ? laneConnector.points.Reverse() : laneConnector.points).ToArray();
+            tsMainManager.AddConnector<TSLaneConnector>(laneFrom, laneTo, points);
+        }
     }
 }
