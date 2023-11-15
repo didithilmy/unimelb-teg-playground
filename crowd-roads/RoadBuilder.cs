@@ -16,6 +16,7 @@ public class RoadBuilder : MonoBehaviour
     public ERRoadNetwork roadNetwork;
     public Plane plane;
     public GameObject itsManager;
+    public bool rightHandDriving = false;
 
     private ERRoadType roadType;
     private bool dragging = false;
@@ -35,9 +36,10 @@ public class RoadBuilder : MonoBehaviour
     {
         coll = GetComponent<Collider>();
         roadNetwork = new ERRoadNetwork();
-        roadType = roadNetwork.GetRoadTypeByName("Default Road");
+        roadType = roadNetwork.GetRoadTypeByName("Primary-TwoLane-TwoWay");
         ERModularBase modularBase = roadNetwork.roadNetwork;
-        modularBase.displayLaneData = true;
+        modularBase.displayLaneData = true; // Required to allow iTS to connect lanes at intersections
+        modularBase.rightHandDriving = rightHandDriving ? 1 : 0;
         roadNetwork.LoadConnections();
 
         tsMainManager = itsManager.GetComponent<TSMainManager>();
@@ -196,9 +198,10 @@ public class RoadBuilder : MonoBehaviour
                              Mathf.Round(pos.z / factor) * factor);
     }
 
-    private ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f, int noOfLanes = 1, bool bidirectional = true, bool reverse = false, bool leftHandDriving = true)
+    private ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f)
     {
         ERRoad road = roadNetwork.CreateRoad(name, roadType);
+
         road.SetWidth(width);
         road.AddMarker(startCoord);
         road.AddMarker(startCoord);
