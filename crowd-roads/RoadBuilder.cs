@@ -6,25 +6,31 @@ using System;
 using System.Linq;
 using ITS.Utils;
 using UnityEngine.EventSystems;
+using System.Reflection.Emit;
 
 public class RoadBuilder : MonoBehaviour
 {
     public CustomDropdown elementPickerDropdown;
+    public ButtonManager startButton, stopButton;
     public Vector3 screenPosition, worldPosition;
     public Vector3 startCoord;
     public Vector3 endCoord;
     public ERRoadNetwork roadNetwork;
     public Plane plane;
-    public GameObject itsManager;
+    public GameObject itsManager, itsTrafficSpawner, trafficLightPrefab;
     public bool rightHandDriving = false;
 
-    private ERRoadType roadType;
+    public TSTrafficSpawner.TSSpawnVehicles[] cars;
+
     private bool dragging = false;
     private ERRoad currentRoad;
     private ERConnection currentCrossing;
+    private GameObject currentTrafficLight;
     private int rotationDegree = 0;
     private Collider coll;
     private TSMainManager tsMainManager;
+    private TSTrafficSpawner tsTrafficSpawner;
+    private Dictionary<ERRoad, List<TSLaneInfo>> roadLaneMap = new Dictionary<ERRoad, List<TSLaneInfo>>();
 
     enum ConnectionType
     {
@@ -36,13 +42,16 @@ public class RoadBuilder : MonoBehaviour
     {
         coll = GetComponent<Collider>();
         roadNetwork = new ERRoadNetwork();
-        roadType = roadNetwork.GetRoadTypeByName("Primary-TwoLane-TwoWay");
         ERModularBase modularBase = roadNetwork.roadNetwork;
         modularBase.displayLaneData = true; // Required to allow iTS to connect lanes at intersections
         modularBase.rightHandDriving = rightHandDriving ? 1 : 0;
         roadNetwork.LoadConnections();
 
         tsMainManager = itsManager.GetComponent<TSMainManager>();
+        // tsTrafficSpawner = itsTrafficSpawner.GetComponent<TSTrafficSpawner>();
+
+        startButton.onClick.AddListener(StartSimulation);
+        stopButton.onClick.AddListener(StopSimulation);
     }
 
     void Update()
@@ -60,6 +69,10 @@ public class RoadBuilder : MonoBehaviour
                 else if (currentCrossing != null)
                 {
                     UpdateCrossingCoord(currentCrossing, endCoord, rotationDegree);
+                }
+                else if (currentTrafficLight != null)
+                {
+                    UpdateTrafficLightCoord(currentTrafficLight, endCoord, rotationDegree);
                 }
             }
         }
@@ -86,18 +99,31 @@ public class RoadBuilder : MonoBehaviour
         if (startCoord != null)
         {
             Vector3 coord = SnapToGrid((Vector3)startCoord);
-            switch (elementPickerDropdown.selectedItemIndex)
+            switch (elementPickerDropdown.selectedText.text)
             {
-                case 1:
-                    currentRoad = CreateRoad("Road", roadType, coord);
+                case "Two-way Road":
+                    ERRoadType twoWayRoadType = roadNetwork.GetRoadTypeByName("Primary-TwoLane-TwoWay");
+                    currentRoad = CreateRoad("2w2lnRoad", twoWayRoadType, coord, 6f);
                     break;
-                case 2:
+                case "One-way Road (1 lane)":
+                    ERRoadType oneWayRoadType = roadNetwork.GetRoadTypeByName("Primary-OneLane-OneWay");
+                    currentRoad = CreateRoad("1w1lnRoad", oneWayRoadType, coord, 4f);
+                    break;
+                case "One-way Road (2 lanes)":
+                    ERRoadType oneWayTwoLanesRoadType = roadNetwork.GetRoadTypeByName("Primary-TwoLane-OneWay");
+                    currentRoad = CreateRoad("1w2lnRoad", oneWayTwoLanesRoadType, coord, 6f);
+                    break;
+                case "X Intersection":
                     rotationDegree = 0;
                     currentCrossing = CreateCrossing(ConnectionType.CrossingX, coord);
                     break;
-                case 3:
+                case "T Intersection":
                     rotationDegree = 0;
                     currentCrossing = CreateCrossing(ConnectionType.CrossingT, coord);
+                    break;
+                case "Traffic Light":
+                    rotationDegree = 0;
+                    currentTrafficLight = CreateTrafficLight(coord);
                     break;
             }
         }
@@ -120,6 +146,25 @@ public class RoadBuilder : MonoBehaviour
 
         currentRoad = null;
         currentCrossing = null;
+        currentTrafficLight = null;
+    }
+
+    void StartSimulation()
+    {
+        GameObject trafficSpawnerObject = new GameObject();
+		trafficSpawnerObject.name = "TrafficSpawner";
+		trafficSpawnerObject.AddComponent<TSTrafficSpawner>();
+        tsTrafficSpawner = trafficSpawnerObject.GetComponent<TSTrafficSpawner>();
+
+        tsTrafficSpawner.manager = tsMainManager;
+        tsTrafficSpawner.cars = cars;
+
+        tsTrafficSpawner.InitializeMe();
+    }
+
+    void StopSimulation()
+    {
+        Destroy(tsTrafficSpawner.gameObject);
     }
 
     private void ProcessNewRoad(ERRoad currentRoad)
@@ -131,11 +176,15 @@ public class RoadBuilder : MonoBehaviour
             {
                 int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
                 currentRoad.ConnectToStart(connection, connectionIndex);
+                // connection.SetCrosswalk(ERRoadSide.Both, connectionIndex, true);
+                // connection.SetSidewalk(ERRoadSide.Both, connectionIndex, true);
             }
             else if (markerIndex == 1)
             {
                 int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(1));
                 currentRoad.ConnectToEnd(connection, connectionIndex);
+                // connection.SetCrosswalk(ERRoadSide.Both, connectionIndex, true);
+                // connection.SetSidewalk(ERRoadSide.Both, connectionIndex, true);
             }
             roadNetwork.Refresh();
             connection.ResetLaneConnectors();
@@ -157,11 +206,15 @@ public class RoadBuilder : MonoBehaviour
             {
                 int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(0));
                 road.ConnectToStart(connection, connectionIndex);
+                // connection.SetCrosswalk(ERRoadSide.Both, connectionIndex, true);
+                // connection.SetSidewalk(ERRoadSide.Both, connectionIndex, true);
             }
             else if (markerIndex == 1)
             {
                 int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(1));
                 road.ConnectToEnd(connection, connectionIndex);
+                // connection.SetCrosswalk(ERRoadSide.Both, connectionIndex, true);
+                // connection.SetSidewalk(ERRoadSide.Both, connectionIndex, true);
             }
         }
 
@@ -192,7 +245,7 @@ public class RoadBuilder : MonoBehaviour
 
     private Vector3 SnapToGrid(Vector3 pos)
     {
-        float factor = 3f;
+        float factor = 2f;
         return new Vector3(Mathf.Round(pos.x / factor) * factor,
                              pos.y,
                              Mathf.Round(pos.z / factor) * factor);
@@ -202,7 +255,8 @@ public class RoadBuilder : MonoBehaviour
     {
         ERRoad road = roadNetwork.CreateRoad(name, roadType);
 
-        road.SetWidth(width);
+        Debug.Log(roadType.roadWidth);
+        road.SetWidth(roadType.roadWidth);
         road.AddMarker(startCoord);
         road.AddMarker(startCoord);
         return road;
@@ -238,6 +292,70 @@ public class RoadBuilder : MonoBehaviour
         connection.gameObject.transform.rotation = Quaternion.identity * Quaternion.Euler(0, planeRotationDegree, 0);
     }
 
+    private GameObject CreateTrafficLight(Vector3 coord)
+    {
+        return Instantiate(trafficLightPrefab, coord, Quaternion.identity);
+    }
+
+    private void UpdateTrafficLightCoord(GameObject trafficLight, Vector3 coord, float planeRotationDegree = 0)
+    {
+        trafficLight.transform.position = coord;
+        trafficLight.transform.rotation = Quaternion.identity * Quaternion.Euler(0, planeRotationDegree, 0);
+    }
+
+    public void ConnectLaneToTrafficLight(TSTrafficLight trafficLight, TSLaneInfo fromLane, TSLaneInfo toLane)
+    {
+        int fromLaneIndex = tsMainManager.lanes.FindIndex(fromLane);
+        Debug.Log(fromLane.connectors.Length);
+        foreach (var connector in fromLane.connectors)
+        {
+            Debug.Log(connector.NextLane == toLane);
+            Debug.Log(toLane);
+            if (connector.NextLane == toLane)
+            {
+                int connectorIndex = fromLane.connectors.FindIndex(connector);
+                bool connectionExists = trafficLight.pointsNormalLight.Exists(x => x.lane == fromLaneIndex && x.connector == connectorIndex);
+                if (!connectionExists)
+                {
+                    trafficLight.pointsNormalLight.Add(new TSTrafficLight.TSPointReference()
+                    {
+                        lane = fromLaneIndex,
+                        connector = connectorIndex,
+                        point = 0
+                    });
+                }
+            }
+        }
+    }
+
+    public void DisconnectLaneFromTrafficLight(TSTrafficLight trafficLight, TSLaneInfo fromLane, TSLaneInfo toLane)
+    {
+        int fromLaneIndex = tsMainManager.lanes.FindIndex(fromLane);
+        foreach (var connector in fromLane.connectors)
+        {
+            if (connector.NextLane == toLane)
+            {
+                int connectorIndex = fromLane.connectors.FindIndex(connector);
+                List<TSTrafficLight.TSPointReference> pointReferences = trafficLight.pointsNormalLight.FindAll(x => x.lane == fromLaneIndex && x.connector == connectorIndex);
+                foreach (TSTrafficLight.TSPointReference pointReference in pointReferences)
+                {
+                    trafficLight.pointsNormalLight.Remove(pointReference);
+                }
+            }
+        }
+    }
+
+    private List<TSLaneInfo> GetTrafficLightConnectedLanes(GameObject trafficLight)
+    {
+        var outList = new List<TSLaneInfo>();
+        TSTrafficLight trafficLightScript = trafficLight.GetComponent<TSTrafficLight>();
+        foreach (var points in trafficLightScript.pointsNormalLight)
+        {
+            TSLaneInfo lane = tsMainManager.lanes[points.lane];
+            outList.Add(lane);
+        }
+        return outList;
+    }
 
     private HashSet<ERRoad> GetConnectedRoads(ERRoad currentRoad)
     {
@@ -318,8 +436,10 @@ public class RoadBuilder : MonoBehaviour
 
     private void CreateITSLanes(ERRoad[] roads, bool reverse = false, float tolerance = 0.4f, int laneWidth = 2)
     {
+        roadLaneMap.Clear();
         foreach (ERRoad road in roads)
         {
+            roadLaneMap[road] = new List<TSLaneInfo>();
             var laneCount = road.GetLaneCount();
             Debug.Log(laneCount);
             for (int laneIndex = 0; laneIndex < laneCount; laneIndex++)
@@ -329,7 +449,9 @@ public class RoadBuilder : MonoBehaviour
                 Debug.Log(laneData);
                 var points = (reverse ? laneData.points.Reverse() : laneData.points).ToArray();
                 tsMainManager.AddLane<TSLaneInfo>(points, tolerance);
-                tsMainManager.lanes.Last().laneWidth = laneWidth;
+                TSLaneInfo laneInfo = tsMainManager.lanes.Last();
+                laneInfo.laneWidth = laneWidth;
+                roadLaneMap[road].Add(laneInfo);
             }
         }
     }
