@@ -17,7 +17,7 @@ public class RoadBuilder : MonoBehaviour
     public Vector3 endCoord;
     public ERRoadNetwork roadNetwork;
     public Plane plane;
-    public GameObject itsManager, itsTrafficSpawner, trafficLightPrefab;
+    public GameObject itsManager, trafficLightPrefab;
     public bool rightHandDriving = false;
 
     public TSTrafficSpawner.TSSpawnVehicles[] cars;
