@@ -389,6 +389,11 @@ public class RoadBuilder : MonoBehaviour
         Debug.Log(radius);
     }
 
+    public void UpdateTrafficSpawnerInterval(CustomTrafficSpawner spawner, float secondsBetweenCars)
+    {
+        spawner.secondsBetweenCars = secondsBetweenCars;
+    }
+
     private HashSet<ERRoad> GetConnectedRoads(ERRoad currentRoad)
     {
         Vector3 startCoord = currentRoad.GetMarkerPosition(0);
