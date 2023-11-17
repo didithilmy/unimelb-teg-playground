@@ -20,16 +20,15 @@ public class RoadBuilder : MonoBehaviour
     public GameObject itsManager, trafficLightPrefab;
     public bool rightHandDriving = false;
 
-    public TSTrafficSpawner.TSSpawnVehicles[] cars;
+    [SerializeField] public CustomTrafficSpawner.VehicleConfig[] vehicles;
 
     private bool dragging = false;
     private ERRoad currentRoad;
     private ERConnection currentCrossing;
-    private GameObject currentTrafficLight;
+    private GameObject currentTrafficLight, currentTrafficSpawner;
     private int rotationDegree = 0;
     private Collider coll;
     private TSMainManager tsMainManager;
-    private TSTrafficSpawner tsTrafficSpawner;
     private Dictionary<ERRoad, List<TSLaneInfo>> roadLaneMap = new Dictionary<ERRoad, List<TSLaneInfo>>();
 
     enum ConnectionType
@@ -48,7 +47,6 @@ public class RoadBuilder : MonoBehaviour
         roadNetwork.LoadConnections();
 
         tsMainManager = itsManager.GetComponent<TSMainManager>();
-        // tsTrafficSpawner = itsTrafficSpawner.GetComponent<TSTrafficSpawner>();
 
         startButton.onClick.AddListener(StartSimulation);
         stopButton.onClick.AddListener(StopSimulation);
@@ -73,6 +71,10 @@ public class RoadBuilder : MonoBehaviour
                 else if (currentTrafficLight != null)
                 {
                     UpdateTrafficLightCoord(currentTrafficLight, endCoord, rotationDegree);
+                }
+                else if (currentTrafficSpawner != null)
+                {
+                    UpdateTrafficSpawnerRadius(currentTrafficSpawner, endCoord);
                 }
             }
         }
@@ -125,6 +127,9 @@ public class RoadBuilder : MonoBehaviour
                     rotationDegree = 0;
                     currentTrafficLight = CreateTrafficLight(coord);
                     break;
+                case "Traffic Spawner":
+                    currentTrafficSpawner = CreateTrafficSpawner(coord);
+                    break;
             }
         }
     }
@@ -147,24 +152,26 @@ public class RoadBuilder : MonoBehaviour
         currentRoad = null;
         currentCrossing = null;
         currentTrafficLight = null;
+        currentTrafficSpawner = null;
     }
 
     void StartSimulation()
     {
-        GameObject trafficSpawnerObject = new GameObject();
-		trafficSpawnerObject.name = "TrafficSpawner";
-		trafficSpawnerObject.AddComponent<TSTrafficSpawner>();
-        tsTrafficSpawner = trafficSpawnerObject.GetComponent<TSTrafficSpawner>();
-
-        tsTrafficSpawner.manager = tsMainManager;
-        tsTrafficSpawner.cars = cars;
-
-        tsTrafficSpawner.InitializeMe();
+        CustomTrafficSpawner[] trafficSpawners = FindObjectsOfType<CustomTrafficSpawner>();
+        foreach (CustomTrafficSpawner spawner in trafficSpawners)
+        {
+            spawner.StartSpawner();
+        }
     }
 
     void StopSimulation()
     {
-        Destroy(tsTrafficSpawner.gameObject);
+        CustomTrafficSpawner[] trafficSpawners = FindObjectsOfType<CustomTrafficSpawner>();
+        foreach (CustomTrafficSpawner spawner in trafficSpawners)
+        {
+            spawner.StopSpawner();
+            spawner.DestroyAllCars();
+        }
     }
 
     private void ProcessNewRoad(ERRoad currentRoad)
@@ -345,7 +352,7 @@ public class RoadBuilder : MonoBehaviour
         }
     }
 
-    private List<TSLaneInfo> GetTrafficLightConnectedLanes(GameObject trafficLight)
+    public List<TSLaneInfo> GetTrafficLightConnectedLanes(GameObject trafficLight)
     {
         var outList = new List<TSLaneInfo>();
         TSTrafficLight trafficLightScript = trafficLight.GetComponent<TSTrafficLight>();
@@ -355,6 +362,31 @@ public class RoadBuilder : MonoBehaviour
             outList.Add(lane);
         }
         return outList;
+    }
+
+    public GameObject CreateTrafficSpawner(Vector3 coord, float secondsBetweenSpawn = 1f)
+    {
+        GameObject trafficSpawnerGameObject = new GameObject("Traffic Spawner");
+        trafficSpawnerGameObject.transform.position = coord + new Vector3(0, 0.01f, 0); // Add to prevent clash with the plane
+        CustomTrafficSpawner trafficSpawner = trafficSpawnerGameObject.AddComponent<CustomTrafficSpawner>();
+        trafficSpawner.vehicles = vehicles;
+        trafficSpawner.secondsBetweenCars = secondsBetweenSpawn;
+
+        DrawRadius drawRadius = trafficSpawnerGameObject.AddComponent<DrawRadius>();
+        drawRadius.radius = 0.0001f;
+        return trafficSpawnerGameObject;
+    }
+
+    public void UpdateTrafficSpawnerRadius(GameObject trafficSpawnerGameObject, Vector3 endCoord)
+    {
+        float radius = (trafficSpawnerGameObject.transform.position - endCoord).magnitude;
+        CustomTrafficSpawner trafficSpawner = trafficSpawnerGameObject.GetComponent<CustomTrafficSpawner>();
+        trafficSpawner.radius = radius;
+
+        DrawRadius drawRadius = trafficSpawnerGameObject.GetComponent<DrawRadius>();
+        drawRadius.radius = radius;
+
+        Debug.Log(radius);
     }
 
     private HashSet<ERRoad> GetConnectedRoads(ERRoad currentRoad)

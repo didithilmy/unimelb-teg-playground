@@ -1,13 +1,25 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection.Emit;
 using ITS.AI;
+using ITS.Utils;
 using UnityEngine;
 
 public class CustomTrafficSpawner : MonoBehaviour
 {
-    public int secondsBetweenCars = 1;
+    [System.Serializable]
+    public class VehicleConfig
+    {
+        public GameObject carPrefab;
+        public int frequency = 1;
+    }
+    
+    public float secondsBetweenCars = 1f;
+    public float radius = 1f;
+    public float height = 0.5f;
     public TSMainManager tsMainManager;
-    [SerializeField] public TSTrafficSpawner.TSSpawnVehicles[] cars;
+    [SerializeField] public VehicleConfig[] vehicles;
 
     private GameObject trafficCarsContainer;
     private List<TSTrafficAI> trafficCars = new List<TSTrafficAI>();
@@ -21,6 +33,7 @@ public class CustomTrafficSpawner : MonoBehaviour
             tsMainManager = FindObjectOfType(typeof(TSMainManager)) as TSMainManager;
 
         trafficCarsContainer = new GameObject("TrafficCarsContainer");
+        trafficCarsContainer.transform.parent = transform;
     }
 
     void Update()
@@ -34,6 +47,18 @@ public class CustomTrafficSpawner : MonoBehaviour
         interpolationPeriod += UnityEngine.Time.deltaTime;
     }
 
+    public void DestroyAllCars()
+    {
+        trafficCars.Clear();
+        trafficCarPositions.Clear();
+        foreach (Transform child in trafficCarsContainer.transform)
+        {
+            TSTrafficAI trafficAi = child.gameObject.GetComponent<TSTrafficAI>();
+            trafficAi.Disable();
+            Destroy(child.gameObject);
+        }
+    }
+
     public void StartSpawner()
     {
         trafficCars = new List<TSTrafficAI>();
@@ -41,10 +66,17 @@ public class CustomTrafficSpawner : MonoBehaviour
         enabled = true;
     }
 
+    public void StopSpawner()
+    {
+        enabled = false;
+    }
+
     public void AddCar()
     {
-        int selectedCarIndex = Random.Range(0, cars.Length - 1);
-        GameObject carPrefab = cars[selectedCarIndex].cars;
+        GetRandomLaneAndPointWithinArea(out int laneIndex, out int pointIndex);
+
+        int selectedCarIndex = UnityEngine.Random.Range(0, vehicles.Length - 1);
+        GameObject carPrefab = vehicles[selectedCarIndex].carPrefab;
         GameObject trafficAiGameObject = Instantiate(carPrefab);
         trafficAiGameObject.transform.parent = trafficCarsContainer.transform;
 
@@ -52,19 +84,18 @@ public class CustomTrafficSpawner : MonoBehaviour
         trafficAi.Setlanes(tsMainManager.lanes);
         trafficAi.SetIsMultithreading(false); // TODO change
 
-        int laneIndex = 0; // TODO change
-        int pointIndex = 0; // TODO change
         var bounds = TSTrafficSpawner.CarSize(trafficAiGameObject);
-        float carLength = bounds.size.z + 3;
+        float carLength = 0; // bounds.size.z;
 
         // TODO check if vehicle type is allowed on lane
 
         var reservedPoints = new Queue<TSTrafficAI.TSReservedPoints>();
-        bool spawnAllowed = tsMainManager.lanes[laneIndex].TryToReserve(trafficAi, pointIndex, carLength + carLength / 2f, ref reservedPoints);
+        bool spawnAllowed = tsMainManager.lanes[laneIndex].TryToReserve(trafficAi, pointIndex, carLength, ref reservedPoints);
 
-        Debug.Log("Called!");
         if (!spawnAllowed)
         {
+            Debug.Log("Cannot spawn at laneIndex=" + laneIndex + ", pointIndex=" + pointIndex);
+            Destroy(trafficAi.gameObject);
             return;
         }
 
@@ -96,4 +127,27 @@ public class CustomTrafficSpawner : MonoBehaviour
         carTransform.rotation = Quaternion.LookRotation(forward);
     }
 
+    private void GetRandomLaneAndPointWithinArea(out int laneIndex, out int pointIndex)
+    {
+        List<(TSLaneInfo, TSPoints)> pointsWithinRadius = new List<(TSLaneInfo, TSPoints)>();
+        foreach (TSLaneInfo lane in tsMainManager.lanes)
+        {
+            foreach (TSPoints point in lane.Points)
+            {
+                Vector3 planeVector = transform.position - point.point;
+                planeVector.y = 0;
+                bool withinPlaneRadius = planeVector.magnitude <= radius;
+
+                float heightDiff = Math.Abs(transform.position.y - point.point.y);
+                bool withinHeight = heightDiff <= height;
+
+                if (withinHeight && withinPlaneRadius) pointsWithinRadius.Add((lane, point));
+            }
+        }
+
+        int randomIndex = UnityEngine.Random.Range(0, pointsWithinRadius.Count - 1);
+        (TSLaneInfo chosenLane, TSPoints chosenPoint) = pointsWithinRadius[randomIndex];
+        laneIndex = tsMainManager.lanes.FindIndex(chosenLane);
+        pointIndex = chosenLane.Points.FindIndex(chosenPoint);
+    }
 }
