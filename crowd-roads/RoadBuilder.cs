@@ -90,7 +90,17 @@ public class RoadBuilder : MonoBehaviour
         {
             roadNetwork.ConnectRoads(currentRoad, connectedRoad);
         }
-        RecreateITSLanes();
+
+        CreateITSLane(currentRoad, new TSLaneInfo.VehicleType[] {
+            TSLaneInfo.VehicleType.Light,
+            TSLaneInfo.VehicleType.Medium,
+            TSLaneInfo.VehicleType.Taxi,
+            TSLaneInfo.VehicleType.Bus,
+            TSLaneInfo.VehicleType.Heavy
+        });
+
+        CreateITSConnections(roadNetwork.GetRoadObjects());
+        tsMainManager.ProcessJunctions(false, 0f);
     }
 
     public void ProcessNewConnection(ERConnection connection)
@@ -112,13 +122,6 @@ public class RoadBuilder : MonoBehaviour
 
         roadNetwork.Refresh();
         connection.ResetLaneConnectors();
-        RecreateITSLanes();
-    }
-
-    public void RecreateITSLanes()
-    {
-        tsMainManager.Clear();
-        CreateITSLanes(roadNetwork.GetRoadObjects());
         CreateITSConnections(roadNetwork.GetRoadObjects());
         tsMainManager.ProcessJunctions(false, 0f);
     }
@@ -330,7 +333,6 @@ public class RoadBuilder : MonoBehaviour
         {
             foreach (Vector3 position in connection.GetConnectionWorldPositions())
             {
-                // float distThreshold = 3f;
                 if ((position - road.GetMarkerPosition(0)).magnitude <= maxDistance)
                 {
                     roadsMap[road] = 0;
@@ -350,26 +352,39 @@ public class RoadBuilder : MonoBehaviour
         return list;
     }
 
-    private void CreateITSLanes(ERRoad[] roads, bool reverse = false, float tolerance = 0.4f, int laneWidth = 2)
+    private TSLaneInfo[] CreateITSLane(ERRoad road, TSLaneInfo.VehicleType[] vehicleTypes = null, bool reverse = false, float tolerance = 0.4f, int laneWidth = 2)
     {
-        roadLaneMap.Clear();
-        foreach (ERRoad road in roads)
+        roadLaneMap[road] = new List<TSLaneInfo>();
+        var laneCount = road.GetLaneCount();
+        TSLaneInfo[] lanes = new TSLaneInfo[laneCount];
+
+        for (int laneIndex = 0; laneIndex < laneCount; laneIndex++)
         {
-            roadLaneMap[road] = new List<TSLaneInfo>();
-            var laneCount = road.GetLaneCount();
-            Debug.Log(laneCount);
-            for (int laneIndex = 0; laneIndex < laneCount; laneIndex++)
+            var laneData = road.GetLaneData(laneIndex);
+            Debug.Log(road.roadScript.laneData.Count);
+            Debug.Log(laneData);
+            var points = (reverse ? laneData.points.Reverse() : laneData.points).ToArray();
+            tsMainManager.AddLane<TSLaneInfo>(points, tolerance);
+            TSLaneInfo laneInfo = tsMainManager.lanes.Last();
+            laneInfo.laneWidth = laneWidth;
+
+            if (vehicleTypes != null)
             {
-                var laneData = road.GetLaneData(laneIndex);
-                Debug.Log(road.roadScript.laneData.Count);
-                Debug.Log(laneData);
-                var points = (reverse ? laneData.points.Reverse() : laneData.points).ToArray();
-                tsMainManager.AddLane<TSLaneInfo>(points, tolerance);
-                TSLaneInfo laneInfo = tsMainManager.lanes.Last();
-                laneInfo.laneWidth = laneWidth;
-                roadLaneMap[road].Add(laneInfo);
+                laneInfo.vehicleType = 0;
+                foreach (TSLaneInfo.VehicleType vehicleType in vehicleTypes)
+                {
+                    Debug.Log(vehicleType);
+                    laneInfo.vehicleType = laneInfo.vehicleType.Add(vehicleType);
+                }
             }
+
+            Debug.Log("Vehicle types: " + laneInfo.vehicleType);
+
+            roadLaneMap[road].Add(laneInfo);
+            lanes[laneIndex] = laneInfo;
         }
+
+        return lanes;
     }
 
     private void CreateITSConnections(ERRoad[] roads)
