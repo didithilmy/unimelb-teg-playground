@@ -256,6 +256,7 @@ public class RoadBuilder : MonoBehaviour
         CustomTrafficSpawner trafficSpawner = trafficSpawnerGameObject.AddComponent<CustomTrafficSpawner>();
         trafficSpawner.vehicles = vehicles;
         trafficSpawner.secondsBetweenCars = secondsBetweenSpawn;
+        trafficSpawner.radius = radius;
 
         if (simulationEnabled)
         {
