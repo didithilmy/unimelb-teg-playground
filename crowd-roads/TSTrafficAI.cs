@@ -488,6 +488,8 @@ namespace ITS.AI
             
             UnReserveAll();
             gameObject.SetActive(!disableGameObject);
+
+            // Additional line for Traffic AI
             Destroy(gameObject);
         }
 
