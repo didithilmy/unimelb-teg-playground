@@ -8,7 +8,7 @@ using ITS.Utils;
 using UnityEngine.EventSystems;
 using System.Reflection.Emit;
 
-public class RoadBuilder : MonoBehaviour
+public class RoadBuilderFlex : MonoBehaviour
 {
     public ERRoadNetwork roadNetwork;
     public GameObject itsManager, trafficLightPrefab;
@@ -18,15 +18,8 @@ public class RoadBuilder : MonoBehaviour
 
     private TSMainManager tsMainManager;
     private Dictionary<ERRoad, List<TSLaneInfo>> roadLaneMap = new Dictionary<ERRoad, List<TSLaneInfo>>();
+    private Dictionary<Vector3, ERConnection> connectorMap = new();
     private bool simulationEnabled = false;
-
-    public enum ConnectionType
-    {
-        CrossingXTwoLane,
-        CrossingTTwoLane,
-        CrossingXFourLane,
-        CrossingTFourLane
-    }
 
     [System.Serializable]
     public class TrafficLightConfig
@@ -66,62 +59,28 @@ public class RoadBuilder : MonoBehaviour
         }
     }
 
-    public void ProcessNewConnection(ERConnection connection)
-    {
-        List<(int, ERRoad)> roads = GetConnectedRoadsFromConnection(connection);
-        foreach ((int markerIndex, ERRoad road) in roads)
-        {
-            if (markerIndex == 0)
-            {
-                int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(0));
-                road.ConnectToStart(connection, connectionIndex);
-            }
-            else if (markerIndex == 1)
-            {
-                int connectionIndex = connection.FindNearestConnectionIndex(road.GetMarkerPosition(1));
-                road.ConnectToEnd(connection, connectionIndex);
-            }
-        }
-
-        roadNetwork.Refresh();
-        connection.ResetLaneConnectors();
-        ERRoad[] roadObjects = GetRoadObjects();
-        CreateITSConnections(roadObjects);
-        tsMainManager.ProcessJunctions(false, 0f);
-    }
-
-    public ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f)
-    {
-        ERRoad road = roadNetwork.CreateRoad(name, roadType);
-        road.SetWidth(roadType.roadWidth);
-        road.AddMarker(startCoord);
-        road.AddMarker(startCoord);
-        return road;
-    }
-
     public void ProcessNewRoad(ERRoad currentRoad)
     {
-        List<(int, ERConnection)> connections = GetConnectedConnectionsFromRoad(currentRoad);
-        foreach ((int markerIndex, ERConnection connection) in connections)
+        for (int i = 0; i < currentRoad.GetMarkerCount(); i++)
         {
-            if (markerIndex == 0)
+            var currentRoadMarkerPos = currentRoad.GetMarkerPosition(i);
+            if (connectorMap.ContainsKey(currentRoadMarkerPos))
             {
-                int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(0));
-                currentRoad.ConnectToStart(connection, connectionIndex);
+                var connector = connectorMap[currentRoadMarkerPos];
+                currentRoad.ConnectToEnd(connector);
             }
-            else if (markerIndex == 1)
+            else
             {
-                int connectionIndex = connection.FindNearestConnectionIndex(currentRoad.GetMarkerPosition(1));
-                currentRoad.ConnectToEnd(connection, connectionIndex);
-            }
-            roadNetwork.Refresh();
-            connection.ResetLaneConnectors();
-        }
+                Dictionary<ERRoad, (int, int)> connectedRoads = GetConnectedRoads(currentRoad);
+                foreach (ERRoad connectedRoad in connectedRoads.Keys)
+                {
+                    (int connectedRoadMarkerIndex, int currentRoadMarkerIndex) = connectedRoads[connectedRoad];
+                    Vector3 position = currentRoad.GetMarkerPosition(currentRoadMarkerIndex);
 
-        HashSet<ERRoad> connectedRoads = GetConnectedRoads(currentRoad);
-        foreach (ERRoad connectedRoad in connectedRoads)
-        {
-            roadNetwork.ConnectRoads(currentRoad, connectedRoad);
+                    currentRoad.InsertFlexConnector(position, connectedRoad, connectedRoadMarkerIndex, out ERRoad splitRoad);
+                    // roadNetwork.ConnectRoads(currentRoad, connectedRoad);
+                }
+            }
         }
 
         CreateITSLane(currentRoad, new TSLaneInfo.VehicleType[] {
@@ -132,82 +91,24 @@ public class RoadBuilder : MonoBehaviour
             TSLaneInfo.VehicleType.Heavy
         });
 
-        ERRoad[] roadObjects = GetRoadObjects();
-        CreateITSConnections(roadObjects);
+        // CreateITSConnections(roadNetwork.GetRoadObjects());
         tsMainManager.ProcessJunctions(false, 0f);
+    }
+
+
+    public ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f)
+    {
+        ERRoad road = roadNetwork.CreateRoad(name, roadType);
+        road.SetWidth(roadType.roadWidth);
+        road.AddMarker(startCoord);
+        road.AddMarker(startCoord);
+        return road;
     }
 
     public void UpdateRoadEndCoord(ERRoad road, Vector3 coord)
     {
         road.DeleteMarker(1);
         road.InsertMarker(coord);
-    }
-
-    public ERRoad CreateFootpath(string name, Vector3 startCoord, float width = 3f)
-    {
-        ERRoadType roadType = roadNetwork.GetRoadTypeByName("Footpath");
-        ERRoad road = roadNetwork.CreateRoad(name, roadType);
-        road.SetWidth(width);
-        road.AddMarker(startCoord + new Vector3(0, 0.1f, 0));
-        road.AddMarker(startCoord + new Vector3(0, 0.1f, 0));
-        return road;
-    }
-
-    public void UpdateFootpathEndCoord(ERRoad road, Vector3 coord)
-    {
-        road.DeleteMarker(1);
-        road.InsertMarker(coord + new Vector3(0, 0.1f, 0));
-    }
-
-    public void ProcessNewFootpath(ERRoad currentRoad)
-    {
-        Debug.Log("process footpath");
-        HashSet<ERRoad> connectedRoads = GetConnectedFootpaths(currentRoad);
-        Debug.Log("Footpath connected: " + connectedRoads.Count());
-        foreach (ERRoad connectedRoad in connectedRoads)
-        {
-            roadNetwork.ConnectRoads(currentRoad, connectedRoad);
-        }
-
-        CreateITSLane(currentRoad, new TSLaneInfo.VehicleType[] {
-            TSLaneInfo.VehicleType.Pedestrians
-        });
-    }
-
-    public Vector3[] GetFootpathSplinePointsCenter(ERRoad footpath)
-    {
-        Vector3[] splinePoints = footpath.GetSplinePointsCenter();
-        return splinePoints;
-    }
-
-    public float GetFootpathWidth(ERRoad footpath)
-    {
-        float footpathWidth = footpath.GetWidth();
-        return footpathWidth;
-    }
-
-    public ERConnection CreateCrossing(ConnectionType connectionType, Vector3 coord)
-    {
-        String prefabName = "X-2Lane";
-        switch (connectionType)
-        {
-            case ConnectionType.CrossingTTwoLane:
-                prefabName = "T-2Lane";
-                break;
-            case ConnectionType.CrossingXTwoLane:
-                prefabName = "X-2Lane";
-                break;
-            case ConnectionType.CrossingTFourLane:
-                prefabName = "T-4Lane";
-                break;
-            case ConnectionType.CrossingXFourLane:
-                prefabName = "X-4Lane";
-                break;
-        }
-
-        ERConnection connectionPrefab = roadNetwork.GetConnectionPrefabByName(prefabName);
-        ERConnection connection = roadNetwork.InstantiateConnection(connectionPrefab, "Intersection", coord, Vector3.zero);
-        return connection;
     }
 
     public void UpdateCrossingCoord(ERConnection connection, Vector3 coord, float planeRotationDegree = 0)
@@ -324,81 +225,39 @@ public class RoadBuilder : MonoBehaviour
         spawner.secondsBetweenCars = secondsBetweenCars;
     }
 
-    public HashSet<ERRoad> GetConnectedRoads(ERRoad currentRoad)
+    public Dictionary<ERRoad, (int, int)> GetConnectedRoads(ERRoad currentRoad)
     {
         Vector3 startCoord = currentRoad.GetMarkerPosition(0);
         Vector3 endCoord = currentRoad.GetMarkerPosition(1);
-        HashSet<ERRoad> roads = new HashSet<ERRoad>();
-        ERRoad[] roadObjects = GetRoadObjects();
-        foreach (ERRoad road in roadObjects)
+        Dictionary<ERRoad, (int, int)> roads = new();
+        foreach (ERRoad road in roadNetwork.GetRoadObjects())
         {
             if (road == currentRoad) continue;
             Vector3[] markerPositions = road.GetMarkerPositions();
-            foreach (Vector3 pos in markerPositions)
+            for (int i = 0; i < markerPositions.Count(); i++)
             {
-                if (pos == startCoord || pos == endCoord)
                 {
-                    roads.Add(road);
-                    break;
+                    var pos = markerPositions[i];
+                    if (pos == startCoord)
+                    {
+                        roads[road] = (i, 0);
+                        break;
+                    }
+                    else if (pos == endCoord)
+                    {
+                        roads[road] = (i, 1);
+                        break;
+                    }
                 }
             }
         }
         return roads;
-    }
-
-    public HashSet<ERRoad> GetConnectedFootpaths(ERRoad currentRoad)
-    {
-        Vector3 startCoord = currentRoad.GetMarkerPosition(0);
-        Vector3 endCoord = currentRoad.GetMarkerPosition(1);
-        HashSet<ERRoad> roads = new HashSet<ERRoad>();
-        ERRoad[] roadObjects = GetFootpathObjects();
-        foreach (ERRoad road in roadObjects)
-        {
-            if (road == currentRoad) continue;
-            Vector3[] markerPositions = road.GetMarkerPositions();
-            foreach (Vector3 pos in markerPositions)
-            {
-                if (pos == startCoord || pos == endCoord)
-                {
-                    roads.Add(road);
-                    break;
-                }
-            }
-        }
-        return roads;
-    }
-
-    private List<(int, ERConnection)> GetConnectedConnectionsFromRoad(ERRoad currentRoad, float maxDistance = 3f)
-    {
-        Dictionary<ERConnection, int> connectionsMap = new Dictionary<ERConnection, int>();
-        foreach (ERConnection connection in roadNetwork.GetConnections())
-        {
-            foreach (Vector3 position in connection.GetConnectionWorldPositions())
-            {
-                if ((position - currentRoad.GetMarkerPosition(0)).magnitude <= maxDistance)
-                {
-                    connectionsMap[connection] = 0;
-                }
-                else if ((position - currentRoad.GetMarkerPosition(1)).magnitude <= maxDistance)
-                {
-                    connectionsMap[connection] = 1;
-                }
-            }
-        }
-
-        List<(int, ERConnection)> list = new List<(int, ERConnection)>();
-        foreach (ERConnection connection in connectionsMap.Keys)
-        {
-            list.Add((connectionsMap[connection], connection));
-        }
-        return list;
     }
 
     private List<(int, ERRoad)> GetConnectedRoadsFromConnection(ERConnection connection, float maxDistance = 3f)
     {
         Dictionary<ERRoad, int> roadsMap = new Dictionary<ERRoad, int>();
-        ERRoad[] roadObjects = Array.FindAll(roadNetwork.GetRoadObjects(), r => !r.GetRoadType().roadTypeName.Equals("Footpath"));
-        foreach (ERRoad road in roadObjects)
+        foreach (ERRoad road in roadNetwork.GetRoadObjects())
         {
             foreach (Vector3 position in connection.GetConnectionWorldPositions())
             {
@@ -487,17 +346,5 @@ public class RoadBuilder : MonoBehaviour
             var points = (reverse ? laneConnector.points.Reverse() : laneConnector.points).ToArray();
             tsMainManager.AddConnector<TSLaneConnector>(laneFrom, laneTo, points);
         }
-    }
-
-    public ERRoad[] GetRoadObjects()
-    {
-        ERRoad[] roadObjects = Array.FindAll(roadNetwork.GetRoadObjects(), r => !r.GetRoadType().roadTypeName.Equals("Footpath"));
-        return roadObjects;
-    }
-
-    public ERRoad[] GetFootpathObjects()
-    {
-        ERRoad[] roadObjects = Array.FindAll(roadNetwork.GetRoadObjects(), r => r.GetRoadType().roadTypeName.Equals("Footpath"));
-        return roadObjects;
     }
 }

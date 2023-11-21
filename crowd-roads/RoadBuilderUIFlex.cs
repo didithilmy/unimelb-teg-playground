@@ -8,7 +8,7 @@ using ITS.Utils;
 using UnityEngine.EventSystems;
 using System.Reflection.Emit;
 
-public class RoadBuilderUI : MonoBehaviour
+public class RoadBuilderUIFlex : MonoBehaviour
 {
     public CustomDropdown elementPickerDropdown;
     public ButtonManager startButton, stopButton;
@@ -16,18 +16,18 @@ public class RoadBuilderUI : MonoBehaviour
 
     private bool dragging = false;
     private Vector3 endCoord;
-    private ERRoad currentRoad, currentFootpath;
+    private ERRoad currentRoad;
     private ERConnection currentCrossing;
     private GameObject currentTrafficLight;
     private CustomTrafficSpawner currentTrafficSpawner;
     private int rotationDegree = 0;
     private Collider coll;
-    private RoadBuilder roadBuilder;
+    private RoadBuilderFlex roadBuilder;
 
     void Start()
     {
         coll = GetComponent<Collider>();
-        roadBuilder = GetComponent<RoadBuilder>();
+        roadBuilder = GetComponent<RoadBuilderFlex>();
 
         startButton.onClick.AddListener(roadBuilder.StartSimulation);
         stopButton.onClick.AddListener(roadBuilder.StopSimulation);
@@ -44,10 +44,6 @@ public class RoadBuilderUI : MonoBehaviour
                 if (currentRoad != null)
                 {
                     roadBuilder.UpdateRoadEndCoord(currentRoad, endCoord);
-                }
-                else if (currentFootpath != null)
-                {
-                    roadBuilder.UpdateFootpathEndCoord(currentFootpath, endCoord);
                 }
                 else if (currentCrossing != null)
                 {
@@ -78,20 +74,6 @@ public class RoadBuilderUI : MonoBehaviour
         }
     }
 
-    void OnDrawGizmosSelected()
-    {
-        foreach (ERRoad footpath in roadBuilder.GetFootpathObjects())
-        {
-            Vector3[] footpathSplineCenter = roadBuilder.GetFootpathSplinePointsCenter(footpath);
-            // Draw a yellow sphere at the transform's position
-            Gizmos.color = Color.yellow;
-            foreach (Vector3 pos in footpathSplineCenter)
-            {
-                Gizmos.DrawSphere(pos, 0.3f);
-            }
-        }
-    }
-
     void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject())
@@ -106,9 +88,6 @@ public class RoadBuilderUI : MonoBehaviour
             Vector3 coord = SnapToGrid((Vector3)startCoord);
             switch (elementPickerDropdown.selectedText.text)
             {
-                case "Footpath":
-                    currentFootpath = roadBuilder.CreateFootpath("Footpath", coord);
-                    break;
                 case "Two-way Road":
                     ERRoadType twoWayRoadType = roadBuilder.roadNetwork.GetRoadTypeByName("2Lane-2Way");
                     currentRoad = roadBuilder.CreateRoad("2w2lnRoad", twoWayRoadType, coord, 6f);
@@ -120,22 +99,6 @@ public class RoadBuilderUI : MonoBehaviour
                 case "One-way Road (2 lanes)":
                     ERRoadType oneWayTwoLanesRoadType = roadBuilder.roadNetwork.GetRoadTypeByName("2Lane-1Way");
                     currentRoad = roadBuilder.CreateRoad("1w2lnRoad", oneWayTwoLanesRoadType, coord, 6f);
-                    break;
-                case "X Intersection":
-                    rotationDegree = 0;
-                    currentCrossing = roadBuilder.CreateCrossing(RoadBuilder.ConnectionType.CrossingXTwoLane, coord);
-                    break;
-                case "T Intersection":
-                    rotationDegree = 0;
-                    currentCrossing = roadBuilder.CreateCrossing(RoadBuilder.ConnectionType.CrossingTTwoLane, coord);
-                    break;
-                case "X Intersection (4 lanes)":
-                    rotationDegree = 0;
-                    currentCrossing = roadBuilder.CreateCrossing(RoadBuilder.ConnectionType.CrossingXFourLane, coord);
-                    break;
-                case "T Intersection (4 lanes)":
-                    rotationDegree = 0;
-                    currentCrossing = roadBuilder.CreateCrossing(RoadBuilder.ConnectionType.CrossingTFourLane, coord);
                     break;
                 case "Traffic Light":
                     rotationDegree = 0;
@@ -158,17 +121,7 @@ public class RoadBuilderUI : MonoBehaviour
         {
             roadBuilder.ProcessNewRoad(currentRoad);
         }
-        else if (currentCrossing != null)
-        {
-            roadBuilder.ProcessNewConnection(currentCrossing);
-        }
-        else if (currentFootpath != null)
-        {
-            roadBuilder.ProcessNewFootpath(currentFootpath);
-        }
-
         currentRoad = null;
-        currentFootpath = null;
         currentCrossing = null;
         currentTrafficLight = null;
         currentTrafficSpawner = null;
