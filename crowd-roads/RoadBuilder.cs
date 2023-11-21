@@ -18,6 +18,7 @@ public class RoadBuilder : MonoBehaviour
 
     private TSMainManager tsMainManager;
     private Dictionary<ERRoad, List<TSLaneInfo>> roadLaneMap = new Dictionary<ERRoad, List<TSLaneInfo>>();
+    private bool simulationEnabled = false;
 
     public enum ConnectionType
     {
@@ -46,6 +47,7 @@ public class RoadBuilder : MonoBehaviour
 
     public void StartSimulation()
     {
+        simulationEnabled = true;
         CustomTrafficSpawner[] trafficSpawners = FindObjectsOfType<CustomTrafficSpawner>();
         foreach (CustomTrafficSpawner spawner in trafficSpawners)
         {
@@ -55,6 +57,7 @@ public class RoadBuilder : MonoBehaviour
 
     public void StopSimulation()
     {
+        simulationEnabled = false;
         CustomTrafficSpawner[] trafficSpawners = FindObjectsOfType<CustomTrafficSpawner>();
         foreach (CustomTrafficSpawner spawner in trafficSpawners)
         {
@@ -254,6 +257,10 @@ public class RoadBuilder : MonoBehaviour
         CustomTrafficSpawner trafficSpawner = trafficSpawnerGameObject.AddComponent<CustomTrafficSpawner>();
         trafficSpawner.vehicles = vehicles;
         trafficSpawner.secondsBetweenCars = secondsBetweenSpawn;
+
+        if (simulationEnabled) {
+            trafficSpawner.StartSpawner();
+        }
 
         DrawRadius drawRadius = trafficSpawnerGameObject.AddComponent<DrawRadius>();
         drawRadius.radius = 0.0001f;
