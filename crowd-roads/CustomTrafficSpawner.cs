@@ -1,10 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using ITS.AI;
 using ITS.Utils;
 using UnityEngine;
+using KaimiraGames;
 
 public class CustomTrafficSpawner : MonoBehaviour
 {
@@ -14,18 +13,19 @@ public class CustomTrafficSpawner : MonoBehaviour
         public GameObject carPrefab;
         public int frequency = 1;
     }
-    
+
     public float secondsBetweenCars = 1f;
     public float radius = 1f;
     public float height = 0.5f;
     public TSMainManager tsMainManager;
     [SerializeField] public VehicleConfig[] vehicles;
 
+    private WeightedList<VehicleConfig> vehiclesWeightedList = new();
     private GameObject trafficCarsContainer;
     private List<TSTrafficAI> trafficCars = new List<TSTrafficAI>();
     private List<Vector3> trafficCarPositions = new List<Vector3>();
     private float interpolationPeriod = 0;
-    private bool enabled = false;
+    private bool spawnerEnabled = false;
 
     void Start()
     {
@@ -34,11 +34,16 @@ public class CustomTrafficSpawner : MonoBehaviour
 
         trafficCarsContainer = new GameObject("TrafficCarsContainer");
         trafficCarsContainer.transform.parent = transform;
+
+        foreach (VehicleConfig vehicle in vehicles)
+        {
+            vehiclesWeightedList.Add(vehicle, vehicle.frequency);
+        }
     }
 
     void Update()
     {
-        if (interpolationPeriod >= secondsBetweenCars && enabled)
+        if (interpolationPeriod >= secondsBetweenCars && spawnerEnabled)
         {
             //Do Stuff
             interpolationPeriod = 0;
@@ -63,20 +68,19 @@ public class CustomTrafficSpawner : MonoBehaviour
     {
         trafficCars = new List<TSTrafficAI>();
         trafficCarPositions = new List<Vector3>();
-        enabled = true;
+        spawnerEnabled = true;
     }
 
     public void StopSpawner()
     {
-        enabled = false;
+        spawnerEnabled = false;
     }
 
     public void AddCar()
     {
         GetRandomLaneAndPointWithinArea(out int laneIndex, out int pointIndex);
 
-        int selectedCarIndex = UnityEngine.Random.Range(0, vehicles.Length - 1);
-        GameObject carPrefab = vehicles[selectedCarIndex].carPrefab;
+        GameObject carPrefab = vehiclesWeightedList.Next().carPrefab;
         GameObject trafficAiGameObject = Instantiate(carPrefab);
         trafficAiGameObject.transform.parent = trafficCarsContainer.transform;
 
