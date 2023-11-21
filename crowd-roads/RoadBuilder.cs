@@ -224,11 +224,10 @@ public class RoadBuilder : MonoBehaviour
         }
     }
 
-    public List<TSLaneInfo> GetTrafficLightConnectedLanes(GameObject trafficLight)
+    public List<TSLaneInfo> GetTrafficLightConnectedLanes(TSTrafficLight trafficLight)
     {
         var outList = new List<TSLaneInfo>();
-        TSTrafficLight trafficLightScript = trafficLight.GetComponent<TSTrafficLight>();
-        foreach (var points in trafficLightScript.pointsNormalLight)
+        foreach (var points in trafficLight.pointsNormalLight)
         {
             TSLaneInfo lane = tsMainManager.lanes[points.lane];
             outList.Add(lane);
@@ -250,7 +249,7 @@ public class RoadBuilder : MonoBehaviour
         }
     }
 
-    public GameObject CreateTrafficSpawner(Vector3 coord, float secondsBetweenSpawn = 1f)
+    public CustomTrafficSpawner CreateTrafficSpawner(Vector3 coord, float radius = 0.00001f, float secondsBetweenSpawn = 1f)
     {
         GameObject trafficSpawnerGameObject = new GameObject("Traffic Spawner");
         trafficSpawnerGameObject.transform.position = coord + new Vector3(0, 0.01f, 0); // Add to prevent clash with the plane
@@ -258,25 +257,17 @@ public class RoadBuilder : MonoBehaviour
         trafficSpawner.vehicles = vehicles;
         trafficSpawner.secondsBetweenCars = secondsBetweenSpawn;
 
-        if (simulationEnabled) {
+        if (simulationEnabled)
+        {
             trafficSpawner.StartSpawner();
         }
 
-        DrawRadius drawRadius = trafficSpawnerGameObject.AddComponent<DrawRadius>();
-        drawRadius.radius = 0.0001f;
-        return trafficSpawnerGameObject;
+        return trafficSpawner;
     }
 
-    public void UpdateTrafficSpawnerRadius(GameObject trafficSpawnerGameObject, Vector3 endCoord)
+    public void UpdateTrafficSpawnerRadius(CustomTrafficSpawner trafficSpawner, float radius)
     {
-        float radius = (trafficSpawnerGameObject.transform.position - endCoord).magnitude;
-        CustomTrafficSpawner trafficSpawner = trafficSpawnerGameObject.GetComponent<CustomTrafficSpawner>();
         trafficSpawner.radius = radius;
-
-        DrawRadius drawRadius = trafficSpawnerGameObject.GetComponent<DrawRadius>();
-        drawRadius.radius = radius;
-
-        Debug.Log(radius);
     }
 
     public void UpdateTrafficSpawnerInterval(CustomTrafficSpawner spawner, float secondsBetweenCars)

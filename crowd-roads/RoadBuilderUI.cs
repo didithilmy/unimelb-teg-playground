@@ -18,7 +18,8 @@ public class RoadBuilderUI : MonoBehaviour
     private Vector3 endCoord;
     private ERRoad currentRoad;
     private ERConnection currentCrossing;
-    private GameObject currentTrafficLight, currentTrafficSpawner;
+    private GameObject currentTrafficLight;
+    private CustomTrafficSpawner currentTrafficSpawner;
     private int rotationDegree = 0;
     private Collider coll;
     private RoadBuilder roadBuilder;
@@ -54,7 +55,11 @@ public class RoadBuilderUI : MonoBehaviour
                 }
                 else if (currentTrafficSpawner != null)
                 {
-                    roadBuilder.UpdateTrafficSpawnerRadius(currentTrafficSpawner, endCoord);
+                    float radius = (currentTrafficSpawner.gameObject.transform.position - endCoord).magnitude;
+                    roadBuilder.UpdateTrafficSpawnerRadius(currentTrafficSpawner, radius);
+
+                    DrawRadius drawRadius = currentTrafficSpawner.gameObject.GetComponent<DrawRadius>();
+                    drawRadius.radius = radius;
                 }
             }
         }
@@ -117,6 +122,8 @@ public class RoadBuilderUI : MonoBehaviour
                     break;
                 case "Traffic Spawner":
                     currentTrafficSpawner = roadBuilder.CreateTrafficSpawner(coord);
+                    DrawRadius drawRadius = currentTrafficSpawner.gameObject.AddComponent<DrawRadius>();
+                    drawRadius.radius = currentTrafficSpawner.radius;
                     break;
             }
         }
