@@ -78,9 +78,10 @@ public class CustomTrafficSpawner : MonoBehaviour
 
     public void AddCar()
     {
-        GetRandomLaneAndPointWithinArea(out int laneIndex, out int pointIndex);
-
         GameObject carPrefab = vehiclesWeightedList.Next().carPrefab;
+        var vehicleType = carPrefab.GetComponent<TSTrafficAI>().myVehicleType;
+        GetRandomLaneAndPointWithinArea(vehicleType, out int laneIndex, out int pointIndex);
+
         GameObject trafficAiGameObject = Instantiate(carPrefab);
         trafficAiGameObject.transform.parent = trafficCarsContainer.transform;
 
@@ -131,11 +132,14 @@ public class CustomTrafficSpawner : MonoBehaviour
         carTransform.rotation = Quaternion.LookRotation(forward);
     }
 
-    private void GetRandomLaneAndPointWithinArea(out int laneIndex, out int pointIndex)
+    private void GetRandomLaneAndPointWithinArea(TSLaneInfo.VehicleType vehicleType, out int laneIndex, out int pointIndex)
     {
         List<(TSLaneInfo, TSPoints)> pointsWithinRadius = new List<(TSLaneInfo, TSPoints)>();
         foreach (TSLaneInfo lane in tsMainManager.lanes)
         {
+            if (!lane.HasVehicleType(vehicleType))
+                continue;
+
             foreach (TSPoints point in lane.Points)
             {
                 Vector3 planeVector = transform.position - point.point;

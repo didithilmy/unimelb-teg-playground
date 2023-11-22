@@ -148,15 +148,16 @@ public class RoadBuilder : MonoBehaviour
         ERRoadType roadType = roadNetwork.GetRoadTypeByName("Footpath");
         ERRoad road = roadNetwork.CreateRoad(name, roadType);
         road.SetWidth(width);
-        road.AddMarker(startCoord + new Vector3(0, 0.1f, 0));
-        road.AddMarker(startCoord + new Vector3(0, 0.1f, 0));
+        road.AddMarker(startCoord + new Vector3(0, 0.05f, 0));
+        road.AddMarker(startCoord + new Vector3(0, 0.05f, 0));
+        road.SetMeshCollider(false);
         return road;
     }
 
     public void UpdateFootpathEndCoord(ERRoad road, Vector3 coord)
     {
         road.DeleteMarker(1);
-        road.InsertMarker(coord + new Vector3(0, 0.1f, 0));
+        road.InsertMarker(coord + new Vector3(0, 0.05f, 0));
     }
 
     public void ProcessNewFootpath(ERRoad currentRoad)
