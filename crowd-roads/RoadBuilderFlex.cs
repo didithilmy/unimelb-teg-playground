@@ -64,21 +64,21 @@ public class RoadBuilderFlex : MonoBehaviour
         for (int i = 0; i < currentRoad.GetMarkerCount(); i++)
         {
             var currentRoadMarkerPos = currentRoad.GetMarkerPosition(i);
-            if (connectorMap.ContainsKey(currentRoadMarkerPos))
+
+            ERConnection connection = GetAttachedERConnectionIfAny(currentRoad, i, currentRoad.GetWidth());
+            if (connection != null)
             {
-                var connector = connectorMap[currentRoadMarkerPos];
-                currentRoad.ConnectToEnd(connector);
+                if (i == 0)
+                    currentRoad.ConnectToStart(connection);
+                else
+                    currentRoad.ConnectToEnd(connection);
             }
             else
             {
-                Dictionary<ERRoad, (int, int)> connectedRoads = GetConnectedRoads(currentRoad);
-                foreach (ERRoad connectedRoad in connectedRoads.Keys)
+                ERRoad attachedRoad = GetAttachedRoadIfAny(currentRoad, i, currentRoad.GetWidth());
+                if (attachedRoad != null)
                 {
-                    (int connectedRoadMarkerIndex, int currentRoadMarkerIndex) = connectedRoads[connectedRoad];
-                    Vector3 position = currentRoad.GetMarkerPosition(currentRoadMarkerIndex);
-
-                    currentRoad.InsertFlexConnector(position, connectedRoad, connectedRoadMarkerIndex, out ERRoad splitRoad);
-                    // roadNetwork.ConnectRoads(currentRoad, connectedRoad);
+                    attachedRoad.InsertFlexConnector(currentRoadMarkerPos, currentRoad, i, out ERRoad road3);
                 }
             }
         }
@@ -346,5 +346,46 @@ public class RoadBuilderFlex : MonoBehaviour
             var points = (reverse ? laneConnector.points.Reverse() : laneConnector.points).ToArray();
             tsMainManager.AddConnector<TSLaneConnector>(laneFrom, laneTo, points);
         }
+    }
+
+    public ERRoad[] GetRoadObjects()
+    {
+        ERRoad[] roadObjects = Array.FindAll(roadNetwork.GetRoadObjects(), r => !r.GetRoadType().roadTypeName.Equals("Footpath"));
+        return roadObjects;
+    }
+
+    private ERConnection GetAttachedERConnectionIfAny(ERRoad currentRoad, int markerIndex, float maxDistance = 3f)
+    {
+        ERConnection[] connections = roadNetwork.GetConnections();
+        foreach (ERConnection connection in connections)
+        {
+            float distance = (connection.gameObject.transform.position - currentRoad.GetMarkerPosition(markerIndex)).magnitude;
+
+            if (distance <= maxDistance)
+            {
+                return connection;
+            }
+        }
+
+        return null;
+    }
+
+    private ERRoad GetAttachedRoadIfAny(ERRoad road, int markerIndex, float maxDistance = 3f)
+    {
+        ERRoad[] roads = GetRoadObjects();
+        foreach (ERRoad neighbouringRoad in roads)
+        {
+            foreach (Vector3 splinePoint in neighbouringRoad.GetSplinePointsCenter())
+            {
+                float distance = (splinePoint - road.GetMarkerPosition(markerIndex)).magnitude;
+
+                if (distance <= maxDistance)
+                {
+                    return neighbouringRoad;
+                }
+            }
+        }
+
+        return null;
     }
 }
