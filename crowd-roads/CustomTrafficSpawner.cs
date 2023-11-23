@@ -90,9 +90,7 @@ public class CustomTrafficSpawner : MonoBehaviour
         trafficAi.SetIsMultithreading(false); // TODO change
 
         var bounds = TSTrafficSpawner.CarSize(trafficAiGameObject);
-        float carLength = 0; // bounds.size.z;
-
-        // TODO check if vehicle type is allowed on lane
+        float carLength = bounds.size.z;
 
         var reservedPoints = new Queue<TSTrafficAI.TSReservedPoints>();
         bool spawnAllowed = tsMainManager.lanes[laneIndex].TryToReserve(trafficAi, pointIndex, carLength, ref reservedPoints);

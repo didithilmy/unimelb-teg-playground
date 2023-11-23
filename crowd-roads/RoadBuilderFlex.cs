@@ -126,7 +126,7 @@ public class RoadBuilderFlex : MonoBehaviour
         return currentRoad;
     }
 
-    public ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord, float width = 6f)
+    public ERRoad CreateRoad(string name, ERRoadType roadType, Vector3 startCoord)
     {
         ERRoad road = roadNetwork.CreateRoad(name, roadType);
         road.SetWidth(roadType.roadWidth);
@@ -191,7 +191,8 @@ public class RoadBuilderFlex : MonoBehaviour
             ERRoad attachedRoad = GetAttachedRoadIfAny(out int splinePointIndex, GetFootpathObjects(), footpath, i, footpath.GetWidth() / 2);
             if (attachedRoad != null)
             {
-                ERConnection flexConnector = attachedRoad.InsertFlexConnector(currentRoadMarkerPos, footpath, i, out ERRoad road3);
+                Vector3 pos = currentRoadMarkerPos;
+                ERConnection flexConnector = attachedRoad.InsertFlexConnector(pos, footpath, i, out ERRoad road3);
 
                 // Set corner radius
                 foreach (ERConnectionSibling sibling in flexConnector.prefabScript.siblings)
@@ -523,29 +524,5 @@ public class RoadBuilderFlex : MonoBehaviour
 
         splinePointIndex = -1;
         return null;
-    }
-
-    public static Vector3 FindIntersectionOnYPlane(Vector3 line1Start, Vector3 line1End, Vector3 line2Start, Vector3 line2End)
-    {
-        (float intX, float intY) = FindIntersection(line1Start.x, line1Start.z, line1End.x, line1End.z, line2Start.x, line2Start.z, line2End.x, line2End.z);
-        return new Vector3(intX, 0, intY);
-    }
-
-    public static Tuple<float, float> FindIntersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4)
-    {
-        // Check if the lines are parallel
-        float det = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-
-        if (Math.Abs(det) < 1e-10)
-        {
-            // Lines are parallel or coincident
-            return null;
-        }
-
-        // Calculate the intersection point
-        float intersectionX = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / det;
-        float intersectionY = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / det;
-
-        return Tuple.Create(intersectionX, intersectionY);
     }
 }
