@@ -16,8 +16,7 @@ public class RoadBuilderUIFlex : MonoBehaviour
 
     private bool dragging = false;
     private Vector3 endCoord;
-    private ERRoad currentRoad;
-    private ERConnection currentCrossing;
+    private ERRoad currentRoad, currentFootpath;
     private GameObject currentTrafficLight;
     private CustomTrafficSpawner currentTrafficSpawner;
     private int rotationDegree = 0;
@@ -45,9 +44,9 @@ public class RoadBuilderUIFlex : MonoBehaviour
                 {
                     roadBuilder.UpdateRoadEndCoord(currentRoad, endCoord);
                 }
-                else if (currentCrossing != null)
+                else if (currentFootpath != null)
                 {
-                    roadBuilder.UpdateCrossingCoord(currentCrossing, endCoord, rotationDegree);
+                    roadBuilder.UpdateFootpathEndCoord(currentFootpath, endCoord);
                 }
                 else if (currentTrafficLight != null)
                 {
@@ -74,6 +73,20 @@ public class RoadBuilderUIFlex : MonoBehaviour
         }
     }
 
+    void OnDrawGizmosSelected()
+    {
+        foreach (ERRoad footpath in roadBuilder.GetFootpathObjects())
+        {
+            Vector3[] footpathSplineCenter = roadBuilder.GetFootpathSplinePoints(footpath);
+            // Draw a yellow sphere at the transform's position
+            Gizmos.color = Color.yellow;
+            foreach (Vector3 pos in footpathSplineCenter)
+            {
+                Gizmos.DrawSphere(pos, 0.3f);
+            }
+        }
+    }
+
     void OnMouseDown()
     {
         if (EventSystem.current.IsPointerOverGameObject())
@@ -88,6 +101,12 @@ public class RoadBuilderUIFlex : MonoBehaviour
             Vector3 coord = SnapToGrid((Vector3)startCoord);
             switch (elementPickerDropdown.selectedText.text)
             {
+                case "Footpath":
+                    currentFootpath = roadBuilder.CreateFootpath("Footpath", coord, false);
+                    break;
+                case "Crosswalk":
+                    currentFootpath = roadBuilder.CreateFootpath("Crosswalk", coord, true);
+                    break;
                 case "Two-way Road":
                     ERRoadType twoWayRoadType = roadBuilder.roadNetwork.GetRoadTypeByName("2Lane-2Way");
                     currentRoad = roadBuilder.CreateRoad("2w2lnRoad", twoWayRoadType, coord, 6f);
@@ -121,8 +140,13 @@ public class RoadBuilderUIFlex : MonoBehaviour
         {
             roadBuilder.ProcessNewRoad(currentRoad);
         }
+        else if (currentFootpath != null)
+        {
+            roadBuilder.ProcessNewFootpath(currentFootpath);
+        }
+
         currentRoad = null;
-        currentCrossing = null;
+        currentFootpath = null;
         currentTrafficLight = null;
         currentTrafficSpawner = null;
     }
