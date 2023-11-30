@@ -1,0 +1,15 @@
+[{
+  "@@type": "HexagonLayer",
+  "autoHighlight": true,
+  "coverage": 1,
+  "data": "https://raw.githubusercontent.com/uber-common/deck.gl-data/master/examples/3d-heatmap/heatmap-data.csv",
+  "elevationRange": [
+    0,
+    3000
+  ],
+  "elevationScale": 50,
+  "extruded": true,
+  "getPosition": "@@=[lng, lat]",
+  "id": "09f67bec-bc07-4ca3-be4c-9e791d15b38d",
+  "pickable": true
+}]
